@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducer, type ReactNode } from "react";
-import { agents, problems, type Agent, type AgentIcon, type ImpactKind, type Outcome, type Problem } from "./data";
+import { agents, problems, problemCategories, type Agent, type AgentIcon, type ImpactKind, type Outcome, type Problem } from "./data";
 import { initialState, problemReducer, relevantFunctions, visibleOutcomes, type ProblemState } from "./model";
 import "./discovery.css";
 
@@ -85,6 +85,8 @@ export function ProblemCard({ problem }: { problem: Problem }) {
     </div>
   </section>;
 }
+const problemsById: Record<string, Problem> = Object.fromEntries(problems.map(problem => [problem.id, problem]));
+
 export default function Discovery() {
-  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problems.map(problem => <ProblemCard key={problem.id} problem={problem}/>)}</div></section></main>;
+  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problemCategories.map(category => <section className="problem-category" key={category.title}><h2 className="problem-category-title">{category.title}</h2><div className="problem-list">{category.problemIds.map(id => <ProblemCard key={id} problem={problemsById[id]}/>)}</div></section>)}</div></section></main>;
 }

@@ -761,3 +761,70 @@ export const agents: Record<string, Agent> = {
     ]
   }
 };
+
+// Display groups are separate from problem IDs and knowledge relationships.
+export const problemCategories = [
+  {
+    "title": "Leads",
+    "problemIds": [
+      "problem-1",
+      "problem-2",
+      "problem-5",
+      "problem-6",
+      "problem-7",
+      "problem-8",
+      "problem-9",
+      "problem-10",
+      "problem-11"
+    ]
+  },
+  {
+    "title": "Appointments",
+    "problemIds": [
+      "problem-3",
+      "problem-12",
+      "problem-13",
+      "problem-14",
+      "problem-15",
+      "problem-16"
+    ]
+  },
+  {
+    "title": "Buyers",
+    "problemIds": [
+      "problem-4",
+      "problem-18",
+      "problem-21"
+    ]
+  },
+  {
+    "title": "Employees",
+    "problemIds": [
+      "problem-17",
+      "problem-19",
+      "problem-20",
+      "problem-28"
+    ]
+  },
+  {
+    "title": "Payments",
+    "problemIds": [
+      "problem-22",
+      "problem-23"
+    ]
+  },
+  {
+    "title": "Reviews",
+    "problemIds": [
+      "problem-24"
+    ]
+  },
+  {
+    "title": "Business information",
+    "problemIds": [
+      "problem-25",
+      "problem-26",
+      "problem-27"
+    ]
+  }
+];

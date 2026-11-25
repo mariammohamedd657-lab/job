@@ -3,6 +3,8 @@ body { background: #181818; color: #f4f4f4; }
 .discovery-shell { border: 1px solid #363636; border-radius: 18px; padding: 13px 14px 14px; }
 .discovery-shell h1 { font-size: 27px; font-weight: 650; margin: 0 0 13px; line-height: 1.25; }
 .problem-list { display: flex; flex-direction: column; gap: 13px; }
+.problem-category + .problem-category { margin-top: 4px; }
+.problem-category-title { font-family: inherit; font-size: 14px; font-weight: 700; font-style: italic; color: inherit; margin: 0 0 8px; }
 .problem-card { border: 1px solid #363636; border-radius: 14px; min-width: 0; }
 .problem-header { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 8px 15px; gap: 8px; }
 .circle-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; min-width: 0; line-height: 1.45; }

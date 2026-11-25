@@ -127,3 +127,38 @@ test("problem checkbox retains green outline and impact checkboxes use filled gr
     await expect(input).toHaveCSS("border-top-color", "rgb(99, 99, 99)");
   }
 });
+
+test("all seven category subtitles and all 28 problem cards are in the requested order", async ({ page }) => {
+  await page.goto("/");
+  const groups = page.locator(".problem-category");
+  const expected = [
+    ["Leads", [1,2,5,6,7,8,9,10,11]],
+    ["Appointments", [3,12,13,14,15,16]],
+    ["Buyers", [4,18,21]],
+    ["Employees", [17,19,20,28]],
+    ["Payments", [22,23]],
+    ["Reviews", [24]],
+    ["Business information", [25,26,27]],
+  ] as const;
+  await expect(groups).toHaveCount(expected.length);
+  await expect(page.locator(".problem-card")).toHaveCount(28);
+  for (let i = 0; i < expected.length; i++) {
+    const group = groups.nth(i);
+    const [title, ids] = expected[i];
+    const subtitle = group.locator(".problem-category-title");
+    await expect(subtitle).toHaveText(title);
+    await expect(subtitle).toHaveCSS("font-style", "italic");
+    await expect(subtitle).toHaveCSS("font-weight", "700");
+    await expect(subtitle.locator("input, button, svg")).toHaveCount(0);
+    await expect(group.locator(".problem-card")).toHaveCount(ids.length);
+    expect(await group.locator(".problem-card").evaluateAll(cards => cards.map(card => card.getAttribute("data-problem")))).toEqual(ids.map(id => "problem-" + id));
+  }
+  const lead = page.locator('[data-problem="problem-1"]');
+  const appointment = page.locator('[data-problem="problem-14"]');
+  await lead.getByRole("button", { name: /^Expand/ }).click();
+  await appointment.getByRole("button", { name: /^Expand/ }).click();
+  await lead.getByRole("checkbox").first().check();
+  await expect(appointment.getByRole("checkbox").first()).not.toBeChecked();
+  await expect(lead.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
+  await expect(appointment.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
+});
