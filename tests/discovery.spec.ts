@@ -1540,6 +1540,7 @@ test("every card displays exact approved explanations in order in both viewing m
         expect(await panel.locator(".explanation p").allTextContents()).toEqual(expected.map(o => allBenefitExplanations[agent.id][o.id]));
         if (expected.length) {
           await expect(panel.locator(".explanation h5").first()).toHaveCSS("color","rgb(244, 244, 244)");
+          await expect(panel.locator(".explanation h5 > span").first()).toHaveCSS("color","rgb(244, 244, 244)");
           await expect(panel.locator(".explanation p").first()).toHaveCSS("color","rgb(244, 244, 244)");
         }
       }
@@ -1574,7 +1575,8 @@ test("every card displays exact approved explanations in order in both viewing m
         expect(await panel.locator(".explanation p").allTextContents()).toEqual(expected.map(o=>lookup[o.id]));
         if (expected.length) {
           const tickColor = await entry.locator(".green-check").first().evaluate(el=>getComputedStyle(el).color);
-          await expect(panel.locator(".explanation h5").first()).toHaveCSS("color",tickColor);
+          await expect(panel.locator(".explanation h5").first()).toHaveCSS("color","rgb(244, 244, 244)");
+          await expect(panel.locator(".explanation h5 > span").first()).toHaveCSS("color","rgb(244, 244, 244)");
           await expect(panel.locator(".explanation p").first()).toHaveCSS("color",tickColor);
         } else await expect(panel.locator(".description-content")).toHaveText("");
       }
