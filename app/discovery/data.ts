@@ -1,10 +1,11 @@
-// Centralized knowledge library. Sample content is not a finalized offer specification.
+// Centralized knowledge library. Sample outcome content is not a finalized offer specification.
+import { solutionFunctionReferences } from "./functions";
 export type ImpactKind = "operational" | "financial";
 export type Impact = { id: string; label: string };
 export type Outcome = { id: string; title: string; description: string; functionIds: string[] };
 export type AgentIcon = "inbound" | "speed" | "revival" | "guardian" | "generic";
 export type SolutionKind = "voice-agent" | "shared-feature";
-export type Agent = { id: string; name: string; kind: SolutionKind; icon: AgentIcon; overview: string; temporary: boolean; functions: { id: string; text: string }[]; operationalOutcomes: Outcome[]; financialOutcomes: Outcome[] };
+export type Agent = { id: string; name: string; kind: SolutionKind; icon: AgentIcon; overview: string; temporary: boolean; functionIds: string[]; legacyPreviewFunctions?: { id: string; text: string }[]; operationalOutcomes: Outcome[]; financialOutcomes: Outcome[] };
 export type Link = { kind: ImpactKind; impactId: string; agentId: string; outcomeId: string };
 export type PreviewOutcome = Pick<Link, "kind" | "agentId" | "outcomeId">;
 export type ProblemSolutionRelationship = {
@@ -371,26 +372,7 @@ export const agents: Record<string, Agent> = {
     "name": "Inbound Agent",
     "kind": "voice-agent",
     "icon": "inbound",
-    "overview": "24/7 incoming call handling, qualification and booking.",
     "temporary": true,
-    "functions": [
-      {
-        "id": "answer",
-        "text": "Answers incoming calls around the clock."
-      },
-      {
-        "id": "qualify",
-        "text": "Asks qualification questions."
-      },
-      {
-        "id": "book",
-        "text": "Checks calendar availability and books suitable callers."
-      },
-      {
-        "id": "route",
-        "text": "Routes urgent callers to the appropriate employee, when configured."
-      }
-    ],
     "operationalOutcomes": [
       {
         "id": "operational-1",
@@ -450,29 +432,34 @@ export const agents: Record<string, Agent> = {
           "book"
         ]
       }
-    ]
+    ],
+    "legacyPreviewFunctions": [
+      {
+        "id": "answer",
+        "text": "Answers incoming calls around the clock."
+      },
+      {
+        "id": "qualify",
+        "text": "Asks qualification questions."
+      },
+      {
+        "id": "book",
+        "text": "Checks calendar availability and books suitable callers."
+      },
+      {
+        "id": "route",
+        "text": "Routes urgent callers to the appropriate employee, when configured."
+      }
+    ],
+    overview: solutionFunctionReferences["inbound"].overview,
+    functionIds: solutionFunctionReferences["inbound"].functionIds
   },
   "speed": {
     "id": "speed",
     "name": "Speed-to-Lead Agent",
     "kind": "voice-agent",
     "icon": "speed",
-    "overview": "Prompt contact, qualification and booking for new leads.",
     "temporary": true,
-    "functions": [
-      {
-        "id": "contact",
-        "text": "Initiates contact when a new lead is received."
-      },
-      {
-        "id": "qualify",
-        "text": "Asks the lead qualification questions."
-      },
-      {
-        "id": "book",
-        "text": "Checks availability and offers suitable appointment times."
-      }
-    ],
     "operationalOutcomes": [
       {
         "id": "operational-1",
@@ -521,29 +508,30 @@ export const agents: Record<string, Agent> = {
           "qualify"
         ]
       }
-    ]
+    ],
+    "legacyPreviewFunctions": [
+      {
+        "id": "contact",
+        "text": "Initiates contact when a new lead is received."
+      },
+      {
+        "id": "qualify",
+        "text": "Asks the lead qualification questions."
+      },
+      {
+        "id": "book",
+        "text": "Checks availability and offers suitable appointment times."
+      }
+    ],
+    overview: solutionFunctionReferences["speed"].overview,
+    functionIds: solutionFunctionReferences["speed"].functionIds
   },
   "revival": {
     "id": "revival",
     "name": "Lead Revival Agent",
     "kind": "voice-agent",
     "icon": "revival",
-    "overview": "Reconnecting with old leads, qualifying interest and booking appointments.",
     "temporary": true,
-    "functions": [
-      {
-        "id": "contact",
-        "text": "Contacts eligible old leads using an approved list."
-      },
-      {
-        "id": "qualify",
-        "text": "Asks whether the lead is still interested and qualifies their needs."
-      },
-      {
-        "id": "book",
-        "text": "Offers appointment times to suitable interested leads."
-      }
-    ],
     "operationalOutcomes": [
       {
         "id": "operational-1",
@@ -592,29 +580,30 @@ export const agents: Record<string, Agent> = {
           "qualify"
         ]
       }
-    ]
+    ],
+    "legacyPreviewFunctions": [
+      {
+        "id": "contact",
+        "text": "Contacts eligible old leads using an approved list."
+      },
+      {
+        "id": "qualify",
+        "text": "Asks whether the lead is still interested and qualifies their needs."
+      },
+      {
+        "id": "book",
+        "text": "Offers appointment times to suitable interested leads."
+      }
+    ],
+    overview: solutionFunctionReferences["revival"].overview,
+    functionIds: solutionFunctionReferences["revival"].functionIds
   },
   "guardian": {
     "id": "guardian",
     "name": "Appointment Guardian Agent",
     "kind": "voice-agent",
     "icon": "guardian",
-    "overview": "Appointment reminders, confirmation and rescheduling.",
     "temporary": true,
-    "functions": [
-      {
-        "id": "remind",
-        "text": "Sends appointment reminders using configured channels."
-      },
-      {
-        "id": "confirm",
-        "text": "Asks buyers to confirm whether they will attend."
-      },
-      {
-        "id": "reschedule",
-        "text": "Offers available alternative appointment times when needed."
-      }
-    ],
     "operationalOutcomes": [
       {
         "id": "operational-1",
@@ -663,62 +652,78 @@ export const agents: Record<string, Agent> = {
           "reschedule"
         ]
       }
-    ]
+    ],
+    "legacyPreviewFunctions": [
+      {
+        "id": "remind",
+        "text": "Sends appointment reminders using configured channels."
+      },
+      {
+        "id": "confirm",
+        "text": "Asks buyers to confirm whether they will attend."
+      },
+      {
+        "id": "reschedule",
+        "text": "Offers available alternative appointment times when needed."
+      }
+    ],
+    overview: solutionFunctionReferences["guardian"].overview,
+    functionIds: solutionFunctionReferences["guardian"].functionIds
   },
   "support": {
     "id": "support",
     "name": "Customer Support Agent",
     "kind": "voice-agent",
     "icon": "generic",
-    "overview": "",
     "temporary": false,
-    "functions": [],
     "operationalOutcomes": [],
-    "financialOutcomes": []
+    "financialOutcomes": [],
+    overview: solutionFunctionReferences["support"].overview,
+    functionIds: solutionFunctionReferences["support"].functionIds
   },
   "payments": {
     "id": "payments",
     "name": "Payments & Collections Agent",
     "kind": "voice-agent",
     "icon": "generic",
-    "overview": "",
     "temporary": false,
-    "functions": [],
     "operationalOutcomes": [],
-    "financialOutcomes": []
+    "financialOutcomes": [],
+    overview: solutionFunctionReferences["payments"].overview,
+    functionIds: solutionFunctionReferences["payments"].functionIds
   },
   "reviews": {
     "id": "reviews",
     "name": "Review Request Agent",
     "kind": "voice-agent",
     "icon": "generic",
-    "overview": "",
     "temporary": false,
-    "functions": [],
     "operationalOutcomes": [],
-    "financialOutcomes": []
+    "financialOutcomes": [],
+    overview: solutionFunctionReferences["reviews"].overview,
+    functionIds: solutionFunctionReferences["reviews"].functionIds
   },
   "dashboard": {
     "id": "dashboard",
     "name": "Smart Dashboard",
     "kind": "shared-feature",
     "icon": "generic",
-    "overview": "",
     "temporary": false,
-    "functions": [],
     "operationalOutcomes": [],
-    "financialOutcomes": []
+    "financialOutcomes": [],
+    overview: solutionFunctionReferences["dashboard"].overview,
+    functionIds: solutionFunctionReferences["dashboard"].functionIds
   },
   "crm": {
     "id": "crm",
     "name": "CRM Integration",
     "kind": "shared-feature",
     "icon": "generic",
-    "overview": "",
     "temporary": false,
-    "functions": [],
     "operationalOutcomes": [],
-    "financialOutcomes": []
+    "financialOutcomes": [],
+    overview: solutionFunctionReferences["crm"].overview,
+    functionIds: solutionFunctionReferences["crm"].functionIds
   }
 };
 

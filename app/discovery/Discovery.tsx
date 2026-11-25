@@ -3,6 +3,7 @@
 import { useReducer, useState, type ReactNode } from "react";
 import { agents, problems, problemCategories, type Agent, type AgentIcon, type ImpactKind, type Outcome, type Problem } from "./data";
 import { initialState, matchedSolutions, problemReducer, relevantFunctions, visibleOutcomes, type Mode, type ProblemState } from "./model";
+import { functionLibrary } from "./functions";
 import "./discovery.css";
 
 function Chevron({ open = false }: { open?: boolean }) {
@@ -34,13 +35,14 @@ function OutcomeColumn({ title, outcomes, empty, tone }: { title: string; outcom
 function Explanations({ outcomes, empty }: { outcomes: Outcome[]; empty: string }) {
   return outcomes.length ? <div className="explanations">{outcomes.map(outcome => <div className="explanation" key={outcome.id}><h5>{outcome.title}</h5><p>{outcome.description}</p></div>)}</div> : <Empty>{empty}</Empty>;
 }
-const pendingAgent: Agent = { id: "pending", name: "Agent not yet provided", kind: "voice-agent", icon: "generic", overview: "Solution information has not been provided yet.", temporary: false, functions: [], operationalOutcomes: [], financialOutcomes: [] };
+const pendingAgent: Agent = { id: "pending", name: "Agent not yet provided", kind: "voice-agent", icon: "generic", overview: "Solution information has not been provided yet.", temporary: false, functionIds: [], operationalOutcomes: [], financialOutcomes: [] };
 function SolutionCard({ problem, agent, state: problemState, pending = false }: { problem: Problem; agent: Agent; state: ProblemState; pending?: boolean }) {
   const [mode, setMode] = useState<Mode>("personalized");
   const state = { ...problemState, mode };
   const operational = visibleOutcomes(problem, agent, "operational", state);
   const financial = visibleOutcomes(problem, agent, "financial", state);
   const relevant = relevantFunctions(problem, agent, state);
+  const functions = agent.functionIds.map(id => functionLibrary[id]).filter(fn => fn && fn.availability !== "proposed");
   const message = (kind: ImpactKind) => pending ? "Content not yet provided." : state.mode === "personalized" ? `No related ${kind} impact has been confirmed.` : `No applicable ${kind} outcomes have been provided.`;
   return <div className="solution-entry" data-solution={agent.id}>
     <div className="mode-control" role="group" aria-label="Benefit viewing mode">
@@ -48,7 +50,7 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
       <button type="button" aria-pressed={mode === "all"} onClick={() => setMode("all")}>All benefits</button>
     </div>
     <div className="solution-card">
-    <div className="agent-header"><Icon icon={agent.icon}/><h3>{agent.name}</h3></div>
+    <div className="agent-header"><Icon icon={agent.icon}/><div><h3>{agent.name}</h3>{agent.overview && <p>{agent.overview}</p>}</div></div>
     <hr/>
     <div className="two-columns">
       <OutcomeColumn tone="operational" title="Operational outcomes" outcomes={operational} empty={message("operational")}/>
@@ -57,7 +59,7 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
     <hr/>
     <div className="description-list">
       <Description title="How the agent functions">
-        {agent.functions.length ? <ul className="function-list">{agent.functions.map(fn => <li key={fn.id} className={state.mode === "personalized" && !relevant.has(fn.id) ? "muted-function" : "relevant-function"}>{fn.text}</li>)}</ul> : <Empty>Content not yet provided.</Empty>}
+        {functions.length ? <ul className="function-list">{functions.map(fn => <li key={fn.id} className={state.mode === "personalized" && !relevant.has(fn.id) ? "muted-function" : "relevant-function"}><span>{fn.name}</span><div>{fn.description}</div></li>)}</ul> : <Empty>Content not yet provided.</Empty>}
       </Description>
       <Description tone="operational" title="How it produces operational outcomes"><Explanations outcomes={operational} empty={message("operational")}/></Description>
       <Description tone="financial" title="How it produces financial outcomes"><Explanations outcomes={financial} empty={message("financial")}/></Description>

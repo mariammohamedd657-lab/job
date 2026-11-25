@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { agents, problems } from "../app/discovery/data";
+import { functionLibrary, configurationCapabilities, solutionFunctionReferences } from "../app/discovery/functions";
 import { matchedSolutions } from "../app/discovery/model";
 
 test("all 28 problems, independent confirmation, expansion, and pending personalized mappings", async ({ page }) => {
@@ -30,7 +31,7 @@ test("all 28 problems, independent confirmation, expansion, and pending personal
   await missed.getByText("How it produces operational outcomes", { exact: true }).click();
   await missed.getByText("How it produces financial outcomes", { exact: true }).click();
   await expect(missed.locator("details[open]")).toHaveCount(3);
-  await expect(missed.locator(".muted-function").filter({ hasText: "Routes urgent callers" })).toHaveCount(1);
+  await expect(missed.locator(".muted-function").filter({ hasText: "Routes calls to staff" })).toHaveCount(1);
   await expect(missed.locator(".explanation")).toHaveCount(0);
   await missed.getByRole("button", { name: "All benefits" }).click();
   await expect(missed.locator(".outcome-list li")).toHaveCount(6);
@@ -84,7 +85,7 @@ test("requested pastel headings and compact agent headers across all problems", 
     for (const header of await card.locator(".agent-header").all()) {
       await expect(header.locator("h3")).toHaveCSS("color", "rgb(183, 223, 190)");
       await expect(header).toHaveCSS("align-items", "center");
-      await expect(header.locator("p")).toHaveCount(0);
+      await expect(header.locator("p")).toHaveCount(1);
       await expect(header.locator(".agent-icon")).toHaveCount(1);
     }
     for (const heading of await card.locator(".outcome-tone-operational").all()) {
@@ -176,7 +177,7 @@ test("existing problem titles and sample agent content are preserved", async ({ 
   await missed.getByRole("button", { name: "All benefits" }).click();
   await expect(missed.locator(".outcome-list").getByText("More urgent callers connected to employees", { exact: true })).toBeVisible();
   await missed.getByText("How the agent functions", { exact: true }).click();
-  await expect(missed.locator(".function-list")).toContainText("Routes urgent callers to the appropriate employee, when configured.");
+  await expect(missed.locator(".function-list")).toContainText("The agent identifies when a caller needs to speak to a person. It transfers the call to the right staff member or department using the business\'s transfer rules, contact numbers and working hours.");
   const guardian = page.locator('[data-problem="problem-14"]');
   await guardian.getByRole("button", { name: /^Expand/ }).click();
   await guardian.getByRole("checkbox", { name: "Unused appointment slots" }).check();
@@ -1174,4 +1175,55 @@ test("solution arrays render independently with no duplicates and support adding
   const other = page.locator('[data-problem="problem-1"]');
   await other.getByRole("button", { name: /^Expand/ }).click();
   await expect(other.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("approved overview and shared function content is visible in each existing card, with no proposed capabilities", async ({ page }) => {
+  test.setTimeout(120000);
+  expect(Object.keys(agents)).toHaveLength(9);
+  expect(Object.keys(solutionFunctionReferences)).toHaveLength(12);
+  expect(configurationCapabilities).toHaveLength(15);
+  expect(Object.keys(functionLibrary)).toHaveLength(48);
+  expect(Object.values(functionLibrary).filter(fn => fn.availability === "proposed").map(fn => fn.name)).toEqual(["Contacts waitlisted customers after cancellations"]);
+  expect(agents.inbound.functionIds).toContain("function-books-appointments");
+  expect(agents.speed.functionIds).toContain("function-books-appointments");
+  expect(agents.revival.functionIds).toContain("function-books-appointments");
+  for (const [id, count] of Object.entries({"inbound":12,"speed":13,"revival":13,"guardian":11,"support":7,"payments":9,"reviews":3,"dashboard":7,"crm":5})) {
+    expect(agents[id].functionIds).toHaveLength(count);
+    expect(agents[id].functionIds).toEqual(solutionFunctionReferences[id].functionIds);
+    expect(agents[id].overview).toBe(solutionFunctionReferences[id].overview);
+    expect(agents[id].functionIds.every(fid => functionLibrary[fid] && functionLibrary[fid].availability !== "proposed")).toBe(true);
+    for (const outcome of [...agents[id].operationalOutcomes, ...agents[id].financialOutcomes]) {
+      expect(outcome.functionIds.every(fid => functionLibrary[fid] || agents[id].legacyPreviewFunctions?.some(fn => fn.id === fid))).toBe(true);
+    }
+  }
+  await page.goto("/");
+  for (const problem of problems) {
+    const card = page.locator('[data-problem="' + problem.id + '"]');
+    await card.getByRole("button", { name: /^Expand/ }).click();
+    for (const relationship of problem.solutions) {
+      const agent = agents[relationship.solutionId];
+      const entry = card.locator('[data-solution="' + agent.id + '"]');
+      const overview = entry.locator(".agent-header p");
+      await expect(overview).toHaveText(agent.overview);
+      await expect(overview).toBeVisible();
+      await expect(entry.locator("details[open]")).toHaveCount(0);
+      const list = entry.locator(".function-list");
+      await expect(list).not.toBeVisible();
+      const toggle = entry.getByText("How the agent functions", { exact: true });
+      await toggle.click();
+      await expect(list).toBeVisible();
+      const expected = agent.functionIds.map(id => functionLibrary[id]);
+      expect(await list.locator("li > span").allTextContents()).toEqual(expected.map(fn => fn.name));
+      expect(await list.locator("li > div").allTextContents()).toEqual(expected.map(fn => fn.description));
+      await expect(list.locator(".muted-function")).toHaveCount(expected.length);
+      await entry.getByRole("button", { name: "All benefits" }).click();
+      await expect(list.locator(".relevant-function")).toHaveCount(expected.length);
+      await expect(overview).toBeVisible();
+      await toggle.click();
+      await expect(list).not.toBeVisible();
+      await expect(overview).toBeVisible();
+      await entry.getByRole("button", { name: "Personalized" }).click();
+    }
+    await card.getByRole("button", { name: /^Collapse/ }).click();
+  }
 });

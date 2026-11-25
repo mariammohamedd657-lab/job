@@ -42,5 +42,9 @@ export function visibleOutcomes(problem: Problem, agent: Agent, kind: ImpactKind
 }
 
 export function relevantFunctions(problem: Problem, agent: Agent, state: ProblemState) {
-  return new Set([...visibleOutcomes(problem, agent, "operational", state), ...visibleOutcomes(problem, agent, "financial", state)].flatMap(outcome => outcome.functionIds));
+  const explicit = problem.solutions.find(item => item.solutionId === agent.id)?.functionIds ?? [];
+  const linked = state.mode === "personalized"
+    ? [...visibleOutcomes(problem, agent, "operational", state), ...visibleOutcomes(problem, agent, "financial", state)].flatMap(outcome => outcome.functionIds)
+    : [];
+  return new Set([...explicit, ...linked]);
 }
