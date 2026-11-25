@@ -66,12 +66,11 @@ export function ProblemCard({ problem }: { problem: Problem }) {
       <button type="button" className="problem-toggle" aria-expanded={state.expanded} aria-controls={`${problem.id}-content`} aria-label={`${state.expanded ? "Collapse" : "Expand"} ${problem.name}`} onClick={() => dispatch({type:"expand"})}><Chevron open={state.expanded}/></button>
     </div>
     <div className="problem-content" id={`${problem.id}-content`} hidden={!state.expanded}>
-      <h3 className="selection-heading">Discovery selections</h3>
-      <div className="confirmed-problem"><span className={`problem-status ${state.confirmed ? "confirmed" : ""}`} role="img" aria-label={state.confirmed ? "Confirmed" : "Not confirmed"}>{state.confirmed && <Check/>}</span><span>{problem.name}</span></div>
+      <hr className="discovery-divider"/>
       <div className="two-columns impact-columns">
         {(["operational","financial"] as const).map(kind => {
           const impacts = kind === "operational" ? problem.operationalImpacts : problem.financialImpacts;
-          return <div key={kind}><h4 className="impact-heading">Confirmed {kind} impacts</h4>
+          return <div key={kind}><h4 className="impact-heading"><span className={`impact-tone-${kind}`}>Confirmed {kind} impacts</span></h4>
             {impacts.length ? <div className="impact-list">{impacts.map(impact => <CircleInput key={impact.id} checked={state.selected[kind].includes(impact.id)} onChange={() => dispatch({type:"impact",kind,id:impact.id})} label={impact.label}/>)}</div> : <Empty>Content not yet provided.</Empty>}
           </div>;
         })}

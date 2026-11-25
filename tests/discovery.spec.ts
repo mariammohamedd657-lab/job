@@ -72,7 +72,12 @@ test("requested pastel headings and compact agent headers across all problems", 
   for (const card of await cards.all()) {
     await expect(card.locator(".problem-confirm > span")).toHaveCSS("color", "rgb(242, 173, 173)");
     await card.getByRole("button", { name: /^Expand/ }).click();
-    await expect(card.locator(".confirmed-problem > span:last-child")).toHaveCSS("color", "rgb(242, 173, 173)");
+    await expect(card.locator(".selection-heading, .confirmed-problem")).toHaveCount(0);
+    await expect(card.locator(".problem-content > .discovery-divider + .impact-columns")).toBeVisible();
+    await expect(card.locator(".impact-tone-operational")).toHaveCSS("color", "rgb(245, 230, 163)");
+    await expect(card.locator(".impact-tone-operational")).toHaveCSS("background-color", "rgba(245, 230, 163, 0.08)");
+    await expect(card.locator(".impact-tone-financial")).toHaveCSS("color", "rgb(174, 203, 244)");
+    await expect(card.locator(".impact-tone-financial")).toHaveCSS("background-color", "rgba(174, 203, 244, 0.08)");
     await expect(card.getByRole("heading", { name: "Solution", exact: true })).toHaveCSS("color", "rgb(183, 223, 190)");
     await expect(card.locator(".agent-header h3")).toHaveCSS("color", "rgb(183, 223, 190)");
     await expect(card.locator(".agent-header")).toHaveCSS("align-items", "center");
@@ -87,5 +92,31 @@ test("requested pastel headings and compact agent headers across all problems", 
       await expect(heading).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     }
     await card.getByRole("button", { name: /^Collapse/ }).click();
+  }
+});
+
+test("discovery checkboxes use green outline and check without changing impact text", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Discovery", exact: true })).toHaveCSS("color", "rgb(244, 244, 244)");
+  const card = page.locator('[data-problem="problem-1"]');
+  await card.getByRole("button", { name: "Expand Missed calls" }).click();
+  await expect(card.getByText("Discovery selections", { exact: true })).toHaveCount(0);
+  await expect(card.getByText("Missed calls", { exact: true })).toHaveCount(1);
+  const inputs = card.locator('input[type="checkbox"]');
+  for (const input of await inputs.all()) {
+    await expect(input).not.toBeChecked();
+    await expect(input).toHaveCSS("border-top-color", "rgb(99, 99, 99)");
+    await expect(input).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(input).toHaveCSS("background-image", "none");
+    await input.check();
+    await expect(input).toHaveCSS("border-top-color", "rgb(18, 189, 98)");
+    await expect(input).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(input).toHaveCSS("background-image", /%2312bd62/);
+    const label = input.locator("xpath=following-sibling::span");
+    if (await label.textContent() !== "Missed calls") {
+      await expect(label).toHaveCSS("color", "rgb(244, 244, 244)");
+    }
+    await input.uncheck();
+    await expect(input).toHaveCSS("border-top-color", "rgb(99, 99, 99)");
   }
 });

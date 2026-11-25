@@ -7,26 +7,22 @@ body { background: #181818; color: #f4f4f4; }
 .problem-header { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 8px 15px; gap: 8px; }
 .circle-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; min-width: 0; line-height: 1.45; }
 .circle-input { appearance: none; -webkit-appearance: none; display: inline-grid; place-content: center; width: 22px; height: 22px; border: 1.3px solid #636363; border-radius: 50%; background: transparent; flex: 0 0 auto; margin: 0; cursor: pointer; color: #181818; }
-.circle-input:checked { border-color: #f1f1f1; background: #f1f1f1; }
-.circle-input:checked::after { content: ""; width: 10px; height: 6px; border-left: 2.3px solid currentColor; border-bottom: 2.3px solid currentColor; transform: rotate(-45deg) translateY(-1px); }
+.circle-input:checked { border: 1.5px solid #12bd62; color: #12bd62; background-color: transparent; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='m5 12 4 4L19 6' stroke='%2312bd62' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; background-size: 73.333%; }
 .circle-input:focus-visible, .discovery-page button:focus-visible, .description summary:focus-visible { outline: 2px solid #1685ef; outline-offset: 3px; }
 .problem-confirm { align-items: center; font-size: 17px; font-weight: 500; }
 .problem-confirm .circle-input { width: 24px; height: 24px; }
-.problem-confirm > span, .confirmed-problem > span:last-child { color: #F2ADAD; }
+.problem-confirm > span { color: #F2ADAD; }
 .problem-toggle { flex-shrink: 0; width: 38px; height: 36px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; color: #bcbcbc; padding: 0; border-radius: 8px; }
 .chevron { width: 23px; height: 23px; display: block; flex-shrink: 0; color: #bcbcbc; }
 .chevron.is-open, .description[open] > summary .chevron { transform: rotate(180deg); }
 .problem-content { padding: 0 12px 13px; }
 .problem-content[hidden] { display: none; }
-.selection-heading { font-size: 20px; line-height: 1.35; margin: 4px 0 13px; font-weight: 600; }
-.confirmed-problem { display: flex; gap: 9px; align-items: center; font-weight: 600; margin-bottom: 13px; }
-.problem-status { width: 15px; height: 15px; border: 1.5px solid #666; border-radius: 50%; display: inline-grid; place-items: center; flex-shrink: 0; }
-.problem-status.confirmed { color: #12bd62; border-color: #12bd62; }
-.problem-status svg { width: 11px; height: 11px; }
+.problem-content > hr.discovery-divider { margin: 0 0 12px; }
 .two-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
 .two-columns > div { min-width: 0; }
 .impact-heading, .outcome-heading { font-size: 15px; font-weight: 500; margin: 0 0 10px; line-height: 1.4; }
-.impact-heading { color: #aaa7a7; }
+.impact-tone-operational { color: #F5E6A3; background-color: rgba(245, 230, 163, 0.08); }
+.impact-tone-financial { color: #AECBF4; background-color: rgba(174, 203, 244, 0.08); }
 .impact-list { display: flex; flex-direction: column; gap: 11px; }
 .impact-list .circle-input { width: 20px; height: 20px; margin-top: 1px; }
 .problem-content hr, .solution-card hr { border: 0; border-top: 1px solid #333; margin: 23px 0 19px; }
