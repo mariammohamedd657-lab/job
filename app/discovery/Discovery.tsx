@@ -33,6 +33,8 @@ function OutcomeColumn({ title, outcomes, empty, tone }: { title: string; outcom
   return <div><h4 className="outcome-heading"><span className={`outcome-tone-${tone}`}>{title}</span></h4>{outcomes.length ? <ul className="outcome-list">{outcomes.map(outcome => <li key={outcome.id}><Check className="green-check"/><span>{outcome.title}</span></li>)}</ul> : <Empty>{empty}</Empty>}</div>;
 }
 function Explanations({ outcomes, empty }: { outcomes: Outcome[]; empty: string }) {
+  // The approved outcome names are ready; detailed explanations will be populated later.
+  outcomes = outcomes.filter(outcome => outcome.description.trim().length > 0);
   return outcomes.length ? <div className="explanations">{outcomes.map(outcome => <div className="explanation" key={outcome.id}><h5>{outcome.title}</h5><p>{outcome.description}</p></div>)}</div> : <Empty>{empty}</Empty>;
 }
 const pendingAgent: Agent = { id: "pending", name: "Agent not yet provided", kind: "voice-agent", icon: "generic", overview: "Solution information has not been provided yet.", temporary: false, functionIds: [], operationalOutcomes: [], financialOutcomes: [] };

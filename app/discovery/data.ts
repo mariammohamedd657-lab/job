@@ -1,11 +1,12 @@
 // Centralized knowledge library. Sample outcome content is not a finalized offer specification.
 import { solutionFunctionReferences } from "./functions";
+import { positiveOutcomes, solutionOutcomeIds } from "./outcomes";
 export type ImpactKind = "operational" | "financial";
 export type Impact = { id: string; label: string };
 export type Outcome = { id: string; title: string; description: string; functionIds: string[] };
 export type AgentIcon = "inbound" | "speed" | "revival" | "guardian" | "generic";
 export type SolutionKind = "voice-agent" | "shared-feature";
-export type Agent = { id: string; name: string; kind: SolutionKind; icon: AgentIcon; overview: string; temporary: boolean; functionIds: string[]; legacyPreviewFunctions?: { id: string; text: string }[]; operationalOutcomes: Outcome[]; financialOutcomes: Outcome[] };
+export type Agent = { id: string; name: string; kind: SolutionKind; icon: AgentIcon; overview: string; temporary: boolean; functionIds: string[]; legacyPreviewFunctions?: { id: string; text: string }[]; legacyPreviewOperationalOutcomes?: Outcome[]; legacyPreviewFinancialOutcomes?: Outcome[]; operationalOutcomes: Outcome[]; financialOutcomes: Outcome[] };
 export type Link = { kind: ImpactKind; impactId: string; agentId: string; outcomeId: string };
 export type PreviewOutcome = Pick<Link, "kind" | "agentId" | "outcomeId">;
 export type ProblemSolutionRelationship = {
@@ -36,23 +37,23 @@ export const negativeOperationalImpacts = {
   "fewer-appointments-booked": { id: "negative-operational-fewer-appointments-booked", label: "Fewer appointments booked" },
   "fewer-appointments-attended": { id: "negative-operational-fewer-appointments-attended", label: "Fewer appointments attended" },
   "unused-appointment-slots": { id: "negative-operational-unused-appointment-slots", label: "Unused appointment slots" },
-  "fewer-new-customers": { id: "negative-operational-fewer-new-customers", label: "Fewer new customers" },
-  "lost-existing-customers": { id: "negative-operational-lost-existing-customers", label: "Lost existing customers" },
-  "fewer-customers-served": { id: "negative-operational-fewer-customers-served", label: "Fewer customers served" },
-  "less-staff-time-available-for-other-work": { id: "negative-operational-less-staff-time-available-for-other-work", label: "Less staff time available for other work" },
+  "fewer-new-customers": { id: "negative-operational-fewer-new-customers", label: "Fewer new buyers" },
+  "lost-existing-customers": { id: "negative-operational-lost-existing-customers", label: "Lost existing buyers" },
+  "fewer-customers-served": { id: "negative-operational-fewer-customers-served", label: "Fewer buyers served" },
+  "less-staff-time-available-for-other-work": { id: "negative-operational-less-staff-time-available-for-other-work", label: "Less employee time available for other work" },
   "fewer-tasks-completed": { id: "negative-operational-fewer-tasks-completed", label: "Fewer tasks completed" },
   "more-unpaid-invoices": { id: "negative-operational-more-unpaid-invoices", label: "More unpaid invoices" },
-  "fewer-customer-reviews": { id: "negative-operational-fewer-customer-reviews", label: "Fewer customer reviews" },
+  "fewer-customer-reviews": { id: "negative-operational-fewer-customer-reviews", label: "Fewer buyer reviews" },
   "missing-business-information": { id: "negative-operational-missing-business-information", label: "Missing business information" },
 } satisfies Record<string, Impact>;
 
 export const negativeFinancialImpacts = {
   "lost-potential-revenue": { id: "negative-financial-lost-potential-revenue", label: "Lost potential revenue" },
   "wasted-marketing-spend": { id: "negative-financial-wasted-marketing-spend", label: "Wasted marketing spend" },
-  "higher-cost-per-customer": { id: "negative-financial-higher-cost-per-customer", label: "Higher cost per customer" },
+  "higher-cost-per-customer": { id: "negative-financial-higher-cost-per-customer", label: "Higher cost per buyer" },
   "higher-marketing-costs": { id: "negative-financial-higher-marketing-costs", label: "Higher marketing costs" },
-  "higher-staffing-costs": { id: "negative-financial-higher-staffing-costs", label: "Higher staffing costs" },
-  "wasted-staffing-costs": { id: "negative-financial-wasted-staffing-costs", label: "Wasted staffing costs" },
+  "higher-staffing-costs": { id: "negative-financial-higher-staffing-costs", label: "Higher employee costs" },
+  "wasted-staffing-costs": { id: "negative-financial-wasted-staffing-costs", label: "Wasted employee costs" },
   "higher-collection-costs": { id: "negative-financial-higher-collection-costs", label: "Higher collection costs" },
   "delayed-cash-collection": { id: "negative-financial-delayed-cash-collection", label: "Delayed cash collection" },
   "money-lost-from-unpaid-invoices": { id: "negative-financial-money-lost-from-unpaid-invoices", label: "Money lost from unpaid invoices" },
@@ -373,7 +374,7 @@ export const agents: Record<string, Agent> = {
     "kind": "voice-agent",
     "icon": "inbound",
     "temporary": true,
-    "operationalOutcomes": [
+    "legacyPreviewOperationalOutcomes": [
       {
         "id": "operational-1",
         "title": "More potential buyers reached and qualified",
@@ -402,7 +403,7 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
-    "financialOutcomes": [
+    "legacyPreviewFinancialOutcomes": [
       {
         "id": "financial-1",
         "title": "Potential additional sales revenue",
@@ -433,6 +434,8 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
+    operationalOutcomes: solutionOutcomeIds["inbound"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["inbound"].financial.map(id => positiveOutcomes[id]),
     "legacyPreviewFunctions": [
       {
         "id": "answer",
@@ -460,7 +463,7 @@ export const agents: Record<string, Agent> = {
     "kind": "voice-agent",
     "icon": "speed",
     "temporary": true,
-    "operationalOutcomes": [
+    "legacyPreviewOperationalOutcomes": [
       {
         "id": "operational-1",
         "title": "More new leads contacted promptly",
@@ -488,7 +491,7 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
-    "financialOutcomes": [
+    "legacyPreviewFinancialOutcomes": [
       {
         "id": "financial-1",
         "title": "Potential additional sales revenue",
@@ -509,6 +512,8 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
+    operationalOutcomes: solutionOutcomeIds["speed"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["speed"].financial.map(id => positiveOutcomes[id]),
     "legacyPreviewFunctions": [
       {
         "id": "contact",
@@ -532,7 +537,7 @@ export const agents: Record<string, Agent> = {
     "kind": "voice-agent",
     "icon": "revival",
     "temporary": true,
-    "operationalOutcomes": [
+    "legacyPreviewOperationalOutcomes": [
       {
         "id": "operational-1",
         "title": "More old leads contacted",
@@ -560,7 +565,7 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
-    "financialOutcomes": [
+    "legacyPreviewFinancialOutcomes": [
       {
         "id": "financial-1",
         "title": "Potential additional sales revenue",
@@ -581,6 +586,8 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
+    operationalOutcomes: solutionOutcomeIds["revival"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["revival"].financial.map(id => positiveOutcomes[id]),
     "legacyPreviewFunctions": [
       {
         "id": "contact",
@@ -604,7 +611,7 @@ export const agents: Record<string, Agent> = {
     "kind": "voice-agent",
     "icon": "guardian",
     "temporary": true,
-    "operationalOutcomes": [
+    "legacyPreviewOperationalOutcomes": [
       {
         "id": "operational-1",
         "title": "More buyers reminded before appointments",
@@ -632,7 +639,7 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
-    "financialOutcomes": [
+    "legacyPreviewFinancialOutcomes": [
       {
         "id": "financial-1",
         "title": "Potential additional revenue from attended appointments",
@@ -653,6 +660,8 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ],
+    operationalOutcomes: solutionOutcomeIds["guardian"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["guardian"].financial.map(id => positiveOutcomes[id]),
     "legacyPreviewFunctions": [
       {
         "id": "remind",
@@ -676,8 +685,8 @@ export const agents: Record<string, Agent> = {
     "kind": "voice-agent",
     "icon": "generic",
     "temporary": false,
-    "operationalOutcomes": [],
-    "financialOutcomes": [],
+    operationalOutcomes: solutionOutcomeIds["support"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["support"].financial.map(id => positiveOutcomes[id]),
     overview: solutionFunctionReferences["support"].overview,
     functionIds: solutionFunctionReferences["support"].functionIds
   },
@@ -687,8 +696,8 @@ export const agents: Record<string, Agent> = {
     "kind": "voice-agent",
     "icon": "generic",
     "temporary": false,
-    "operationalOutcomes": [],
-    "financialOutcomes": [],
+    operationalOutcomes: solutionOutcomeIds["payments"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["payments"].financial.map(id => positiveOutcomes[id]),
     overview: solutionFunctionReferences["payments"].overview,
     functionIds: solutionFunctionReferences["payments"].functionIds
   },
@@ -698,8 +707,8 @@ export const agents: Record<string, Agent> = {
     "kind": "voice-agent",
     "icon": "generic",
     "temporary": false,
-    "operationalOutcomes": [],
-    "financialOutcomes": [],
+    operationalOutcomes: solutionOutcomeIds["reviews"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["reviews"].financial.map(id => positiveOutcomes[id]),
     overview: solutionFunctionReferences["reviews"].overview,
     functionIds: solutionFunctionReferences["reviews"].functionIds
   },
@@ -709,8 +718,8 @@ export const agents: Record<string, Agent> = {
     "kind": "shared-feature",
     "icon": "generic",
     "temporary": false,
-    "operationalOutcomes": [],
-    "financialOutcomes": [],
+    operationalOutcomes: solutionOutcomeIds["dashboard"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["dashboard"].financial.map(id => positiveOutcomes[id]),
     overview: solutionFunctionReferences["dashboard"].overview,
     functionIds: solutionFunctionReferences["dashboard"].functionIds
   },
@@ -720,8 +729,8 @@ export const agents: Record<string, Agent> = {
     "kind": "shared-feature",
     "icon": "generic",
     "temporary": false,
-    "operationalOutcomes": [],
-    "financialOutcomes": [],
+    operationalOutcomes: solutionOutcomeIds["crm"].operational.map(id => positiveOutcomes[id]),
+    financialOutcomes: solutionOutcomeIds["crm"].financial.map(id => positiveOutcomes[id]),
     overview: solutionFunctionReferences["crm"].overview,
     functionIds: solutionFunctionReferences["crm"].functionIds
   }

@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { agents, problems } from "../app/discovery/data";
 import { functionLibrary, configurationCapabilities, solutionFunctionReferences } from "../app/discovery/functions";
-import { matchedSolutions } from "../app/discovery/model";
+import { matchedSolutions, visibleOutcomes, initialState } from "../app/discovery/model";
+import { positiveOutcomes, negativeToPositive, solutionOutcomeIds } from "../app/discovery/outcomes";
 
-test("all 28 problems, independent confirmation, expansion, and pending personalized mappings", async ({ page }) => {
+test("all 28 problems, independent confirmation, expansion, and personalized outcomes", async ({ page }) => {
   await page.goto("/");
   const cards = page.locator(".problem-card");
   await expect(cards).toHaveCount(28);
@@ -19,13 +20,17 @@ test("all 28 problems, independent confirmation, expansion, and pending personal
   await slow.getByRole("button", { name: "Expand Slow response to new leads" }).click();
   await expect(missed.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
   await expect(slow.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
-  const buyer = missed.getByRole("checkbox", { name: "Lost leads" });
-  const money = missed.getByRole("checkbox", { name: "Lost potential revenue" });
+  const buyer = missed.getByRole("checkbox", { name: "Lost leads", exact: true });
+  const money = missed.getByRole("checkbox", { name: "Wasted marketing spend", exact: true });
+  const entry = missed.locator(".solution-entry");
+  const op = entry.locator(".solution-card > .two-columns > div").nth(0);
+  const fin = entry.locator(".solution-card > .two-columns > div").nth(1);
   await buyer.check();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
+  await expect(op.locator(".outcome-list li")).toHaveText(["Fewer lost leads"]);
+  await expect(fin.locator(".outcome-list li")).toHaveCount(0);
   await expect(money).not.toBeChecked();
   await money.check();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
+  await expect(fin.locator(".outcome-list li")).toHaveText(["Less wasted marketing spend"]);
   await expect(slow.getByRole("checkbox", { name: "Lost leads" })).not.toBeChecked();
   await missed.getByText("How the agent functions", { exact: true }).click();
   await missed.getByText("How it produces operational outcomes", { exact: true }).click();
@@ -34,10 +39,11 @@ test("all 28 problems, independent confirmation, expansion, and pending personal
   await expect(missed.locator(".muted-function").filter({ hasText: "Routes calls to staff" })).toHaveCount(1);
   await expect(missed.locator(".explanation")).toHaveCount(0);
   await missed.getByRole("button", { name: "All benefits" }).click();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(6);
+  await expect(op.locator(".outcome-list li")).toHaveText(["Fewer lost leads","Fewer lost qualified leads","More appointments booked","More buyers served","Fewer lost existing buyers","More employee time available for other work"]);
+  await expect(fin.locator(".outcome-list li")).toHaveText(["Increased revenue potential","Less wasted marketing spend","Lower cost per buyer","Lower employee costs","Less wasted employee costs"]);
   await expect(missed.locator(".muted-function")).toHaveCount(0);
-  await expect(missed.locator(".explanation")).toHaveCount(6);
-  await expect(missed.getByRole("checkbox", { name: "Wasted marketing spend" })).not.toBeChecked();
+  await expect(missed.locator(".explanation")).toHaveCount(0);
+  await expect(money).toBeChecked();
   await expect(slow.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
   await missed.getByRole("button", { name: "Collapse Missed calls" }).click();
   await missed.getByRole("button", { name: "Expand Missed calls" }).click();
@@ -46,11 +52,15 @@ test("all 28 problems, independent confirmation, expansion, and pending personal
   await expect(money).toBeChecked();
   await expect(missed.locator("details[open]")).toHaveCount(3);
   await missed.getByRole("button", { name: "Personalized" }).click();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
+  await expect(op.locator(".outcome-list li")).toHaveText(["Fewer lost leads"]);
+  await expect(fin.locator(".outcome-list li")).toHaveText(["Less wasted marketing spend"]);
   await buyer.uncheck();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
-  await expect(missed.locator(".explanation")).toHaveCount(0);
-  await expect(money).toBeChecked();
+  await expect(op.locator(".outcome-list li")).toHaveCount(0);
+  await expect(fin.locator(".outcome-list li")).toHaveText(["Less wasted marketing spend"]);
+  await money.uncheck();
+  await expect(fin.locator(".outcome-list li")).toHaveCount(0);
+  await expect(op.locator(".empty-note")).toHaveText("No related operational impact has been confirmed.");
+  await expect(fin.locator(".empty-note")).toHaveText("No related financial impact has been confirmed.");
   await missed.getByText("How the agent functions", { exact: true }).click();
   await expect(missed.locator("details[open]")).toHaveCount(2);
 });
@@ -175,17 +185,17 @@ test("existing problem titles and sample agent content are preserved", async ({ 
   await missed.getByRole("button", { name: /^Expand/ }).click();
   await expect(missed.getByRole("checkbox", { name: "Lost leads", exact: true })).toBeVisible();
   await missed.getByRole("button", { name: "All benefits" }).click();
-  await expect(missed.locator(".outcome-list").getByText("More urgent callers connected to employees", { exact: true })).toBeVisible();
+  await expect(missed.locator(".outcome-list").getByText("Fewer lost existing buyers", { exact: true })).toBeVisible();
   await missed.getByText("How the agent functions", { exact: true }).click();
   await expect(missed.locator(".function-list")).toContainText("The agent identifies when a caller needs to speak to a person. It transfers the call to the right staff member or department using the business\'s transfer rules, contact numbers and working hours.");
   const guardian = page.locator('[data-problem="problem-14"]');
   await guardian.getByRole("button", { name: /^Expand/ }).click();
   await guardian.getByRole("checkbox", { name: "Unused appointment slots" }).check();
-  await guardian.getByRole("checkbox", { name: "Wasted staffing costs" }).check();
-  await expect(guardian.locator(".outcome-list li")).toHaveCount(0);
+  await guardian.getByRole("checkbox", { name: "Wasted employee costs" }).check();
+  await expect(guardian.locator(".outcome-list li")).toHaveText(["Fewer unused appointment slots", "Less wasted employee costs"]);
   await guardian.getByRole("button", { name: "All benefits" }).click();
-  await expect(guardian.locator(".outcome-list").getByText("More buyers reminded before appointments", { exact: true })).toBeVisible();
-  await expect(guardian.locator(".outcome-list").getByText("Potentially less wasted employees' time", { exact: true })).toBeVisible();
+  await expect(guardian.locator(".outcome-list").getByText("More appointments attended", { exact: true })).toBeVisible();
+  await expect(guardian.locator(".outcome-list").getByText("Less wasted employee costs", { exact: true })).toBeVisible();
 });
 
 test("all approved negative impacts appear exactly in order, default unchecked, and remain independent", async ({ page }) => {
@@ -200,7 +210,7 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
     "financial": [
       "Lost potential revenue",
       "Wasted marketing spend",
-      "Higher cost per customer"
+      "Higher cost per buyer"
     ]
   },
   {
@@ -225,8 +235,8 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
   {
     "id": "problem-4",
     "operational": [
-      "Fewer customers served",
-      "Lost existing customers"
+      "Fewer buyers served",
+      "Lost existing buyers"
     ],
     "financial": [
       "Lost potential revenue"
@@ -240,7 +250,7 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
     "financial": [
       "Lost potential revenue",
       "Wasted marketing spend",
-      "Higher cost per customer"
+      "Higher cost per buyer"
     ]
   },
   {
@@ -251,7 +261,7 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
     "financial": [
       "Lost potential revenue",
       "Wasted marketing spend",
-      "Higher cost per customer"
+      "Higher cost per buyer"
     ]
   },
   {
@@ -261,7 +271,7 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
     ],
     "financial": [
       "Lost potential revenue",
-      "Higher cost per customer"
+      "Higher cost per buyer"
     ]
   },
   {
@@ -313,7 +323,7 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
     ],
     "financial": [
       "Lost potential revenue",
-      "Wasted staffing costs"
+      "Wasted employee costs"
     ]
   },
   {
@@ -324,58 +334,58 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
     ],
     "financial": [
       "Lost potential revenue",
-      "Wasted staffing costs"
+      "Wasted employee costs"
     ]
   },
   {
     "id": "problem-14",
     "operational": [
       "Unused appointment slots",
-      "Fewer customers served"
+      "Fewer buyers served"
     ],
     "financial": [
       "Lost potential revenue",
-      "Wasted staffing costs"
+      "Wasted employee costs"
     ]
   },
   {
     "id": "problem-15",
     "operational": [
       "Fewer appointments attended",
-      "Less staff time available for other work"
+      "Less employee time available for other work"
     ],
     "financial": [
       "Lost potential revenue",
-      "Higher staffing costs"
+      "Higher employee costs"
     ]
   },
   {
     "id": "problem-16",
     "operational": [
-      "Fewer customers served"
+      "Fewer buyers served"
     ],
     "financial": [
       "Lost potential revenue",
-      "Wasted staffing costs"
+      "Wasted employee costs"
     ]
   },
   {
     "id": "problem-17",
     "operational": [
-      "Less staff time available for other work",
+      "Less employee time available for other work",
       "Fewer tasks completed"
     ],
     "financial": [
-      "Higher staffing costs",
-      "Wasted staffing costs",
+      "Higher employee costs",
+      "Wasted employee costs",
       "Lost potential revenue"
     ]
   },
   {
     "id": "problem-18",
     "operational": [
-      "Fewer customers served",
-      "Lost existing customers"
+      "Fewer buyers served",
+      "Lost existing buyers"
     ],
     "financial": [
       "Lost potential revenue"
@@ -384,31 +394,31 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
   {
     "id": "problem-19",
     "operational": [
-      "Less staff time available for other work"
+      "Less employee time available for other work"
     ],
     "financial": [
-      "Wasted staffing costs",
-      "Higher staffing costs"
+      "Wasted employee costs",
+      "Higher employee costs"
     ]
   },
   {
     "id": "problem-20",
     "operational": [
-      "Less staff time available for other work",
+      "Less employee time available for other work",
       "Fewer tasks completed",
-      "Fewer customers served"
+      "Fewer buyers served"
     ],
     "financial": [
-      "Higher staffing costs",
-      "Wasted staffing costs",
+      "Higher employee costs",
+      "Wasted employee costs",
       "Lost potential revenue"
     ]
   },
   {
     "id": "problem-21",
     "operational": [
-      "Fewer customers served",
-      "Lost existing customers"
+      "Fewer buyers served",
+      "Lost existing buyers"
     ],
     "financial": [
       "Lost potential revenue"
@@ -437,12 +447,12 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
   {
     "id": "problem-24",
     "operational": [
-      "Fewer customer reviews",
-      "Fewer new customers"
+      "Fewer buyer reviews",
+      "Fewer new buyers"
     ],
     "financial": [
       "Lost potential revenue",
-      "Higher cost per customer"
+      "Higher cost per buyer"
     ]
   },
   {
@@ -474,11 +484,11 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
     "id": "problem-28",
     "operational": [
       "Fewer tasks completed",
-      "Fewer customers served",
+      "Fewer buyers served",
       "Lost leads"
     ],
     "financial": [
-      "Higher staffing costs",
+      "Higher employee costs",
       "Lost potential revenue"
     ]
   }
@@ -499,7 +509,20 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
         await expect(input).not.toBeChecked();
         await input.check();
         await expect(input).toBeChecked();
-        await expect(card.locator(".solution-card .outcome-list li")).toHaveCount(0);
+        const problem = problems.find(p => p.id === item.id)!;
+        const kind = i === 0 ? "operational" : "financial";
+        const impact = (i === 0 ? problem.operationalImpacts : problem.financialImpacts).find(x => x.label === label)!;
+        const outcomeId = negativeToPositive[kind][impact.id];
+        for (const rel of problem.solutions) {
+          const agent = agents[rel.solutionId];
+          const entry = card.locator('[data-solution="' + agent.id + '"]');
+          const supported = solutionOutcomeIds[agent.id][kind].includes(outcomeId);
+          const outcomeColumn = entry.locator(".solution-card > .two-columns > div").nth(i);
+          const otherColumn = entry.locator(".solution-card > .two-columns > div").nth(1-i);
+          if (supported) await expect(outcomeColumn.locator(".outcome-list li")).toHaveText([positiveOutcomes[outcomeId].title]);
+          else await expect(outcomeColumn.locator(".outcome-list li")).toHaveCount(0);
+          await expect(otherColumn.locator(".outcome-list li")).toHaveCount(0);
+        }
         await input.uncheck();
         await expect(input).not.toBeChecked();
       }
@@ -518,7 +541,7 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
   await missed.getByRole("button", { name: /^Expand/ }).click();
   await expect(missed.getByRole("checkbox", { name: "Lost leads", exact: true })).toBeChecked();
   await expect(missed.getByRole("checkbox", { name: "Lost potential revenue", exact: true })).toBeChecked();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
+  await expect(missed.locator(".outcome-list li")).toHaveText(["Fewer lost leads", "Increased revenue potential"]);
 });
 
 test("all approved problem-to-solution mappings, direct and conditional, and card counts", async ({ page }) => {
@@ -1170,7 +1193,9 @@ test("solution arrays render independently with no duplicates and support adding
   await inbound.getByRole("button", { name: "Personalized" }).click();
   await expect(speed.getByRole("button", { name: "All benefits" })).toHaveAttribute("aria-pressed", "true");
   await expect(revival.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
-  await expect(card.locator(".outcome-list li")).toHaveCount(0);
+  await expect(inbound.locator(".outcome-list li")).toHaveText(["More appointments booked"]);
+  await expect(revival.locator(".outcome-list li")).toHaveText(["More appointments booked"]);
+  await expect(speed.locator(".outcome-list li")).toHaveCount(10);
   await expect(card.getByRole("checkbox", { name: "Fewer appointments booked", exact: true })).toBeChecked();
   const other = page.locator('[data-problem="problem-1"]');
   await other.getByRole("button", { name: /^Expand/ }).click();
@@ -1224,6 +1249,144 @@ test("approved overview and shared function content is visible in each existing 
       await expect(overview).toBeVisible();
       await entry.getByRole("button", { name: "Personalized" }).click();
     }
+    await card.getByRole("button", { name: /^Collapse/ }).click();
+  }
+});
+
+test("complete outcome libraries show on every assigned card, irrespective of selection or problem", async ({ page }) => {
+  test.setTimeout(120000);
+  const expected = {
+  "inbound": {
+    "operational": [
+      "Fewer lost leads",
+      "Fewer lost qualified leads",
+      "More appointments booked",
+      "More buyers served",
+      "Fewer lost existing buyers",
+      "More employee time available for other work"
+    ],
+    "financial": [
+      "Increased revenue potential",
+      "Less wasted marketing spend",
+      "Lower cost per buyer",
+      "Lower employee costs",
+      "Less wasted employee costs"
+    ]
+  },
+  "speed": {
+    "operational": [
+      "Fewer lost leads",
+      "Fewer lost qualified leads",
+      "More appointments booked",
+      "More new buyers",
+      "More employee time available for other work"
+    ],
+    "financial": [
+      "Increased revenue potential",
+      "Less wasted marketing spend",
+      "Lower cost per buyer",
+      "Lower employee costs",
+      "Less wasted employee costs"
+    ]
+  },
+  "revival": {
+    "operational": [
+      "More old leads reactivated",
+      "Fewer lost leads",
+      "Fewer lost qualified leads",
+      "More appointments booked",
+      "More new buyers",
+      "More employee time available for other work"
+    ],
+    "financial": [
+      "Increased revenue potential",
+      "Less wasted marketing spend",
+      "Lower cost per buyer",
+      "Lower marketing costs",
+      "Lower employee costs",
+      "Less wasted employee costs"
+    ]
+  },
+  "guardian": {
+    "operational": [
+      "More appointments attended",
+      "Fewer unused appointment slots",
+      "More buyers served",
+      "More employee time available for other work"
+    ],
+    "financial": [
+      "Increased revenue potential",
+      "Less wasted employee costs",
+      "Lower employee costs"
+    ]
+  },
+  "support": {
+    "operational": [
+      "More buyers served",
+      "Fewer lost existing buyers",
+      "More employee time available for other work",
+      "More tasks completed"
+    ],
+    "financial": [
+      "Increased revenue potential",
+      "Lower employee costs",
+      "Less wasted employee costs"
+    ]
+  },
+  "payments": {
+    "operational": [
+      "Fewer unpaid invoices",
+      "More employee time available for other work"
+    ],
+    "financial": [
+      "Faster cash collection",
+      "Less money lost from unpaid invoices",
+      "Lower collection costs"
+    ]
+  },
+  "reviews": {
+    "operational": [
+      "More buyer reviews",
+      "More new buyers"
+    ],
+    "financial": [
+      "Increased revenue potential",
+      "Lower cost per buyer"
+    ]
+  },
+  "dashboard": {
+    "operational": [
+      "More complete business information"
+    ],
+    "financial": []
+  },
+  "crm": {
+    "operational": [
+      "More complete business information"
+    ],
+    "financial": []
+  }
+};
+  expect(Object.keys(positiveOutcomes)).toHaveLength(23);
+  await page.goto("/");
+  for (const problem of problems) {
+    const card = page.locator('[data-problem="' + problem.id + '"]');
+    await card.getByRole("button", { name: /^Expand/ }).click();
+    await expect(card.getByRole("checkbox").first()).not.toBeChecked();
+    for (const rel of problem.solutions) {
+      const entry = card.locator('[data-solution="' + rel.solutionId + '"]');
+      await entry.getByRole("button", { name: "All benefits" }).click();
+      for (const [i, kind] of (["operational","financial"] as const).entries()) {
+        const col = entry.locator(".solution-card > .two-columns > div").nth(i);
+        const titles = expected[rel.solutionId as keyof typeof expected][kind];
+        await expect(col.locator(".outcome-list li")).toHaveCount(titles.length);
+        expect(await col.locator(".outcome-list li span").allTextContents()).toEqual(titles);
+        if (!titles.length) await expect(col.locator(".empty-note")).toHaveText("No applicable " + kind + " outcomes have been provided.");
+      }
+      await entry.getByRole("button", { name: "Personalized" }).click();
+      await expect(entry.locator(".outcome-list li")).toHaveCount(0);
+    }
+    await expect(card.locator("input:checked")).toHaveCount(0);
     await card.getByRole("button", { name: /^Collapse/ }).click();
   }
 });

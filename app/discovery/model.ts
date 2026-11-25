@@ -1,4 +1,5 @@
 import type { Agent, ImpactKind, Problem } from "./data";
+import { negativeToPositive } from "./outcomes";
 
 // One entry per solution ID, preserving relationship order and supporting any array length.
 export function matchedSolutions(problem: Problem, library: Record<string, Agent>): Agent[] {
@@ -31,14 +32,12 @@ export function problemReducer(state: ProblemState, action: Action): ProblemStat
 
 export function visibleOutcomes(problem: Problem, agent: Agent, kind: ImpactKind, state: ProblemState) {
   const outcomes = kind === "operational" ? agent.operationalOutcomes : agent.financialOutcomes;
-  // Only outcomes associated with this problem are applicable, even if the agent is shared.
-  const links = problem.links.filter(link => link.kind === kind && link.agentId === agent.id);
-  // Existing sample benefits can still be viewed in All benefits, but must never be
-  // personalized from newly approved impacts until an explicit approved link exists.
-  const preview = state.mode === "all" ? (problem.previewOutcomes ?? []).filter(item => item.kind === kind && item.agentId === agent.id) : [];
-  return outcomes.filter(outcome => links.some(link => link.outcomeId === outcome.id &&
-    (state.mode === "all" || state.selected[kind].includes(link.impactId))) ||
-    preview.some(item => item.outcomeId === outcome.id));
+  // All benefits is the complete solution library, regardless of problem or selections.
+  if (state.mode === "all") return outcomes;
+  // Personalized uses only this problem's checked impacts of the matching kind.
+  const available = new Set((kind === "operational" ? problem.operationalImpacts : problem.financialImpacts).map(impact => impact.id));
+  const supported = new Set(state.selected[kind].filter(id => available.has(id)).map(id => negativeToPositive[kind][id]));
+  return outcomes.filter(outcome => supported.has(outcome.id));
 }
 
 export function relevantFunctions(problem: Problem, agent: Agent, state: ProblemState) {
