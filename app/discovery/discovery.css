@@ -34,7 +34,7 @@ body { background: #181818; color: #f4f4f4; }
 .mode-control button { font: inherit; font-size: 14px; line-height: 1.3; border: none; border-radius: 999px; padding: 9px 16px; background: transparent; color: #aaa7a7; cursor: pointer; }
 .mode-control button[aria-pressed="true"] { color: #f4f4f4; background: #282828; }
 .solution-card { border: 1px solid #363636; border-radius: 13px; padding: 13px 12px; }
-.solution-card + .solution-card { margin-top: 12px; }
+.solution-entry + .solution-entry { margin-top: 12px; }
 .agent-header { display: flex; gap: 9px; align-items: center; }
 .agent-icon { display: grid; place-items: center; flex-shrink: 0; width: 45px; height: 45px; border-radius: 11px; background: #272c35; color: #8499ca; }
 .agent-icon svg { width: 24px; height: 24px; }

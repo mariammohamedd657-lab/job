@@ -3,10 +3,29 @@ export type ImpactKind = "operational" | "financial";
 export type Impact = { id: string; label: string };
 export type Outcome = { id: string; title: string; description: string; functionIds: string[] };
 export type AgentIcon = "inbound" | "speed" | "revival" | "guardian" | "generic";
-export type Agent = { id: string; name: string; icon: AgentIcon; overview: string; temporary: boolean; functions: { id: string; text: string }[]; operationalOutcomes: Outcome[]; financialOutcomes: Outcome[] };
+export type SolutionKind = "voice-agent" | "shared-feature";
+export type Agent = { id: string; name: string; kind: SolutionKind; icon: AgentIcon; overview: string; temporary: boolean; functions: { id: string; text: string }[]; operationalOutcomes: Outcome[]; financialOutcomes: Outcome[] };
 export type Link = { kind: ImpactKind; impactId: string; agentId: string; outcomeId: string };
 export type PreviewOutcome = Pick<Link, "kind" | "agentId" | "outcomeId">;
-export type Problem = { id: string; name: string; operationalImpacts: Impact[]; financialImpacts: Impact[]; agentIds: string[]; links: Link[]; previewOutcomes?: PreviewOutcome[] };
+export type ProblemSolutionRelationship = {
+  problemId: string;
+  solutionId: string;
+  type: "direct" | "conditional";
+  condition: string;
+  negativeOperationalImpactIds: string[];
+  negativeFinancialImpactIds: string[];
+  positiveOperationalOutcomeIds: string[];
+  positiveFinancialOutcomeIds: string[];
+  functionIds: string[];
+  operationalOutcomeExplanations: { outcomeId: string; description: string }[];
+  financialOutcomeExplanations: { outcomeId: string; description: string }[];
+};
+export type Problem = { id: string; name: string; operationalImpacts: Impact[]; financialImpacts: Impact[]; solutions: ProblemSolutionRelationship[]; links: Link[]; previewOutcomes?: PreviewOutcome[] };
+
+// The relationship conditions are internal data only. Detailed mappings remain pending.
+function relationship(problemId: string, solutionId: string, type: ProblemSolutionRelationship["type"], condition: string): ProblemSolutionRelationship {
+  return { problemId, solutionId, type, condition, negativeOperationalImpactIds: [], negativeFinancialImpactIds: [], positiveOperationalOutcomeIds: [], positiveFinancialOutcomeIds: [], functionIds: [], operationalOutcomeExplanations: [], financialOutcomeExplanations: [] };
+}
 
 // Approved unified negative impact libraries. Shared IDs do not share checkbox state.
 export const negativeOperationalImpacts = {
@@ -45,7 +64,9 @@ export const problems: Problem[] = [
     name: "Missed calls",
     operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"], negativeFinancialImpacts["higher-cost-per-customer"]],
-    agentIds: ["inbound"],
+    solutions: [
+      relationship("problem-1", "inbound", "direct", "Direct match."),
+    ],
     links: [],
     previewOutcomes: [{"kind":"operational","agentId":"inbound","outcomeId":"operational-1"},{"kind":"operational","agentId":"inbound","outcomeId":"operational-2"},{"kind":"operational","agentId":"inbound","outcomeId":"operational-3"},{"kind":"financial","agentId":"inbound","outcomeId":"financial-1"},{"kind":"financial","agentId":"inbound","outcomeId":"financial-2"},{"kind":"financial","agentId":"inbound","outcomeId":"financial-3"}],
   },
@@ -54,7 +75,9 @@ export const problems: Problem[] = [
     name: "Calls outside working hours",
     operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-2", "inbound", "direct", "Direct match for unanswered incoming calls outside working hours."),
+    ],
     links: [],
   },
   {
@@ -62,7 +85,11 @@ export const problems: Problem[] = [
     name: "Missed bookings during calls",
     operationalImpacts: [negativeOperationalImpacts["fewer-appointments-booked"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-3", "inbound", "conditional", "Inbound applies to incoming calls."),
+      relationship("problem-3", "speed", "conditional", "Speed-to-Lead applies to calls to new leads."),
+      relationship("problem-3", "revival", "conditional", "Lead Revival applies to calls to old leads."),
+    ],
     links: [],
   },
   {
@@ -70,7 +97,9 @@ export const problems: Problem[] = [
     name: "Urgent calls not reaching employees",
     operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-existing-customers"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-4", "inbound", "conditional", "Routes urgent incoming calls to staff according to configured routing rules."),
+    ],
     links: [],
   },
   {
@@ -78,7 +107,9 @@ export const problems: Problem[] = [
     name: "Slow response to new leads",
     operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"], negativeFinancialImpacts["higher-cost-per-customer"]],
-    agentIds: ["speed"],
+    solutions: [
+      relationship("problem-5", "speed", "direct", "Direct match."),
+    ],
     links: [],
     previewOutcomes: [{"kind":"operational","agentId":"speed","outcomeId":"operational-1"},{"kind":"operational","agentId":"speed","outcomeId":"operational-2"},{"kind":"operational","agentId":"speed","outcomeId":"operational-3"},{"kind":"financial","agentId":"speed","outcomeId":"financial-1"},{"kind":"financial","agentId":"speed","outcomeId":"financial-2"}],
   },
@@ -87,7 +118,9 @@ export const problems: Problem[] = [
     name: "New leads never called",
     operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"], negativeFinancialImpacts["higher-cost-per-customer"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-6", "speed", "direct", "Direct match."),
+    ],
     links: [],
   },
   {
@@ -95,7 +128,10 @@ export const problems: Problem[] = [
     name: "Late lead qualifications",
     operationalImpacts: [negativeOperationalImpacts["lost-qualified-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-cost-per-customer"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-7", "speed", "conditional", "Speed-to-Lead applies to new outbound leads."),
+      relationship("problem-7", "inbound", "conditional", "Inbound applies to leads calling the business."),
+    ],
     links: [],
   },
   {
@@ -103,7 +139,10 @@ export const problems: Problem[] = [
     name: "Warm leads not contacted",
     operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-8", "speed", "conditional", "Speed-to-Lead applies to new leads within the configured follow-up process."),
+      relationship("problem-8", "revival", "conditional", "Lead Revival applies to old leads."),
+    ],
     links: [],
   },
   {
@@ -111,7 +150,9 @@ export const problems: Problem[] = [
     name: "Old leads not called",
     operationalImpacts: [negativeOperationalImpacts["fewer-old-leads-reactivated"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-marketing-costs"]],
-    agentIds: ["revival"],
+    solutions: [
+      relationship("problem-9", "revival", "direct", "Direct match."),
+    ],
     links: [],
     previewOutcomes: [{"kind":"operational","agentId":"revival","outcomeId":"operational-1"},{"kind":"operational","agentId":"revival","outcomeId":"operational-2"},{"kind":"operational","agentId":"revival","outcomeId":"operational-3"},{"kind":"financial","agentId":"revival","outcomeId":"financial-1"},{"kind":"financial","agentId":"revival","outcomeId":"financial-2"}],
   },
@@ -120,7 +161,9 @@ export const problems: Problem[] = [
     name: "Inconsistent follow-up with old leads",
     operationalImpacts: [negativeOperationalImpacts["fewer-old-leads-reactivated"], negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-marketing-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-10", "revival", "conditional", "Follow-up must be configured according to the business's requirements."),
+    ],
     links: [],
   },
   {
@@ -128,7 +171,9 @@ export const problems: Problem[] = [
     name: "Warm old leads not contacted again",
     operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-marketing-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-11", "revival", "conditional", "Further contact must be included in the configured follow-up process."),
+    ],
     links: [],
   },
   {
@@ -136,7 +181,9 @@ export const problems: Problem[] = [
     name: "Missed appointment reminders",
     operationalImpacts: [negativeOperationalImpacts["fewer-appointments-attended"], negativeOperationalImpacts["unused-appointment-slots"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-12", "guardian", "direct", "Direct match."),
+    ],
     links: [],
   },
   {
@@ -144,7 +191,9 @@ export const problems: Problem[] = [
     name: "Unconfirmed appointments",
     operationalImpacts: [negativeOperationalImpacts["fewer-appointments-attended"], negativeOperationalImpacts["unused-appointment-slots"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-13", "guardian", "direct", "Direct match."),
+    ],
     links: [],
   },
   {
@@ -152,7 +201,9 @@ export const problems: Problem[] = [
     name: "Appointment no-shows",
     operationalImpacts: [negativeOperationalImpacts["unused-appointment-slots"], negativeOperationalImpacts["fewer-customers-served"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
-    agentIds: ["guardian"],
+    solutions: [
+      relationship("problem-14", "guardian", "direct", "Addresses no-shows through reminders, confirmations and rescheduling."),
+    ],
     links: [],
     previewOutcomes: [{"kind":"operational","agentId":"guardian","outcomeId":"operational-1"},{"kind":"operational","agentId":"guardian","outcomeId":"operational-2"},{"kind":"operational","agentId":"guardian","outcomeId":"operational-3"},{"kind":"financial","agentId":"guardian","outcomeId":"financial-1"},{"kind":"financial","agentId":"guardian","outcomeId":"financial-2"}],
   },
@@ -161,7 +212,9 @@ export const problems: Problem[] = [
     name: "Time-consuming appointment rescheduling",
     operationalImpacts: [negativeOperationalImpacts["fewer-appointments-attended"], negativeOperationalImpacts["less-staff-time-available-for-other-work"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-staffing-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-15", "guardian", "direct", "Direct match."),
+    ],
     links: [],
   },
   {
@@ -169,7 +222,9 @@ export const problems: Problem[] = [
     name: "Empty slots after cancellations",
     operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-16", "guardian", "conditional", "Conditional match. Earlier cancellations and rescheduling may give staff more time to fill available slots. Do not assume that the agent automatically finds replacement customers."),
+    ],
     links: [],
   },
   {
@@ -177,7 +232,10 @@ export const problems: Problem[] = [
     name: "Many routine questions",
     operationalImpacts: [negativeOperationalImpacts["less-staff-time-available-for-other-work"], negativeOperationalImpacts["fewer-tasks-completed"]],
     financialImpacts: [negativeFinancialImpacts["higher-staffing-costs"], negativeFinancialImpacts["wasted-staffing-costs"], negativeFinancialImpacts["lost-potential-revenue"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-17", "support", "conditional", "Customer Support handles routine customer questions."),
+      relationship("problem-17", "inbound", "conditional", "Inbound handles routine questions received during incoming calls."),
+    ],
     links: [],
   },
   {
@@ -185,7 +243,10 @@ export const problems: Problem[] = [
     name: "Slow answers to simple questions",
     operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-existing-customers"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-18", "support", "conditional", "Customer Support handles routine customer questions."),
+      relationship("problem-18", "inbound", "conditional", "Inbound handles approved questions during incoming calls."),
+    ],
     links: [],
   },
   {
@@ -193,7 +254,10 @@ export const problems: Problem[] = [
     name: "Employees answering the same questions",
     operationalImpacts: [negativeOperationalImpacts["less-staff-time-available-for-other-work"]],
     financialImpacts: [negativeFinancialImpacts["wasted-staffing-costs"], negativeFinancialImpacts["higher-staffing-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-19", "support", "conditional", "Depends on where and how staff receive those questions. Answering routine customer questions and handling supported requests."),
+      relationship("problem-19", "inbound", "conditional", "Depends on where and how staff receive those questions. Answering incoming calls."),
+    ],
     links: [],
   },
   {
@@ -201,7 +265,16 @@ export const problems: Problem[] = [
     name: "Too much manual work",
     operationalImpacts: [negativeOperationalImpacts["less-staff-time-available-for-other-work"], negativeOperationalImpacts["fewer-tasks-completed"], negativeOperationalImpacts["fewer-customers-served"]],
     financialImpacts: [negativeFinancialImpacts["higher-staffing-costs"], negativeFinancialImpacts["wasted-staffing-costs"], negativeFinancialImpacts["lost-potential-revenue"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-20", "inbound", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Answering incoming calls."),
+      relationship("problem-20", "speed", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Calling and qualifying new leads."),
+      relationship("problem-20", "revival", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Following up with old leads."),
+      relationship("problem-20", "guardian", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Confirming and rescheduling appointments."),
+      relationship("problem-20", "support", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Answering routine customer questions and handling supported requests."),
+      relationship("problem-20", "payments", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Following up on outstanding payments."),
+      relationship("problem-20", "reviews", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Requesting customer reviews."),
+      relationship("problem-20", "crm", "conditional", "Each solution applies only if its specific tasks form part of the manual workload. Manually entering lead information."),
+    ],
     links: [],
   },
   {
@@ -209,7 +282,9 @@ export const problems: Problem[] = [
     name: "Basic buyer requests not handled",
     operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-existing-customers"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-21", "support", "conditional", "Applies to supported customer requests."),
+    ],
     links: [],
   },
   {
@@ -217,7 +292,9 @@ export const problems: Problem[] = [
     name: "Missed payment reminders",
     operationalImpacts: [negativeOperationalImpacts["more-unpaid-invoices"]],
     financialImpacts: [negativeFinancialImpacts["delayed-cash-collection"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-22", "payments", "direct", "Direct match."),
+    ],
     links: [],
   },
   {
@@ -225,7 +302,9 @@ export const problems: Problem[] = [
     name: "Invoices not followed up regularly",
     operationalImpacts: [negativeOperationalImpacts["more-unpaid-invoices"]],
     financialImpacts: [negativeFinancialImpacts["delayed-cash-collection"], negativeFinancialImpacts["money-lost-from-unpaid-invoices"], negativeFinancialImpacts["higher-collection-costs"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-23", "payments", "direct", "Direct match."),
+    ],
     links: [],
   },
   {
@@ -233,7 +312,9 @@ export const problems: Problem[] = [
     name: "Buyers not asked for reviews",
     operationalImpacts: [negativeOperationalImpacts["fewer-customer-reviews"], negativeOperationalImpacts["fewer-new-customers"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-cost-per-customer"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-24", "reviews", "direct", "Direct match."),
+    ],
     links: [],
   },
   {
@@ -241,7 +322,9 @@ export const problems: Problem[] = [
     name: "Missing call recordings and outcomes",
     operationalImpacts: [negativeOperationalImpacts["missing-business-information"]],
     financialImpacts: [],
-    agentIds: [],
+    solutions: [
+      relationship("problem-25", "dashboard", "direct", "Provides access to call activity, recordings, transcripts and outcomes."),
+    ],
     links: [],
   },
   {
@@ -249,7 +332,9 @@ export const problems: Problem[] = [
     name: "Lead details not updated in CRM",
     operationalImpacts: [negativeOperationalImpacts["missing-business-information"], negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-26", "crm", "direct", "Records collected information and call outcomes through configured CRM connections."),
+    ],
     links: [],
   },
   {
@@ -257,7 +342,9 @@ export const problems: Problem[] = [
     name: "Hard to see what the AI agent is doing",
     operationalImpacts: [negativeOperationalImpacts["missing-business-information"]],
     financialImpacts: [],
-    agentIds: [],
+    solutions: [
+      relationship("problem-27", "dashboard", "direct", "Displays agent activity, call activity, booking outcomes, failed requests and call quality scores."),
+    ],
     links: [],
   },
   {
@@ -265,7 +352,15 @@ export const problems: Problem[] = [
     name: "Employees overloaded",
     operationalImpacts: [negativeOperationalImpacts["fewer-tasks-completed"], negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-leads"]],
     financialImpacts: [negativeFinancialImpacts["higher-staffing-costs"], negativeFinancialImpacts["lost-potential-revenue"]],
-    agentIds: [],
+    solutions: [
+      relationship("problem-28", "inbound", "conditional", "Each solution applies only if its specific tasks contribute to the staff's workload. Answering incoming calls."),
+      relationship("problem-28", "speed", "conditional", "Each solution applies only if its specific tasks contribute to the staff's workload. Calling and qualifying new leads."),
+      relationship("problem-28", "revival", "conditional", "Each solution applies only if its specific tasks contribute to the staff's workload. Following up with old leads."),
+      relationship("problem-28", "guardian", "conditional", "Each solution applies only if its specific tasks contribute to the staff's workload. Confirming and rescheduling appointments."),
+      relationship("problem-28", "support", "conditional", "Each solution applies only if its specific tasks contribute to the staff's workload. Answering routine customer questions and handling supported requests."),
+      relationship("problem-28", "payments", "conditional", "Each solution applies only if its specific tasks contribute to the staff's workload. Following up on outstanding payments."),
+      relationship("problem-28", "reviews", "conditional", "Each solution applies only if its specific tasks contribute to the staff's workload. Requesting customer reviews."),
+    ],
     links: [],
   },
 ];
@@ -274,6 +369,7 @@ export const agents: Record<string, Agent> = {
   "inbound": {
     "id": "inbound",
     "name": "Inbound Agent",
+    "kind": "voice-agent",
     "icon": "inbound",
     "overview": "24/7 incoming call handling, qualification and booking.",
     "temporary": true,
@@ -359,6 +455,7 @@ export const agents: Record<string, Agent> = {
   "speed": {
     "id": "speed",
     "name": "Speed-to-Lead Agent",
+    "kind": "voice-agent",
     "icon": "speed",
     "overview": "Prompt contact, qualification and booking for new leads.",
     "temporary": true,
@@ -429,6 +526,7 @@ export const agents: Record<string, Agent> = {
   "revival": {
     "id": "revival",
     "name": "Lead Revival Agent",
+    "kind": "voice-agent",
     "icon": "revival",
     "overview": "Reconnecting with old leads, qualifying interest and booking appointments.",
     "temporary": true,
@@ -499,6 +597,7 @@ export const agents: Record<string, Agent> = {
   "guardian": {
     "id": "guardian",
     "name": "Appointment Guardian Agent",
+    "kind": "voice-agent",
     "icon": "guardian",
     "overview": "Appointment reminders, confirmation and rescheduling.",
     "temporary": true,
@@ -565,6 +664,61 @@ export const agents: Record<string, Agent> = {
         ]
       }
     ]
+  },
+  "support": {
+    "id": "support",
+    "name": "Customer Support Agent",
+    "kind": "voice-agent",
+    "icon": "generic",
+    "overview": "",
+    "temporary": false,
+    "functions": [],
+    "operationalOutcomes": [],
+    "financialOutcomes": []
+  },
+  "payments": {
+    "id": "payments",
+    "name": "Payments & Collections Agent",
+    "kind": "voice-agent",
+    "icon": "generic",
+    "overview": "",
+    "temporary": false,
+    "functions": [],
+    "operationalOutcomes": [],
+    "financialOutcomes": []
+  },
+  "reviews": {
+    "id": "reviews",
+    "name": "Review Request Agent",
+    "kind": "voice-agent",
+    "icon": "generic",
+    "overview": "",
+    "temporary": false,
+    "functions": [],
+    "operationalOutcomes": [],
+    "financialOutcomes": []
+  },
+  "dashboard": {
+    "id": "dashboard",
+    "name": "Smart Dashboard",
+    "kind": "shared-feature",
+    "icon": "generic",
+    "overview": "",
+    "temporary": false,
+    "functions": [],
+    "operationalOutcomes": [],
+    "financialOutcomes": []
+  },
+  "crm": {
+    "id": "crm",
+    "name": "CRM Integration",
+    "kind": "shared-feature",
+    "icon": "generic",
+    "overview": "",
+    "temporary": false,
+    "functions": [],
+    "operationalOutcomes": [],
+    "financialOutcomes": []
   }
 };
 

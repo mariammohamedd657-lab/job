@@ -1,8 +1,8 @@
 "use client";
 
-import { useReducer, type ReactNode } from "react";
+import { useReducer, useState, type ReactNode } from "react";
 import { agents, problems, problemCategories, type Agent, type AgentIcon, type ImpactKind, type Outcome, type Problem } from "./data";
-import { initialState, problemReducer, relevantFunctions, visibleOutcomes, type ProblemState } from "./model";
+import { initialState, matchedSolutions, problemReducer, relevantFunctions, visibleOutcomes, type Mode, type ProblemState } from "./model";
 import "./discovery.css";
 
 function Chevron({ open = false }: { open?: boolean }) {
@@ -34,13 +34,20 @@ function OutcomeColumn({ title, outcomes, empty, tone }: { title: string; outcom
 function Explanations({ outcomes, empty }: { outcomes: Outcome[]; empty: string }) {
   return outcomes.length ? <div className="explanations">{outcomes.map(outcome => <div className="explanation" key={outcome.id}><h5>{outcome.title}</h5><p>{outcome.description}</p></div>)}</div> : <Empty>{empty}</Empty>;
 }
-const pendingAgent: Agent = { id: "pending", name: "Agent not yet provided", icon: "generic", overview: "Solution information has not been provided yet.", temporary: false, functions: [], operationalOutcomes: [], financialOutcomes: [] };
-function SolutionCard({ problem, agent, state, pending = false }: { problem: Problem; agent: Agent; state: ProblemState; pending?: boolean }) {
+const pendingAgent: Agent = { id: "pending", name: "Agent not yet provided", kind: "voice-agent", icon: "generic", overview: "Solution information has not been provided yet.", temporary: false, functions: [], operationalOutcomes: [], financialOutcomes: [] };
+function SolutionCard({ problem, agent, state: problemState, pending = false }: { problem: Problem; agent: Agent; state: ProblemState; pending?: boolean }) {
+  const [mode, setMode] = useState<Mode>("personalized");
+  const state = { ...problemState, mode };
   const operational = visibleOutcomes(problem, agent, "operational", state);
   const financial = visibleOutcomes(problem, agent, "financial", state);
   const relevant = relevantFunctions(problem, agent, state);
   const message = (kind: ImpactKind) => pending ? "Content not yet provided." : state.mode === "personalized" ? `No related ${kind} impact has been confirmed.` : `No applicable ${kind} outcomes have been provided.`;
-  return <div className="solution-card">
+  return <div className="solution-entry" data-solution={agent.id}>
+    <div className="mode-control" role="group" aria-label="Benefit viewing mode">
+      <button type="button" aria-pressed={mode === "personalized"} onClick={() => setMode("personalized")}>Personalized</button>
+      <button type="button" aria-pressed={mode === "all"} onClick={() => setMode("all")}>All benefits</button>
+    </div>
+    <div className="solution-card">
     <div className="agent-header"><Icon icon={agent.icon}/><h3>{agent.name}</h3></div>
     <hr/>
     <div className="two-columns">
@@ -55,11 +62,12 @@ function SolutionCard({ problem, agent, state, pending = false }: { problem: Pro
       <Description tone="operational" title="How it produces operational outcomes"><Explanations outcomes={operational} empty={message("operational")}/></Description>
       <Description tone="financial" title="How it produces financial outcomes"><Explanations outcomes={financial} empty={message("financial")}/></Description>
     </div>
+    </div>
   </div>;
 }
 export function ProblemCard({ problem }: { problem: Problem }) {
   const [state, dispatch] = useReducer(problemReducer, initialState);
-  const matching = problem.agentIds.map(id => agents[id]).filter(Boolean);
+  const matching = matchedSolutions(problem, agents);
   return <section className="problem-card" data-problem={problem.id}>
     <div className="problem-header">
       <CircleInput className="problem-confirm" checked={state.confirmed} onChange={() => dispatch({type:"confirm"})} label={problem.name}/>
@@ -77,10 +85,6 @@ export function ProblemCard({ problem }: { problem: Problem }) {
       </div>
       <hr/>
       <h2 className="matched-heading">Solution</h2>
-      <div className="mode-control" role="group" aria-label="Benefit viewing mode">
-        <button type="button" aria-pressed={state.mode === "personalized"} onClick={() => dispatch({type:"mode",mode:"personalized"})}>Personalized</button>
-        <button type="button" aria-pressed={state.mode === "all"} onClick={() => dispatch({type:"mode",mode:"all"})}>All benefits</button>
-      </div>
       {matching.length ? matching.map(agent => <SolutionCard key={agent.id} agent={agent} problem={problem} state={state}/>) : <SolutionCard agent={pendingAgent} problem={problem} state={state} pending/>}
     </div>
   </section>;

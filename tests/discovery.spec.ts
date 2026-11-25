@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { agents, problems } from "../app/discovery/data";
+import { matchedSolutions } from "../app/discovery/model";
 
 test("all 28 problems, independent confirmation, expansion, and pending personalized mappings", async ({ page }) => {
   await page.goto("/");
@@ -54,7 +56,7 @@ test("all 28 problems, independent confirmation, expansion, and pending personal
 
 test("remaining example agents and unpopulated problem use the same expandable interface", async ({ page }) => {
   await page.goto("/");
-  for (const [id, agent] of [["problem-9", "Lead Revival Agent"], ["problem-14", "Appointment Guardian Agent"], ["problem-2", "Agent not yet provided"]]) {
+  for (const [id, agent] of [["problem-9", "Lead Revival Agent"], ["problem-14", "Appointment Guardian Agent"], ["problem-2", "Inbound Agent"]]) {
     const card = page.locator(`[data-problem="${id}"]`);
     await card.getByRole("button", { name: /^Expand/ }).click();
     await expect(card.getByRole("heading", { name: agent })).toBeVisible();
@@ -79,10 +81,12 @@ test("requested pastel headings and compact agent headers across all problems", 
     await expect(card.locator(".impact-tone-financial")).toHaveCSS("color", "rgb(174, 203, 244)");
     await expect(card.locator(".impact-tone-financial")).toHaveCSS("background-color", "rgba(174, 203, 244, 0.08)");
     await expect(card.getByRole("heading", { name: "Solution", exact: true })).toHaveCSS("color", "rgb(183, 223, 190)");
-    await expect(card.locator(".agent-header h3")).toHaveCSS("color", "rgb(183, 223, 190)");
-    await expect(card.locator(".agent-header")).toHaveCSS("align-items", "center");
-    await expect(card.locator(".agent-header p")).toHaveCount(0);
-    await expect(card.locator(".agent-header .agent-icon")).toHaveCount(1);
+    for (const header of await card.locator(".agent-header").all()) {
+      await expect(header.locator("h3")).toHaveCSS("color", "rgb(183, 223, 190)");
+      await expect(header).toHaveCSS("align-items", "center");
+      await expect(header.locator("p")).toHaveCount(0);
+      await expect(header.locator(".agent-icon")).toHaveCount(1);
+    }
     for (const heading of await card.locator(".outcome-tone-operational").all()) {
       await expect(heading).toHaveCSS("color", "rgb(245, 230, 163)");
       await expect(heading).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
@@ -514,4 +518,660 @@ test("all approved negative impacts appear exactly in order, default unchecked, 
   await expect(missed.getByRole("checkbox", { name: "Lost leads", exact: true })).toBeChecked();
   await expect(missed.getByRole("checkbox", { name: "Lost potential revenue", exact: true })).toBeChecked();
   await expect(missed.locator(".outcome-list li")).toHaveCount(0);
+});
+
+test("all approved problem-to-solution mappings, direct and conditional, and card counts", async ({ page }) => {
+  test.setTimeout(120000);
+  const expected = [
+  {
+    "id": "problem-1",
+    "ids": [
+      "inbound"
+    ],
+    "names": [
+      "Inbound Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "inbound",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-2",
+    "ids": [
+      "inbound"
+    ],
+    "names": [
+      "Inbound Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "inbound",
+        "type": "direct",
+        "condition": "Direct match for unanswered incoming calls outside working hours."
+      }
+    ]
+  },
+  {
+    "id": "problem-3",
+    "ids": [
+      "inbound",
+      "speed",
+      "revival"
+    ],
+    "names": [
+      "Inbound Agent",
+      "Speed-to-Lead Agent",
+      "Lead Revival Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Inbound applies to incoming calls."
+      },
+      {
+        "solutionId": "speed",
+        "type": "conditional",
+        "condition": "Speed-to-Lead applies to calls to new leads."
+      },
+      {
+        "solutionId": "revival",
+        "type": "conditional",
+        "condition": "Lead Revival applies to calls to old leads."
+      }
+    ]
+  },
+  {
+    "id": "problem-4",
+    "ids": [
+      "inbound"
+    ],
+    "names": [
+      "Inbound Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Routes urgent incoming calls to staff according to configured routing rules."
+      }
+    ]
+  },
+  {
+    "id": "problem-5",
+    "ids": [
+      "speed"
+    ],
+    "names": [
+      "Speed-to-Lead Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "speed",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-6",
+    "ids": [
+      "speed"
+    ],
+    "names": [
+      "Speed-to-Lead Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "speed",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-7",
+    "ids": [
+      "speed",
+      "inbound"
+    ],
+    "names": [
+      "Speed-to-Lead Agent",
+      "Inbound Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "speed",
+        "type": "conditional",
+        "condition": "Speed-to-Lead applies to new outbound leads."
+      },
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Inbound applies to leads calling the business."
+      }
+    ]
+  },
+  {
+    "id": "problem-8",
+    "ids": [
+      "speed",
+      "revival"
+    ],
+    "names": [
+      "Speed-to-Lead Agent",
+      "Lead Revival Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "speed",
+        "type": "conditional",
+        "condition": "Speed-to-Lead applies to new leads within the configured follow-up process."
+      },
+      {
+        "solutionId": "revival",
+        "type": "conditional",
+        "condition": "Lead Revival applies to old leads."
+      }
+    ]
+  },
+  {
+    "id": "problem-9",
+    "ids": [
+      "revival"
+    ],
+    "names": [
+      "Lead Revival Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "revival",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-10",
+    "ids": [
+      "revival"
+    ],
+    "names": [
+      "Lead Revival Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "revival",
+        "type": "conditional",
+        "condition": "Follow-up must be configured according to the business's requirements."
+      }
+    ]
+  },
+  {
+    "id": "problem-11",
+    "ids": [
+      "revival"
+    ],
+    "names": [
+      "Lead Revival Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "revival",
+        "type": "conditional",
+        "condition": "Further contact must be included in the configured follow-up process."
+      }
+    ]
+  },
+  {
+    "id": "problem-12",
+    "ids": [
+      "guardian"
+    ],
+    "names": [
+      "Appointment Guardian Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "guardian",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-13",
+    "ids": [
+      "guardian"
+    ],
+    "names": [
+      "Appointment Guardian Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "guardian",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-14",
+    "ids": [
+      "guardian"
+    ],
+    "names": [
+      "Appointment Guardian Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "guardian",
+        "type": "direct",
+        "condition": "Addresses no-shows through reminders, confirmations and rescheduling."
+      }
+    ]
+  },
+  {
+    "id": "problem-15",
+    "ids": [
+      "guardian"
+    ],
+    "names": [
+      "Appointment Guardian Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "guardian",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-16",
+    "ids": [
+      "guardian"
+    ],
+    "names": [
+      "Appointment Guardian Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "guardian",
+        "type": "conditional",
+        "condition": "Conditional match. Earlier cancellations and rescheduling may give staff more time to fill available slots. Do not assume that the agent automatically finds replacement customers."
+      }
+    ]
+  },
+  {
+    "id": "problem-17",
+    "ids": [
+      "support",
+      "inbound"
+    ],
+    "names": [
+      "Customer Support Agent",
+      "Inbound Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "support",
+        "type": "conditional",
+        "condition": "Customer Support handles routine customer questions."
+      },
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Inbound handles routine questions received during incoming calls."
+      }
+    ]
+  },
+  {
+    "id": "problem-18",
+    "ids": [
+      "support",
+      "inbound"
+    ],
+    "names": [
+      "Customer Support Agent",
+      "Inbound Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "support",
+        "type": "conditional",
+        "condition": "Customer Support handles routine customer questions."
+      },
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Inbound handles approved questions during incoming calls."
+      }
+    ]
+  },
+  {
+    "id": "problem-19",
+    "ids": [
+      "support",
+      "inbound"
+    ],
+    "names": [
+      "Customer Support Agent",
+      "Inbound Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "support",
+        "type": "conditional",
+        "condition": "Depends on where and how staff receive those questions. Answering routine customer questions and handling supported requests."
+      },
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Depends on where and how staff receive those questions. Answering incoming calls."
+      }
+    ]
+  },
+  {
+    "id": "problem-20",
+    "ids": [
+      "inbound",
+      "speed",
+      "revival",
+      "guardian",
+      "support",
+      "payments",
+      "reviews",
+      "crm"
+    ],
+    "names": [
+      "Inbound Agent",
+      "Speed-to-Lead Agent",
+      "Lead Revival Agent",
+      "Appointment Guardian Agent",
+      "Customer Support Agent",
+      "Payments & Collections Agent",
+      "Review Request Agent",
+      "CRM Integration"
+    ],
+    "conditions": [
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Answering incoming calls."
+      },
+      {
+        "solutionId": "speed",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Calling and qualifying new leads."
+      },
+      {
+        "solutionId": "revival",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Following up with old leads."
+      },
+      {
+        "solutionId": "guardian",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Confirming and rescheduling appointments."
+      },
+      {
+        "solutionId": "support",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Answering routine customer questions and handling supported requests."
+      },
+      {
+        "solutionId": "payments",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Following up on outstanding payments."
+      },
+      {
+        "solutionId": "reviews",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Requesting customer reviews."
+      },
+      {
+        "solutionId": "crm",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks form part of the manual workload. Manually entering lead information."
+      }
+    ]
+  },
+  {
+    "id": "problem-21",
+    "ids": [
+      "support"
+    ],
+    "names": [
+      "Customer Support Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "support",
+        "type": "conditional",
+        "condition": "Applies to supported customer requests."
+      }
+    ]
+  },
+  {
+    "id": "problem-22",
+    "ids": [
+      "payments"
+    ],
+    "names": [
+      "Payments & Collections Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "payments",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-23",
+    "ids": [
+      "payments"
+    ],
+    "names": [
+      "Payments & Collections Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "payments",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-24",
+    "ids": [
+      "reviews"
+    ],
+    "names": [
+      "Review Request Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "reviews",
+        "type": "direct",
+        "condition": "Direct match."
+      }
+    ]
+  },
+  {
+    "id": "problem-25",
+    "ids": [
+      "dashboard"
+    ],
+    "names": [
+      "Smart Dashboard"
+    ],
+    "conditions": [
+      {
+        "solutionId": "dashboard",
+        "type": "direct",
+        "condition": "Provides access to call activity, recordings, transcripts and outcomes."
+      }
+    ]
+  },
+  {
+    "id": "problem-26",
+    "ids": [
+      "crm"
+    ],
+    "names": [
+      "CRM Integration"
+    ],
+    "conditions": [
+      {
+        "solutionId": "crm",
+        "type": "direct",
+        "condition": "Records collected information and call outcomes through configured CRM connections."
+      }
+    ]
+  },
+  {
+    "id": "problem-27",
+    "ids": [
+      "dashboard"
+    ],
+    "names": [
+      "Smart Dashboard"
+    ],
+    "conditions": [
+      {
+        "solutionId": "dashboard",
+        "type": "direct",
+        "condition": "Displays agent activity, call activity, booking outcomes, failed requests and call quality scores."
+      }
+    ]
+  },
+  {
+    "id": "problem-28",
+    "ids": [
+      "inbound",
+      "speed",
+      "revival",
+      "guardian",
+      "support",
+      "payments",
+      "reviews"
+    ],
+    "names": [
+      "Inbound Agent",
+      "Speed-to-Lead Agent",
+      "Lead Revival Agent",
+      "Appointment Guardian Agent",
+      "Customer Support Agent",
+      "Payments & Collections Agent",
+      "Review Request Agent"
+    ],
+    "conditions": [
+      {
+        "solutionId": "inbound",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks contribute to the staff's workload. Answering incoming calls."
+      },
+      {
+        "solutionId": "speed",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks contribute to the staff's workload. Calling and qualifying new leads."
+      },
+      {
+        "solutionId": "revival",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks contribute to the staff's workload. Following up with old leads."
+      },
+      {
+        "solutionId": "guardian",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks contribute to the staff's workload. Confirming and rescheduling appointments."
+      },
+      {
+        "solutionId": "support",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks contribute to the staff's workload. Answering routine customer questions and handling supported requests."
+      },
+      {
+        "solutionId": "payments",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks contribute to the staff's workload. Following up on outstanding payments."
+      },
+      {
+        "solutionId": "reviews",
+        "type": "conditional",
+        "condition": "Each solution applies only if its specific tasks contribute to the staff's workload. Requesting customer reviews."
+      }
+    ]
+  }
+];
+  expect(Object.keys(agents)).toHaveLength(9);
+  expect(Object.values(agents).filter(agent => agent.kind === "shared-feature").map(agent => agent.name)).toEqual(["Smart Dashboard", "CRM Integration"]);
+  await page.goto("/");
+  await expect(page.locator(".problem-card")).toHaveCount(28);
+  for (const item of expected) {
+    const problem = problems.find(p => p.id === item.id)!;
+    expect(problem.solutions.map(({ solutionId, type, condition }) => ({ solutionId, type, condition }))).toEqual(item.conditions);
+    expect(problem.solutions.every(rel => rel.problemId === item.id && !rel.negativeOperationalImpactIds.length && !rel.negativeFinancialImpactIds.length && !rel.positiveOperationalOutcomeIds.length && !rel.positiveFinancialOutcomeIds.length && !rel.functionIds.length && !rel.operationalOutcomeExplanations.length && !rel.financialOutcomeExplanations.length)).toBe(true);
+    const card = page.locator('[data-problem="' + item.id + '"]');
+    await card.getByRole("button", { name: /^Expand/ }).click();
+    await expect(card.locator(".solution-card")).toHaveCount(item.ids.length);
+    await expect(card.locator(".agent-header h3")).toHaveText(item.names);
+    expect(await card.locator(".solution-entry").evaluateAll(nodes => nodes.map(node => node.getAttribute("data-solution")))).toEqual(item.ids);
+    for (const entry of await card.locator(".solution-entry").all()) {
+      await expect(entry.locator(".mode-control")).toBeVisible();
+      await expect(entry.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
+      await expect(entry.locator(".solution-card")).toHaveCSS("border-radius", "13px");
+      await expect(entry.locator(".agent-header .agent-icon")).toHaveCount(1);
+      await expect(entry.locator("details")).toHaveCount(3);
+      await expect(entry.locator(".outcome-list li")).toHaveCount(0);
+    }
+    await card.getByRole("button", { name: /^Collapse/ }).click();
+  }
+});
+test("solution arrays render independently with no duplicates and support adding and removing entries", async ({ page }) => {
+  const problem = problems.find(p => p.id === "problem-3")!;
+  const extra = { ...problem.solutions[0], solutionId: "crm" };
+  expect(matchedSolutions({ ...problem, solutions: [...problem.solutions, extra, extra] }, agents).map(a => a.id)).toEqual(["inbound","speed","revival","crm"]);
+  expect(matchedSolutions({ ...problem, solutions: problem.solutions.slice(1) }, agents).map(a => a.id)).toEqual(["speed","revival"]);
+  expect(matchedSolutions({ ...problem, solutions: [] }, agents)).toEqual([]);
+  await page.goto("/");
+  const card = page.locator('[data-problem="problem-3"]');
+  await card.getByRole("button", { name: /^Expand/ }).click();
+  const inbound = card.locator('[data-solution="inbound"]');
+  const speed = card.locator('[data-solution="speed"]');
+  const revival = card.locator('[data-solution="revival"]');
+  await card.getByRole("checkbox", { name: "Fewer appointments booked", exact: true }).check();
+  await inbound.getByRole("button", { name: "All benefits" }).click();
+  await inbound.getByText("How the agent functions", { exact: true }).click();
+  await inbound.getByText("How it produces operational outcomes", { exact: true }).click();
+  await speed.getByText("How it produces financial outcomes", { exact: true }).click();
+  await expect(inbound.locator("details[open]")).toHaveCount(2);
+  await expect(speed.locator("details[open]")).toHaveCount(1);
+  await expect(revival.locator("details[open]")).toHaveCount(0);
+  await expect(speed.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
+  await expect(revival.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
+  await card.getByRole("button", { name: /^Collapse/ }).click();
+  await card.getByRole("button", { name: /^Expand/ }).click();
+  await expect(card.getByRole("checkbox", { name: "Fewer appointments booked", exact: true })).toBeChecked();
+  await expect(inbound.getByRole("button", { name: "All benefits" })).toHaveAttribute("aria-pressed", "true");
+  await expect(inbound.locator("details[open]")).toHaveCount(2);
+  await expect(speed.locator("details[open]")).toHaveCount(1);
+  await expect(revival.locator("details[open]")).toHaveCount(0);
+  await speed.getByRole("button", { name: "All benefits" }).click();
+  await inbound.getByRole("button", { name: "Personalized" }).click();
+  await expect(speed.getByRole("button", { name: "All benefits" })).toHaveAttribute("aria-pressed", "true");
+  await expect(revival.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
+  await expect(card.locator(".outcome-list li")).toHaveCount(0);
+  await expect(card.getByRole("checkbox", { name: "Fewer appointments booked", exact: true })).toBeChecked();
+  const other = page.locator('[data-problem="problem-1"]');
+  await other.getByRole("button", { name: /^Expand/ }).click();
+  await expect(other.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
 });

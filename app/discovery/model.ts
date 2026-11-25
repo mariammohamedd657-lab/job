@@ -1,5 +1,10 @@
 import type { Agent, ImpactKind, Problem } from "./data";
 
+// One entry per solution ID, preserving relationship order and supporting any array length.
+export function matchedSolutions(problem: Problem, library: Record<string, Agent>): Agent[] {
+  return [...new Set(problem.solutions.map(item => item.solutionId))].map(id => library[id]).filter(Boolean);
+}
+
 export type Mode = "personalized" | "all";
 export type Selection = Record<ImpactKind, string[]>;
 export type ProblemState = { confirmed: boolean; expanded: boolean; mode: Mode; selected: Selection };
