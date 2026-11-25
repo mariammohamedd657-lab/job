@@ -1,5 +1,6 @@
 import type { Agent, ImpactKind, Problem } from "./data";
 import { negativeToPositive } from "./outcomes";
+import { personalizedFunctionRelationships } from "./personalized-functions";
 
 // One entry per solution ID, preserving relationship order and supporting any array length.
 export function matchedSolutions(problem: Problem, library: Record<string, Agent>): Agent[] {
@@ -41,9 +42,12 @@ export function visibleOutcomes(problem: Problem, agent: Agent, kind: ImpactKind
 }
 
 export function relevantFunctions(problem: Problem, agent: Agent, state: ProblemState) {
-  const explicit = problem.solutions.find(item => item.solutionId === agent.id)?.functionIds ?? [];
-  const linked = state.mode === "personalized"
-    ? [...visibleOutcomes(problem, agent, "operational", state), ...visibleOutcomes(problem, agent, "financial", state)].flatMap(outcome => outcome.functionIds)
-    : [];
-  return new Set([...explicit, ...linked]);
+  if (state.mode === "all") return new Set(agent.functionIds);
+  if (!problem.solutions.some(item => item.solutionId === agent.id)) return new Set<string>();
+  const displayed = new Set([...visibleOutcomes(problem, agent, "operational", state), ...visibleOutcomes(problem, agent, "financial", state)].map(outcome => outcome.id));
+  const linked = personalizedFunctionRelationships
+    .filter(rel => rel.problemId === problem.id && rel.solutionId === agent.id && displayed.has(rel.outcomeId))
+    .flatMap(rel => rel.functionIds);
+  // Retain only the agent's approved function IDs; a Set deduplicates shared functions.
+  return new Set(linked.filter(id => agent.functionIds.includes(id)));
 }

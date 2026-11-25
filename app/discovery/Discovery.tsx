@@ -44,7 +44,7 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
   const operational = visibleOutcomes(problem, agent, "operational", state);
   const financial = visibleOutcomes(problem, agent, "financial", state);
   const relevant = relevantFunctions(problem, agent, state);
-  const functions = agent.functionIds.map(id => functionLibrary[id]).filter(fn => fn && fn.availability !== "proposed");
+  const functions = agent.functionIds.map(id => functionLibrary[id]).filter(fn => fn && fn.availability !== "proposed" && (mode === "all" || relevant.has(fn.id)));
   const message = (kind: ImpactKind) => pending ? "Content not yet provided." : state.mode === "personalized" ? `No related ${kind} impact has been confirmed.` : `No applicable ${kind} outcomes have been provided.`;
   return <div className="solution-entry" data-solution={agent.id}>
     <div className="mode-control" role="group" aria-label="Benefit viewing mode">
@@ -61,7 +61,7 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
     <hr/>
     <div className="description-list">
       <Description title="How the agent functions">
-        {functions.length ? <ul className="function-list">{functions.map(fn => <li key={fn.id} className={state.mode === "personalized" && !relevant.has(fn.id) ? "muted-function" : "relevant-function"}><span>{fn.name}</span><div>{fn.description}</div></li>)}</ul> : <Empty>Content not yet provided.</Empty>}
+        {functions.length ? <ul className="function-list">{functions.map(fn => <li key={fn.id} className={mode === "personalized" ? "personalized-function" : "relevant-function"}><span>{fn.name}</span><div>{fn.description}</div></li>)}</ul> : mode === "all" ? <Empty>Content not yet provided.</Empty> : null}
       </Description>
       <Description tone="operational" title="How it produces operational outcomes"><Explanations outcomes={operational} empty={message("operational")}/></Description>
       <Description tone="financial" title="How it produces financial outcomes"><Explanations outcomes={financial} empty={message("financial")}/></Description>

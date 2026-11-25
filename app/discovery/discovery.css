@@ -46,7 +46,8 @@ body { background: #181818; color: #f4f4f4; }
 .outcome-tone-financial { color: #AECBF4; }
 .outcome-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; }
 .outcome-list li { display: flex; gap: 6px; align-items: flex-start; }
-.green-check { width: 15px; height: 15px; margin-top: 4px; flex-shrink: 0; color: #10b85c; }
+.green-check { width: 15px; height: 15px; margin-top: 4px; flex-shrink: 0; }
+.green-check, .personalized-function { color: #10b85c; }
 .empty-note { color: #8f8f8f; font-size: 14px; line-height: 1.45; margin: 0; }
 .description-list { display: flex; flex-direction: column; gap: 11px; }
 .description { background: #151515; border-radius: 9px; overflow: hidden; }
