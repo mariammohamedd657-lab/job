@@ -61,8 +61,8 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
       <Description title="How the agent functions">
         {functions.length ? <ul className="function-list">{functions.map(fn => <li key={fn.id} className={mode === "personalized" ? "personalized-function" : "relevant-function"}><span>{fn.name}</span><div>{fn.description}</div></li>)}</ul> : mode === "all" ? <Empty>Content not yet provided.</Empty> : null}
       </Description>
-      <Description title="How it produces operational outcomes"><Explanations outcomes={visibleOutcomeExplanations(problem, agent, "operational", state)} empty={message("operational")} mode={mode}/></Description>
-      <Description title="How it produces financial outcomes"><Explanations outcomes={visibleOutcomeExplanations(problem, agent, "financial", state)} empty={message("financial")} mode={mode}/></Description>
+      <Description tone="operational" title="How it produces operational outcomes"><Explanations outcomes={visibleOutcomeExplanations(problem, agent, "operational", state)} empty={message("operational")} mode={mode}/></Description>
+      <Description tone="financial" title="How it produces financial outcomes"><Explanations outcomes={visibleOutcomeExplanations(problem, agent, "financial", state)} empty={message("financial")} mode={mode}/></Description>
     </div>
     </div>
   </div>;

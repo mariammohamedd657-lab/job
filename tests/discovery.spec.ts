@@ -1514,6 +1514,9 @@ test("every card displays exact approved explanations in order in both viewing m
       const agent = agents[relationship.solutionId];
       for (const kind of ["operational","financial"] as const) {
         const panel = entry.locator("details").filter({has: page.locator("summary", {hasText: "How it produces " + kind + " outcomes"})});
+        const heading = panel.locator("summary > span");
+        await expect(heading).toHaveCSS("color", kind === "operational" ? "rgb(245, 230, 163)" : "rgb(174, 203, 244)");
+        await expect(heading).toHaveCSS("color", await entry.locator(".outcome-heading > .outcome-tone-" + kind).evaluate(el => getComputedStyle(el).color));
         await panel.locator("summary").click();
         await expect(panel.locator(".explanation")).toHaveCount(0);
       }
@@ -1540,7 +1543,7 @@ test("every card displays exact approved explanations in order in both viewing m
         expect(await panel.locator(".explanation p").allTextContents()).toEqual(expected.map(o => allBenefitExplanations[agent.id][o.id]));
         if (expected.length) {
           await expect(panel.locator(".explanation h5").first()).toHaveCSS("color","rgb(244, 244, 244)");
-          await expect(panel.locator(".explanation h5 > span").first()).toHaveCSS("color","rgb(244, 244, 244)");
+          await expect(panel.locator(".explanation h5 > span").first()).toHaveCSS("color","rgb(255, 255, 255)");
           await expect(panel.locator(".explanation p").first()).toHaveCSS("color","rgb(244, 244, 244)");
         }
       }
@@ -1576,7 +1579,7 @@ test("every card displays exact approved explanations in order in both viewing m
         if (expected.length) {
           const tickColor = await entry.locator(".green-check").first().evaluate(el=>getComputedStyle(el).color);
           await expect(panel.locator(".explanation h5").first()).toHaveCSS("color",tickColor);
-          await expect(panel.locator(".explanation h5 > span").first()).toHaveCSS("color",tickColor);
+          await expect(panel.locator(".explanation h5 > span").first()).toHaveCSS("color","rgb(255, 255, 255)");
           await expect(panel.locator(".explanation p").first()).toHaveCSS("color",tickColor);
         } else await expect(panel.locator(".description-content")).toHaveText("");
       }
