@@ -22,7 +22,7 @@ export const problems: Problem[] = [
       },
       {
         "id": "operational-3",
-        "label": "Urgent callers not reaching staff"
+        "label": "Urgent callers not reaching employees"
       }
     ],
     "financialImpacts": [
@@ -99,7 +99,7 @@ export const problems: Problem[] = [
   },
   {
     "id": "problem-4",
-    "name": "Urgent calls not reaching staff",
+    "name": "Urgent calls not reaching employees",
     "operationalImpacts": [],
     "financialImpacts": [],
     "agentIds": [],
@@ -293,7 +293,7 @@ export const problems: Problem[] = [
     "operationalImpacts": [
       {
         "id": "operational-1",
-        "label": "Customers forgetting appointments"
+        "label": "Buyers forgetting appointments"
       },
       {
         "id": "operational-2",
@@ -301,7 +301,7 @@ export const problems: Problem[] = [
       },
       {
         "id": "operational-3",
-        "label": "Customers unable to attend at the booked time"
+        "label": "Buyers unable to attend at the booked time"
       }
     ],
     "financialImpacts": [
@@ -311,7 +311,7 @@ export const problems: Problem[] = [
       },
       {
         "id": "financial-2",
-        "label": "Staff time wasted on missed appointments"
+        "label": "Employees' time wasted on missed appointments"
       }
     ],
     "agentIds": [
@@ -384,7 +384,7 @@ export const problems: Problem[] = [
   },
   {
     "id": "problem-19",
-    "name": "Staff answering the same questions",
+    "name": "Employees answering the same questions",
     "operationalImpacts": [],
     "financialImpacts": [],
     "agentIds": [],
@@ -400,7 +400,7 @@ export const problems: Problem[] = [
   },
   {
     "id": "problem-21",
-    "name": "Basic customer requests not handled",
+    "name": "Basic buyer requests not handled",
     "operationalImpacts": [],
     "financialImpacts": [],
     "agentIds": [],
@@ -424,7 +424,7 @@ export const problems: Problem[] = [
   },
   {
     "id": "problem-24",
-    "name": "Customers not asked for reviews",
+    "name": "Buyers not asked for reviews",
     "operationalImpacts": [],
     "financialImpacts": [],
     "agentIds": [],
@@ -456,7 +456,7 @@ export const problems: Problem[] = [
   },
   {
     "id": "problem-28",
-    "name": "Humans overloaded",
+    "name": "Employees overloaded",
     "operationalImpacts": [],
     "financialImpacts": [],
     "agentIds": [],
@@ -486,7 +486,7 @@ export const agents: Record<string, Agent> = {
       },
       {
         "id": "route",
-        "text": "Routes urgent callers to the appropriate staff member, when configured."
+        "text": "Routes urgent callers to the appropriate employee, when configured."
       }
     ],
     "operationalOutcomes": [
@@ -510,8 +510,8 @@ export const agents: Record<string, Agent> = {
       },
       {
         "id": "operational-3",
-        "title": "More urgent callers connected to staff",
-        "description": "The agent identifies urgent calls and routes them to the designated staff member when configured.",
+        "title": "More urgent callers connected to employees",
+        "description": "The agent identifies urgent calls and routes them to the designated employee when configured.",
         "functionIds": [
           "answer",
           "route"
@@ -541,7 +541,7 @@ export const agents: Record<string, Agent> = {
       {
         "id": "financial-3",
         "title": "Potentially lower call-handling costs",
-        "description": "Handling routine calls and bookings can reduce the staff time needed for those tasks. Actual cost savings depend on staffing changes.",
+        "description": "Handling routine calls and bookings can reduce the employees' time needed for those tasks. Actual cost savings depend on staffing changes.",
         "functionIds": [
           "answer",
           "qualify",
@@ -574,7 +574,7 @@ export const agents: Record<string, Agent> = {
       {
         "id": "operational-1",
         "title": "More new leads contacted promptly",
-        "description": "The agent initiates contact when a lead arrives instead of waiting for a member of staff to become available.",
+        "description": "The agent initiates contact when a lead arrives instead of waiting for an employee to become available.",
         "functionIds": [
           "contact"
         ]
@@ -703,7 +703,7 @@ export const agents: Record<string, Agent> = {
       },
       {
         "id": "confirm",
-        "text": "Asks customers to confirm whether they will attend."
+        "text": "Asks buyers to confirm whether they will attend."
       },
       {
         "id": "reschedule",
@@ -713,8 +713,8 @@ export const agents: Record<string, Agent> = {
     "operationalOutcomes": [
       {
         "id": "operational-1",
-        "title": "More customers reminded before appointments",
-        "description": "The agent sends reminders before scheduled appointments so customers have an opportunity to prepare.",
+        "title": "More buyers reminded before appointments",
+        "description": "The agent sends reminders before scheduled appointments so buyers have an opportunity to prepare.",
         "functionIds": [
           "remind"
         ]
@@ -722,7 +722,7 @@ export const agents: Record<string, Agent> = {
       {
         "id": "operational-2",
         "title": "More appointments confirmed in advance",
-        "description": "The agent asks customers to confirm attendance, which can identify appointments at risk of being missed.",
+        "description": "The agent asks buyers to confirm attendance, which can identify appointments at risk of being missed.",
         "functionIds": [
           "remind",
           "confirm"
@@ -731,7 +731,7 @@ export const agents: Record<string, Agent> = {
       {
         "id": "operational-3",
         "title": "More appointments rescheduled when needed",
-        "description": "The agent offers another available time to customers who cannot attend the original appointment.",
+        "description": "The agent offers another available time to buyers who cannot attend the original appointment.",
         "functionIds": [
           "confirm",
           "reschedule"
@@ -742,7 +742,7 @@ export const agents: Record<string, Agent> = {
       {
         "id": "financial-1",
         "title": "Potential additional revenue from attended appointments",
-        "description": "Reminders and rescheduling may help more customers attend. Additional revenue depends on attendance and subsequent sales.",
+        "description": "Reminders and rescheduling may help more buyers attend. Additional revenue depends on attendance and subsequent sales.",
         "functionIds": [
           "remind",
           "confirm",
@@ -751,8 +751,8 @@ export const agents: Record<string, Agent> = {
       },
       {
         "id": "financial-2",
-        "title": "Potentially less wasted staff time",
-        "description": "Confirmations and rescheduling can give staff advance notice of some missed appointments and help them use their time more effectively.",
+        "title": "Potentially less wasted employees' time",
+        "description": "Confirmations and rescheduling can give employees advance notice of some missed appointments and help them use their time more effectively.",
         "functionIds": [
           "confirm",
           "reschedule"

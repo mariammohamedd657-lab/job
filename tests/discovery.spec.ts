@@ -162,3 +162,21 @@ test("all seven category subtitles and all 28 problem cards are in the requested
   await expect(lead.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
   await expect(appointment.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
 });
+
+test("approved buyer and employee wording is used in problem titles and existing content", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".problem-confirm > span")).toHaveText(["Missed calls","Calls outside working hours","Slow response to new leads","New leads never called","Late lead qualifications","Warm leads not contacted","Old leads not called","Inconsistent follow-up with old leads","Warm old leads not contacted again","Missed bookings during calls","Missed appointment reminders","Unconfirmed appointments","Appointment no-shows","Time-consuming appointment rescheduling","Empty slots after cancellations","Urgent calls not reaching employees","Slow answers to simple questions","Basic buyer requests not handled","Many routine questions","Employees answering the same questions","Too much manual work","Employees overloaded","Missed payment reminders","Invoices not followed up regularly","Buyers not asked for reviews","Missing call recordings and outcomes","Lead details not updated in CRM","Hard to see what the AI agent is doing"]);
+  const missed = page.locator('[data-problem="problem-1"]');
+  await missed.getByRole("button", { name: /^Expand/ }).click();
+  await expect(missed.getByRole("checkbox", { name: "Urgent callers not reaching employees" })).toBeVisible();
+  await missed.getByRole("button", { name: "All benefits" }).click();
+  await expect(missed.getByText("More urgent callers connected to employees", { exact: true })).toBeVisible();
+  await missed.getByText("How the agent functions", { exact: true }).click();
+  await expect(missed.locator(".function-list")).toContainText("Routes urgent callers to the appropriate employee, when configured.");
+  const guardian = page.locator('[data-problem="problem-14"]');
+  await guardian.getByRole("button", { name: /^Expand/ }).click();
+  await guardian.getByRole("checkbox", { name: "Buyers forgetting appointments" }).check();
+  await expect(guardian.getByText("More buyers reminded before appointments", { exact: true })).toBeVisible();
+  await guardian.getByRole("checkbox", { name: "Employees' time wasted on missed appointments" }).check();
+  await expect(guardian.getByText("Potentially less wasted employees' time", { exact: true })).toBeVisible();
+});
