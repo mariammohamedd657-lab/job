@@ -23,13 +23,13 @@ function Icon({ icon }: { icon: AgentIcon }) {
 function CircleInput({ checked, onChange, label, className = "" }: { checked: boolean; onChange: () => void; label: string; className?: string }) {
   return <label className={`circle-label ${className}`}><input type="checkbox" className="circle-input" checked={checked} onChange={onChange}/><span>{label}</span></label>;
 }
-function Description({ title, children }: { title: string; children: ReactNode }) {
+function Description({ title, children, tone }: { title: string; children: ReactNode; tone?: ImpactKind }) {
   // Native independent disclosure state is preserved because the parent never unmounts.
-  return <details className="description"><summary>{title}<Chevron/></summary><div className="description-content">{children}</div></details>;
+  return <details className="description"><summary>{tone ? <span className={`outcome-tone-${tone}`}>{title}</span> : title}<Chevron/></summary><div className="description-content">{children}</div></details>;
 }
 function Empty({ children }: { children: ReactNode }) { return <p className="empty-note">{children}</p>; }
-function OutcomeColumn({ title, outcomes, empty }: { title: string; outcomes: Outcome[]; empty: string }) {
-  return <div><h4 className="outcome-heading">{title}</h4>{outcomes.length ? <ul className="outcome-list">{outcomes.map(outcome => <li key={outcome.id}><Check className="green-check"/><span>{outcome.title}</span></li>)}</ul> : <Empty>{empty}</Empty>}</div>;
+function OutcomeColumn({ title, outcomes, empty, tone }: { title: string; outcomes: Outcome[]; empty: string; tone: ImpactKind }) {
+  return <div><h4 className="outcome-heading"><span className={`outcome-tone-${tone}`}>{title}</span></h4>{outcomes.length ? <ul className="outcome-list">{outcomes.map(outcome => <li key={outcome.id}><Check className="green-check"/><span>{outcome.title}</span></li>)}</ul> : <Empty>{empty}</Empty>}</div>;
 }
 function Explanations({ outcomes, empty }: { outcomes: Outcome[]; empty: string }) {
   return outcomes.length ? <div className="explanations">{outcomes.map(outcome => <div className="explanation" key={outcome.id}><h5>{outcome.title}</h5><p>{outcome.description}</p></div>)}</div> : <Empty>{empty}</Empty>;
@@ -41,19 +41,19 @@ function SolutionCard({ problem, agent, state, pending = false }: { problem: Pro
   const relevant = relevantFunctions(problem, agent, state);
   const message = (kind: ImpactKind) => pending ? "Content not yet provided." : state.mode === "personalized" ? `No related ${kind} impact has been confirmed.` : `No applicable ${kind} outcomes have been provided.`;
   return <div className="solution-card">
-    <div className="agent-header"><Icon icon={agent.icon}/><div><h3>{agent.name}</h3><p>{agent.overview}{agent.temporary && <span className="sample-note"> Temporary example content.</span>}</p></div></div>
+    <div className="agent-header"><Icon icon={agent.icon}/><h3>{agent.name}</h3></div>
     <hr/>
     <div className="two-columns">
-      <OutcomeColumn title="Operational outcomes" outcomes={operational} empty={message("operational")}/>
-      <OutcomeColumn title="Financial outcomes" outcomes={financial} empty={message("financial")}/>
+      <OutcomeColumn tone="operational" title="Operational outcomes" outcomes={operational} empty={message("operational")}/>
+      <OutcomeColumn tone="financial" title="Financial outcomes" outcomes={financial} empty={message("financial")}/>
     </div>
     <hr/>
     <div className="description-list">
       <Description title="How the agent functions">
         {agent.functions.length ? <ul className="function-list">{agent.functions.map(fn => <li key={fn.id} className={state.mode === "personalized" && !relevant.has(fn.id) ? "muted-function" : "relevant-function"}>{fn.text}</li>)}</ul> : <Empty>Content not yet provided.</Empty>}
       </Description>
-      <Description title="How it produces operational outcomes"><Explanations outcomes={operational} empty={message("operational")}/></Description>
-      <Description title="How it produces financial outcomes"><Explanations outcomes={financial} empty={message("financial")}/></Description>
+      <Description tone="operational" title="How it produces operational outcomes"><Explanations outcomes={operational} empty={message("operational")}/></Description>
+      <Description tone="financial" title="How it produces financial outcomes"><Explanations outcomes={financial} empty={message("financial")}/></Description>
     </div>
   </div>;
 }
@@ -77,7 +77,7 @@ export function ProblemCard({ problem }: { problem: Problem }) {
         })}
       </div>
       <hr/>
-      <h2 className="matched-heading">Matched solution</h2>
+      <h2 className="matched-heading">Solution</h2>
       <div className="mode-control" role="group" aria-label="Benefit viewing mode">
         <button type="button" aria-pressed={state.mode === "personalized"} onClick={() => dispatch({type:"mode",mode:"personalized"})}>Personalized</button>
         <button type="button" aria-pressed={state.mode === "all"} onClick={() => dispatch({type:"mode",mode:"all"})}>All benefits</button>

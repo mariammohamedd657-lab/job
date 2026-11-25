@@ -12,10 +12,10 @@ test("all 28 problems, independent confirmation, expansion, and personalized out
   await confirmation.check();
   await expect(missed.getByRole("checkbox", { name: "Potential buyers lost before qualification" })).not.toBeChecked();
   await confirmation.uncheck();
-  await expect(missed.getByRole("heading", { name: "Matched solution" })).toBeVisible();
+  await expect(missed.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
   await slow.getByRole("button", { name: "Expand Slow response to new leads" }).click();
-  await expect(missed.getByRole("heading", { name: "Matched solution" })).toBeVisible();
-  await expect(slow.getByRole("heading", { name: "Matched solution" })).toBeVisible();
+  await expect(missed.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
+  await expect(slow.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
   const buyer = missed.getByRole("checkbox", { name: "Potential buyers lost before qualification" });
   const money = missed.getByRole("checkbox", { name: "Lost potential sales revenue" });
   await buyer.check();
@@ -61,5 +61,31 @@ test("remaining example agents and unpopulated problem use the same expandable i
     await expect(card.locator("details")).toHaveCount(3);
     await card.getByRole("checkbox").first().check();
     await expect(card.getByRole("checkbox").first()).toBeChecked();
+  }
+});
+
+test("requested pastel headings and compact agent headers across all problems", async ({ page }) => {
+  test.setTimeout(120000);
+  await page.goto("/");
+  const cards = page.locator(".problem-card");
+  await expect(cards).toHaveCount(28);
+  for (const card of await cards.all()) {
+    await expect(card.locator(".problem-confirm > span")).toHaveCSS("color", "rgb(242, 173, 173)");
+    await card.getByRole("button", { name: /^Expand/ }).click();
+    await expect(card.locator(".confirmed-problem > span:last-child")).toHaveCSS("color", "rgb(242, 173, 173)");
+    await expect(card.getByRole("heading", { name: "Solution", exact: true })).toHaveCSS("color", "rgb(183, 223, 190)");
+    await expect(card.locator(".agent-header h3")).toHaveCSS("color", "rgb(183, 223, 190)");
+    await expect(card.locator(".agent-header")).toHaveCSS("align-items", "center");
+    await expect(card.locator(".agent-header p")).toHaveCount(0);
+    await expect(card.locator(".agent-header .agent-icon")).toHaveCount(1);
+    for (const heading of await card.locator(".outcome-tone-operational").all()) {
+      await expect(heading).toHaveCSS("color", "rgb(245, 230, 163)");
+      await expect(heading).toHaveCSS("background-color", "rgba(245, 230, 163, 0.08)");
+    }
+    for (const heading of await card.locator(".outcome-tone-financial").all()) {
+      await expect(heading).toHaveCSS("color", "rgb(174, 203, 244)");
+      await expect(heading).toHaveCSS("background-color", "rgba(174, 203, 244, 0.08)");
+    }
+    await card.getByRole("button", { name: /^Collapse/ }).click();
   }
 });

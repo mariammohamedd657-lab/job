@@ -12,6 +12,7 @@ body { background: #181818; color: #f4f4f4; }
 .circle-input:focus-visible, .discovery-page button:focus-visible, .description summary:focus-visible { outline: 2px solid #1685ef; outline-offset: 3px; }
 .problem-confirm { align-items: center; font-size: 17px; font-weight: 500; }
 .problem-confirm .circle-input { width: 24px; height: 24px; }
+.problem-confirm > span, .confirmed-problem > span:last-child { color: #F2ADAD; }
 .problem-toggle { flex-shrink: 0; width: 38px; height: 36px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; color: #bcbcbc; padding: 0; border-radius: 8px; }
 .chevron { width: 23px; height: 23px; display: block; flex-shrink: 0; color: #bcbcbc; }
 .chevron.is-open, .description[open] > summary .chevron { transform: rotate(180deg); }
@@ -29,20 +30,21 @@ body { background: #181818; color: #f4f4f4; }
 .impact-list { display: flex; flex-direction: column; gap: 11px; }
 .impact-list .circle-input { width: 20px; height: 20px; margin-top: 1px; }
 .problem-content hr, .solution-card hr { border: 0; border-top: 1px solid #333; margin: 23px 0 19px; }
-.matched-heading { font-size: 24px; line-height: 1.3; font-weight: 650; margin: 0 0 12px; }
+.matched-heading { font-size: 24px; line-height: 1.3; font-weight: 650; margin: 0 0 12px; color: #B7DFBE; }
 .mode-control { display: flex; align-items: center; gap: 5px; margin: 0 0 13px; }
 .mode-control button { font: inherit; font-size: 14px; line-height: 1.3; border: none; border-radius: 999px; padding: 9px 16px; background: transparent; color: #aaa7a7; cursor: pointer; }
 .mode-control button[aria-pressed="true"] { color: #f4f4f4; background: #282828; }
 .solution-card { border: 1px solid #363636; border-radius: 13px; padding: 13px 12px; }
 .solution-card + .solution-card { margin-top: 12px; }
-.agent-header { display: flex; gap: 9px; align-items: flex-start; }
+.agent-header { display: flex; gap: 9px; align-items: center; }
 .agent-icon { display: grid; place-items: center; flex-shrink: 0; width: 45px; height: 45px; border-radius: 11px; background: #272c35; color: #8499ca; }
 .agent-icon svg { width: 24px; height: 24px; }
-.agent-header h3 { font-size: 24px; font-weight: 650; line-height: 1.2; margin: 0 0 4px; }
+.agent-header h3 { font-size: 24px; font-weight: 650; line-height: 1.2; margin: 0; color: #B7DFBE; }
 .agent-header p { color: #aaa7a7; font-size: 14px; margin: 0; }
 .sample-note { color: #999; font-size: 12px; }
 .solution-card hr { margin: 20px 0; }
-.outcome-heading { color: #11bb60; }
+.outcome-tone-operational { color: #F5E6A3; background-color: rgba(245, 230, 163, 0.08); }
+.outcome-tone-financial { color: #AECBF4; background-color: rgba(174, 203, 244, 0.08); }
 .outcome-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; }
 .outcome-list li { display: flex; gap: 6px; align-items: flex-start; }
 .green-check { width: 15px; height: 15px; margin-top: 4px; flex-shrink: 0; color: #10b85c; }
