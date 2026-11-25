@@ -101,6 +101,9 @@ test("requested pastel headings and compact agent headers across all problems", 
       await expect(header.locator("p")).toHaveCount(1);
       await expect(header.locator(".agent-icon")).toHaveCount(1);
     }
+    for (const heading of await card.locator(".description summary").all()) {
+      await expect(heading).toHaveCSS("color", "rgb(244, 244, 244)");
+    }
     for (const heading of await card.locator(".outcome-tone-operational").all()) {
       await expect(heading).toHaveCSS("color", "rgb(245, 230, 163)");
       await expect(heading).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
@@ -1519,6 +1522,20 @@ test("every card displays exact approved explanations in order in both viewing m
         const panel = entry.locator("details").nth(i+1);
         const expected = kind === "operational" ? agent.operationalOutcomes : agent.financialOutcomes;
         await expect(panel.locator(".explanation")).toHaveCount(expected.length);
+        await expect(panel.locator(".explanation h5 > .green-check")).toHaveCount(expected.length);
+        if (expected.length) {
+          const heading = panel.locator(".explanation h5").first();
+          const tick = heading.locator(".green-check");
+          const originalTick = entry.locator(".outcome-list .green-check").first();
+          await expect(heading).toHaveCSS("border-bottom-width", "1px");
+          await expect(heading).toHaveCSS("border-bottom-color", "rgb(51, 51, 51)");
+          await expect(heading).toHaveCSS("border-bottom-style", "solid");
+          for (const property of ["width", "height", "color"]) {
+            await expect(tick).toHaveCSS(property, await originalTick.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property));
+          }
+          expect(await tick.locator("path").getAttribute("d")).toBe(await originalTick.locator("path").getAttribute("d"));
+          expect(await tick.locator("path").getAttribute("stroke-width")).toBe(await originalTick.locator("path").getAttribute("stroke-width"));
+        }
         expect(await panel.locator(".explanation h5").allTextContents()).toEqual(expected.map(o => o.title));
         expect(await panel.locator(".explanation p").allTextContents()).toEqual(expected.map(o => allBenefitExplanations[agent.id][o.id]));
         if (expected.length) {
@@ -1539,6 +1556,20 @@ test("every card displays exact approved explanations in order in both viewing m
         const relevantIds = new Set((kind==="operational"?problem.operationalImpacts:problem.financialImpacts).map(impact=>negativeToPositive[kind][impact.id]));
         const expected = (kind==="operational"?agent.operationalOutcomes:agent.financialOutcomes).filter(o=>relevantIds.has(o.id)&&lookup[o.id]);
         await expect(panel.locator(".explanation")).toHaveCount(expected.length);
+        await expect(panel.locator(".explanation h5 > .green-check")).toHaveCount(expected.length);
+        if (expected.length) {
+          const heading = panel.locator(".explanation h5").first();
+          const tick = heading.locator(".green-check");
+          const originalTick = entry.locator(".outcome-list .green-check").first();
+          await expect(heading).toHaveCSS("border-bottom-width", "1px");
+          await expect(heading).toHaveCSS("border-bottom-color", "rgb(51, 51, 51)");
+          await expect(heading).toHaveCSS("border-bottom-style", "solid");
+          for (const property of ["width", "height", "color"]) {
+            await expect(tick).toHaveCSS(property, await originalTick.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property));
+          }
+          expect(await tick.locator("path").getAttribute("d")).toBe(await originalTick.locator("path").getAttribute("d"));
+          expect(await tick.locator("path").getAttribute("stroke-width")).toBe(await originalTick.locator("path").getAttribute("stroke-width"));
+        }
         expect(await panel.locator(".explanation h5").allTextContents()).toEqual(expected.map(o=>o.title));
         expect(await panel.locator(".explanation p").allTextContents()).toEqual(expected.map(o=>lookup[o.id]));
         if (expected.length) {
