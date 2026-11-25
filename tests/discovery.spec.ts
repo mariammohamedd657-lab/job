@@ -28,7 +28,7 @@ test("all 28 problems, independent confirmation, expansion, and pending personal
   await missed.getByText("How it produces operational outcomes", { exact: true }).click();
   await missed.getByText("How it produces financial outcomes", { exact: true }).click();
   await expect(missed.locator("details[open]")).toHaveCount(3);
-  await expect(missed.locator(".muted-function")).toContainText("Routes urgent callers");
+  await expect(missed.locator(".muted-function").filter({ hasText: "Routes urgent callers" })).toHaveCount(1);
   await expect(missed.locator(".explanation")).toHaveCount(0);
   await missed.getByRole("button", { name: "All benefits" }).click();
   await expect(missed.locator(".outcome-list li")).toHaveCount(6);
