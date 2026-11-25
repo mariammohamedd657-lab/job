@@ -1,6 +1,7 @@
 import type { Agent, ImpactKind, Problem } from "./data";
 import { negativeToPositive } from "./outcomes";
 import { personalizedFunctionRelationships } from "./personalized-functions";
+import { allBenefitExplanations, personalizedExplanations } from "./explanations";
 
 // One entry per solution ID, preserving relationship order and supporting any array length.
 export function matchedSolutions(problem: Problem, library: Record<string, Agent>): Agent[] {
@@ -50,4 +51,15 @@ export function relevantFunctions(problem: Problem, agent: Agent, state: Problem
     .flatMap(rel => rel.functionIds);
   // Retain only the agent's approved function IDs; a Set deduplicates shared functions.
   return new Set(linked.filter(id => agent.functionIds.includes(id)));
+}
+
+/** Follow the currently displayed outcomes in their existing order. No fallback across modes. */
+export function visibleOutcomeExplanations(problem: Problem, agent: Agent, kind: ImpactKind, state: ProblemState) {
+  const descriptions = state.mode === "all"
+    ? allBenefitExplanations[agent.id]
+    : personalizedExplanations[problem.id]?.[agent.id];
+  return visibleOutcomes(problem, agent, kind, state).flatMap(outcome => {
+    const description = descriptions?.[outcome.id];
+    return description ? [{ ...outcome, description }] : [];
+  });
 }

@@ -2,7 +2,7 @@
 
 import { useReducer, useState, type ReactNode } from "react";
 import { agents, problems, problemCategories, type Agent, type AgentIcon, type ImpactKind, type Outcome, type Problem } from "./data";
-import { initialState, matchedSolutions, problemReducer, relevantFunctions, visibleOutcomes, type Mode, type ProblemState } from "./model";
+import { initialState, matchedSolutions, problemReducer, relevantFunctions, visibleOutcomes, visibleOutcomeExplanations, type Mode, type ProblemState } from "./model";
 import { functionLibrary } from "./functions";
 import "./discovery.css";
 
@@ -32,10 +32,8 @@ function Empty({ children }: { children: ReactNode }) { return <p className="emp
 function OutcomeColumn({ title, outcomes, empty, tone }: { title: string; outcomes: Outcome[]; empty: string; tone: ImpactKind }) {
   return <div><h4 className="outcome-heading"><span className={`outcome-tone-${tone}`}>{title}</span></h4>{outcomes.length ? <ul className="outcome-list">{outcomes.map(outcome => <li key={outcome.id}><Check className="green-check"/><span>{outcome.title}</span></li>)}</ul> : <Empty>{empty}</Empty>}</div>;
 }
-function Explanations({ outcomes, empty }: { outcomes: Outcome[]; empty: string }) {
-  // The approved outcome names are ready; detailed explanations will be populated later.
-  outcomes = outcomes.filter(outcome => outcome.description.trim().length > 0);
-  return outcomes.length ? <div className="explanations">{outcomes.map(outcome => <div className="explanation" key={outcome.id}><h5>{outcome.title}</h5><p>{outcome.description}</p></div>)}</div> : <Empty>{empty}</Empty>;
+function Explanations({ outcomes, empty, mode }: { outcomes: Outcome[]; empty: string; mode: Mode }) {
+  return outcomes.length ? <div className="explanations">{outcomes.map(outcome => <div className={mode === "personalized" ? "explanation personalized-explanation" : "explanation"} key={outcome.id}><h5>{outcome.title}</h5><p>{outcome.description}</p></div>)}</div> : mode === "all" ? <Empty>{empty}</Empty> : null;
 }
 const pendingAgent: Agent = { id: "pending", name: "Agent not yet provided", kind: "voice-agent", icon: "generic", overview: "Solution information has not been provided yet.", temporary: false, functionIds: [], operationalOutcomes: [], financialOutcomes: [] };
 function SolutionCard({ problem, agent, state: problemState, pending = false }: { problem: Problem; agent: Agent; state: ProblemState; pending?: boolean }) {
@@ -63,8 +61,8 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
       <Description title="How the agent functions">
         {functions.length ? <ul className="function-list">{functions.map(fn => <li key={fn.id} className={mode === "personalized" ? "personalized-function" : "relevant-function"}><span>{fn.name}</span><div>{fn.description}</div></li>)}</ul> : mode === "all" ? <Empty>Content not yet provided.</Empty> : null}
       </Description>
-      <Description tone="operational" title="How it produces operational outcomes"><Explanations outcomes={operational} empty={message("operational")}/></Description>
-      <Description tone="financial" title="How it produces financial outcomes"><Explanations outcomes={financial} empty={message("financial")}/></Description>
+      <Description tone="operational" title="How it produces operational outcomes"><Explanations outcomes={visibleOutcomeExplanations(problem, agent, "operational", state)} empty={message("operational")} mode={mode}/></Description>
+      <Description tone="financial" title="How it produces financial outcomes"><Explanations outcomes={visibleOutcomeExplanations(problem, agent, "financial", state)} empty={message("financial")} mode={mode}/></Description>
     </div>
     </div>
   </div>;

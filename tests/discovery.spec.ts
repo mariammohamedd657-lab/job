@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { agents, problems } from "../app/discovery/data";
 import { functionLibrary, configurationCapabilities, solutionFunctionReferences } from "../app/discovery/functions";
-import { matchedSolutions, visibleOutcomes, initialState, relevantFunctions } from "../app/discovery/model";
+import { matchedSolutions, visibleOutcomes, initialState, relevantFunctions, visibleOutcomeExplanations } from "../app/discovery/model";
+import { allBenefitExplanations, personalizedExplanations } from "../app/discovery/explanations";
 import { personalizedFunctionRelationships, pendingPersonalizedRelationships } from "../app/discovery/personalized-functions";
 import { positiveOutcomes, negativeToPositive, solutionOutcomeIds } from "../app/discovery/outcomes";
 
@@ -39,12 +40,12 @@ test("all 28 problems, independent confirmation, expansion, and personalized out
   await expect(missed.locator("details[open]")).toHaveCount(3);
   await expect(missed.locator(".function-list li > span")).toHaveText(["Answers incoming calls"]);
   await expect(missed.locator(".personalized-function")).toHaveCSS("color", "rgb(16, 184, 92)");
-  await expect(missed.locator(".explanation")).toHaveCount(0);
+  await expect(missed.locator(".explanation")).toHaveCount(2);
   await missed.getByRole("button", { name: "All benefits" }).click();
   await expect(op.locator(".outcome-list li")).toHaveText(["Fewer lost leads","Fewer lost qualified leads","More appointments booked","More buyers served","Fewer lost existing buyers","More employee time available for other work"]);
   await expect(fin.locator(".outcome-list li")).toHaveText(["Increased revenue potential","Less wasted marketing spend","Lower cost per buyer","Lower employee costs","Less wasted employee costs"]);
   await expect(missed.locator(".muted-function")).toHaveCount(0);
-  await expect(missed.locator(".explanation")).toHaveCount(0);
+  await expect(missed.locator(".explanation")).toHaveCount(11);
   await expect(money).toBeChecked();
   await expect(slow.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
   await missed.getByRole("button", { name: "Collapse Missed calls" }).click();
@@ -1472,4 +1473,120 @@ test("personalized functions follow selections, deduplicate, reuse tick green an
   await expect(review.locator(".function-list")).toHaveCount(0);
   await expect(review.locator("details").first().locator(".description-content")).toHaveText("");
   await expect(manual.locator(".solution-card")).toHaveCount(8);
+});
+
+test("all explanation records correspond to the existing approved relationships", () => {
+  let allCount = 0;
+  let personalizedCount = 0;
+  for (const agent of Object.values(agents)) {
+    const expected = [...agent.operationalOutcomes, ...agent.financialOutcomes].map(o => o.id);
+    expect(Object.keys(allBenefitExplanations[agent.id]).sort()).toEqual(expected.sort());
+    allCount += expected.length;
+    expect(Object.values(allBenefitExplanations[agent.id]).every(text => text.trim())).toBe(true);
+  }
+  for (const problem of problems) for (const rel of problem.solutions) {
+    const agent = agents[rel.solutionId];
+    const expected = personalizedFunctionRelationships.filter(r => r.problemId === problem.id && r.solutionId === agent.id).map(r => r.outcomeId);
+    const actual = personalizedExplanations[problem.id]?.[agent.id] ?? {};
+    expect(Object.keys(actual).sort()).toEqual(expected.sort());
+    personalizedCount += expected.length;
+    const state = { ...initialState, selected: { operational: problem.operationalImpacts.map(i => i.id), financial: problem.financialImpacts.map(i => i.id) } };
+    for (const kind of ["operational", "financial"] as const) {
+      const shown = visibleOutcomes(problem, agent, kind, state);
+      expect(visibleOutcomeExplanations(problem, agent, kind, state).map(o => o.id)).toEqual(shown.filter(o => actual[o.id]).map(o => o.id));
+    }
+  }
+  expect(allCount).toBe(58);
+  expect(personalizedCount).toBe(144);
+});
+
+test("every card displays exact approved explanations in order in both viewing modes", async ({ page }) => {
+  test.setTimeout(180000);
+  await page.goto("/");
+  for (const problem of problems) {
+    const card = page.locator('[data-problem="' + problem.id + '"]');
+    await card.getByRole("button", { name: /^Expand/ }).click();
+    for (const relationship of problem.solutions) {
+      const entry = card.locator('[data-solution="' + relationship.solutionId + '"]');
+      const agent = agents[relationship.solutionId];
+      for (const kind of ["operational","financial"] as const) {
+        const panel = entry.locator("details").filter({has: page.locator("summary", {hasText: "How it produces " + kind + " outcomes"})});
+        await panel.locator("summary").click();
+        await expect(panel.locator(".explanation")).toHaveCount(0);
+      }
+      await entry.getByRole("button", { name: "All benefits" }).click();
+      for (const [i,kind] of (["operational","financial"] as const).entries()) {
+        const panel = entry.locator("details").nth(i+1);
+        const expected = kind === "operational" ? agent.operationalOutcomes : agent.financialOutcomes;
+        await expect(panel.locator(".explanation")).toHaveCount(expected.length);
+        expect(await panel.locator(".explanation h5").allTextContents()).toEqual(expected.map(o => o.title));
+        expect(await panel.locator(".explanation p").allTextContents()).toEqual(expected.map(o => allBenefitExplanations[agent.id][o.id]));
+        if (expected.length) {
+          await expect(panel.locator(".explanation h5").first()).toHaveCSS("color","rgb(244, 244, 244)");
+          await expect(panel.locator(".explanation p").first()).toHaveCSS("color","rgb(244, 244, 244)");
+        }
+      }
+      await expect(card.locator("input:checked")).toHaveCount(0);
+      await entry.getByRole("button", { name: "Personalized" }).click();
+    }
+    for (const impact of [...problem.operationalImpacts,...problem.financialImpacts]) await card.getByRole("checkbox", {name:impact.label,exact:true}).check();
+    for (const relationship of problem.solutions) {
+      const agent = agents[relationship.solutionId];
+      const entry = card.locator('[data-solution="' + agent.id + '"]');
+      const lookup = personalizedExplanations[problem.id]?.[agent.id] ?? {};
+      for (const [i,kind] of (["operational","financial"] as const).entries()) {
+        const panel = entry.locator("details").nth(i+1);
+        const relevantIds = new Set((kind==="operational"?problem.operationalImpacts:problem.financialImpacts).map(impact=>negativeToPositive[kind][impact.id]));
+        const expected = (kind==="operational"?agent.operationalOutcomes:agent.financialOutcomes).filter(o=>relevantIds.has(o.id)&&lookup[o.id]);
+        await expect(panel.locator(".explanation")).toHaveCount(expected.length);
+        expect(await panel.locator(".explanation h5").allTextContents()).toEqual(expected.map(o=>o.title));
+        expect(await panel.locator(".explanation p").allTextContents()).toEqual(expected.map(o=>lookup[o.id]));
+        if (expected.length) {
+          const tickColor = await entry.locator(".green-check").first().evaluate(el=>getComputedStyle(el).color);
+          await expect(panel.locator(".explanation h5").first()).toHaveCSS("color",tickColor);
+          await expect(panel.locator(".explanation p").first()).toHaveCSS("color",tickColor);
+        } else await expect(panel.locator(".description-content")).toHaveText("");
+      }
+    }
+    for (const impact of [...problem.operationalImpacts,...problem.financialImpacts]) await card.getByRole("checkbox",{name:impact.label,exact:true}).uncheck();
+    await expect(card.locator(".explanation")).toHaveCount(0);
+    await card.getByRole("button", { name: /^Collapse/ }).click();
+  }
+});
+
+test("explanations update dynamically and pending relationships never fall back", async ({page}) => {
+  await page.goto("/");
+  const card = page.locator('[data-problem="problem-1"]');
+  await card.getByRole("button",{name:/^Expand/}).click();
+  const entry = card.locator('[data-solution="inbound"]');
+  const op = entry.locator("details").nth(1), fin = entry.locator("details").nth(2);
+  await op.locator("summary").click(); await fin.locator("summary").click();
+  const lead=card.getByRole("checkbox",{name:"Lost leads",exact:true}), revenue=card.getByRole("checkbox",{name:"Lost potential revenue",exact:true});
+  await lead.check();
+  await expect(op.locator("h5")).toHaveText(["Fewer lost leads"]);
+  await expect(fin.locator(".explanation")).toHaveCount(0);
+  await revenue.check();
+  const expected=personalizedExplanations["problem-1"].inbound["positive-financial-increased-revenue-potential"];
+  await expect(fin.locator(".explanation p")).toHaveText(expected);
+  await entry.getByRole("button",{name:"All benefits"}).click();
+  await expect(fin.locator(".explanation").filter({has:page.getByRole("heading",{name:"Increased revenue potential",exact:true})}).locator("p")).toHaveText(allBenefitExplanations.inbound["positive-financial-increased-revenue-potential"]);
+  await entry.getByRole("button",{name:"Personalized"}).click();
+  await expect(fin.locator(".explanation p")).toHaveText(expected);
+  await expect(lead).toBeChecked(); await expect(revenue).toBeChecked();
+  await card.getByRole("button",{name:/^Collapse/}).click(); await card.getByRole("button",{name:/^Expand/}).click();
+  await expect(entry.locator("details[open]")).toHaveCount(2);
+  await expect(fin.locator(".explanation p")).toHaveText(expected);
+  await revenue.uncheck(); await expect(fin.locator(".explanation")).toHaveCount(0); await expect(op.locator("h5")).toHaveText(["Fewer lost leads"]);
+  const manual=page.locator('[data-problem="problem-20"]');
+  await manual.getByRole("button",{name:/^Expand/}).click();
+  const review=manual.locator('[data-solution="reviews"]'), inbound=manual.locator('[data-solution="inbound"]');
+  await manual.getByRole("checkbox",{name:"Lost potential revenue",exact:true}).check();
+  await review.locator("details").nth(2).locator("summary").click();
+  await expect(review.locator(".outcome-list li")).toHaveText(["Increased revenue potential"]);
+  await expect(review.locator("details").nth(2).locator(".description-content")).toHaveText("");
+  await review.getByRole("button",{name:"All benefits"}).click();
+  await expect(review.locator("details").nth(2).locator(".explanation")).toHaveCount(2);
+  await expect(inbound.getByRole("button",{name:"Personalized"})).toHaveAttribute("aria-pressed","true");
+  await review.getByRole("button",{name:"Personalized"}).click();
+  await expect(review.locator("details").nth(2).locator(".description-content")).toHaveText("");
 });
