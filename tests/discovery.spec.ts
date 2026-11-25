@@ -95,7 +95,7 @@ test("requested pastel headings and compact agent headers across all problems", 
   }
 });
 
-test("discovery checkboxes use green outline and check without changing impact text", async ({ page }) => {
+test("problem checkbox retains green outline and impact checkboxes use filled green with dark check", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Discovery", exact: true })).toHaveCSS("color", "rgb(244, 244, 244)");
   const card = page.locator('[data-problem="problem-1"]');
@@ -109,11 +109,18 @@ test("discovery checkboxes use green outline and check without changing impact t
     await expect(input).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     await expect(input).toHaveCSS("background-image", "none");
     await input.check();
-    await expect(input).toHaveCSS("border-top-color", "rgb(18, 189, 98)");
-    await expect(input).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-    await expect(input).toHaveCSS("background-image", /%2312bd62/);
     const label = input.locator("xpath=following-sibling::span");
-    if (await label.textContent() !== "Missed calls") {
+    if (await label.textContent() === "Missed calls") {
+      await expect(input).toHaveCSS("border-top-color", "rgb(18, 189, 98)");
+      await expect(input).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      await expect(input).toHaveCSS("background-image", /%2312bd62/);
+      await expect(label).toHaveCSS("color", "rgb(242, 173, 173)");
+    } else {
+      await expect(input).toHaveCSS("border-top-color", "rgb(4, 184, 76)");
+      await expect(input).toHaveCSS("background-color", "rgb(4, 184, 76)");
+      await expect(input).toHaveCSS("background-image", /%23181818/);
+      await expect(input).toHaveCSS("width", "20px");
+      await expect(input).toHaveCSS("height", "20px");
       await expect(label).toHaveCSS("color", "rgb(244, 244, 244)");
     }
     await input.uncheck();
