@@ -80,11 +80,11 @@ test("requested pastel headings and compact agent headers across all problems", 
     await expect(card.locator(".agent-header .agent-icon")).toHaveCount(1);
     for (const heading of await card.locator(".outcome-tone-operational").all()) {
       await expect(heading).toHaveCSS("color", "rgb(245, 230, 163)");
-      await expect(heading).toHaveCSS("background-color", "rgba(245, 230, 163, 0.08)");
+      await expect(heading).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     }
     for (const heading of await card.locator(".outcome-tone-financial").all()) {
       await expect(heading).toHaveCSS("color", "rgb(174, 203, 244)");
-      await expect(heading).toHaveCSS("background-color", "rgba(174, 203, 244, 0.08)");
+      await expect(heading).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     }
     await card.getByRole("button", { name: /^Collapse/ }).click();
   }

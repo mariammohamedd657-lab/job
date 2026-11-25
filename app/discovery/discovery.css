@@ -43,8 +43,8 @@ body { background: #181818; color: #f4f4f4; }
 .agent-header p { color: #aaa7a7; font-size: 14px; margin: 0; }
 .sample-note { color: #999; font-size: 12px; }
 .solution-card hr { margin: 20px 0; }
-.outcome-tone-operational { color: #F5E6A3; background-color: rgba(245, 230, 163, 0.08); }
-.outcome-tone-financial { color: #AECBF4; background-color: rgba(174, 203, 244, 0.08); }
+.outcome-tone-operational { color: #F5E6A3; }
+.outcome-tone-financial { color: #AECBF4; }
 .outcome-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; }
 .outcome-list li { display: flex; gap: 6px; align-items: flex-start; }
 .green-check { width: 15px; height: 15px; margin-top: 4px; flex-shrink: 0; color: #10b85c; }
