@@ -5,463 +5,269 @@ export type Outcome = { id: string; title: string; description: string; function
 export type AgentIcon = "inbound" | "speed" | "revival" | "guardian" | "generic";
 export type Agent = { id: string; name: string; icon: AgentIcon; overview: string; temporary: boolean; functions: { id: string; text: string }[]; operationalOutcomes: Outcome[]; financialOutcomes: Outcome[] };
 export type Link = { kind: ImpactKind; impactId: string; agentId: string; outcomeId: string };
-export type Problem = { id: string; name: string; operationalImpacts: Impact[]; financialImpacts: Impact[]; agentIds: string[]; links: Link[] };
+export type PreviewOutcome = Pick<Link, "kind" | "agentId" | "outcomeId">;
+export type Problem = { id: string; name: string; operationalImpacts: Impact[]; financialImpacts: Impact[]; agentIds: string[]; links: Link[]; previewOutcomes?: PreviewOutcome[] };
 
+// Approved unified negative impact libraries. Shared IDs do not share checkbox state.
+export const negativeOperationalImpacts = {
+  "lost-leads": { id: "negative-operational-lost-leads", label: "Lost leads" },
+  "lost-qualified-leads": { id: "negative-operational-lost-qualified-leads", label: "Lost qualified leads" },
+  "fewer-old-leads-reactivated": { id: "negative-operational-fewer-old-leads-reactivated", label: "Fewer old leads reactivated" },
+  "fewer-appointments-booked": { id: "negative-operational-fewer-appointments-booked", label: "Fewer appointments booked" },
+  "fewer-appointments-attended": { id: "negative-operational-fewer-appointments-attended", label: "Fewer appointments attended" },
+  "unused-appointment-slots": { id: "negative-operational-unused-appointment-slots", label: "Unused appointment slots" },
+  "fewer-new-customers": { id: "negative-operational-fewer-new-customers", label: "Fewer new customers" },
+  "lost-existing-customers": { id: "negative-operational-lost-existing-customers", label: "Lost existing customers" },
+  "fewer-customers-served": { id: "negative-operational-fewer-customers-served", label: "Fewer customers served" },
+  "less-staff-time-available-for-other-work": { id: "negative-operational-less-staff-time-available-for-other-work", label: "Less staff time available for other work" },
+  "fewer-tasks-completed": { id: "negative-operational-fewer-tasks-completed", label: "Fewer tasks completed" },
+  "more-unpaid-invoices": { id: "negative-operational-more-unpaid-invoices", label: "More unpaid invoices" },
+  "fewer-customer-reviews": { id: "negative-operational-fewer-customer-reviews", label: "Fewer customer reviews" },
+  "missing-business-information": { id: "negative-operational-missing-business-information", label: "Missing business information" },
+} satisfies Record<string, Impact>;
+
+export const negativeFinancialImpacts = {
+  "lost-potential-revenue": { id: "negative-financial-lost-potential-revenue", label: "Lost potential revenue" },
+  "wasted-marketing-spend": { id: "negative-financial-wasted-marketing-spend", label: "Wasted marketing spend" },
+  "higher-cost-per-customer": { id: "negative-financial-higher-cost-per-customer", label: "Higher cost per customer" },
+  "higher-marketing-costs": { id: "negative-financial-higher-marketing-costs", label: "Higher marketing costs" },
+  "higher-staffing-costs": { id: "negative-financial-higher-staffing-costs", label: "Higher staffing costs" },
+  "wasted-staffing-costs": { id: "negative-financial-wasted-staffing-costs", label: "Wasted staffing costs" },
+  "higher-collection-costs": { id: "negative-financial-higher-collection-costs", label: "Higher collection costs" },
+  "delayed-cash-collection": { id: "negative-financial-delayed-cash-collection", label: "Delayed cash collection" },
+  "money-lost-from-unpaid-invoices": { id: "negative-financial-money-lost-from-unpaid-invoices", label: "Money lost from unpaid invoices" },
+} satisfies Record<string, Impact>;
+
+// Approved negative impacts; positive mappings are pending. Preview outcomes preserve the previous All benefits samples without an impact ID.
 export const problems: Problem[] = [
   {
-    "id": "problem-1",
-    "name": "Missed calls",
-    "operationalImpacts": [
-      {
-        "id": "operational-1",
-        "label": "Potential buyers lost before qualification"
-      },
-      {
-        "id": "operational-2",
-        "label": "Potential appointments lost"
-      },
-      {
-        "id": "operational-3",
-        "label": "Urgent callers not reaching employees"
-      }
-    ],
-    "financialImpacts": [
-      {
-        "id": "financial-1",
-        "label": "Lost potential sales revenue"
-      },
-      {
-        "id": "financial-2",
-        "label": "Wasted marketing spend"
-      },
-      {
-        "id": "financial-3",
-        "label": "Excessive staffing costs"
-      }
-    ],
-    "agentIds": [
-      "inbound"
-    ],
-    "links": [
-      {
-        "kind": "operational",
-        "impactId": "operational-1",
-        "agentId": "inbound",
-        "outcomeId": "operational-1"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-2",
-        "agentId": "inbound",
-        "outcomeId": "operational-2"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-3",
-        "agentId": "inbound",
-        "outcomeId": "operational-3"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-1",
-        "agentId": "inbound",
-        "outcomeId": "financial-1"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-2",
-        "agentId": "inbound",
-        "outcomeId": "financial-2"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-3",
-        "agentId": "inbound",
-        "outcomeId": "financial-3"
-      }
-    ]
+    id: "problem-1",
+    name: "Missed calls",
+    operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"], negativeFinancialImpacts["higher-cost-per-customer"]],
+    agentIds: ["inbound"],
+    links: [],
+    previewOutcomes: [{"kind":"operational","agentId":"inbound","outcomeId":"operational-1"},{"kind":"operational","agentId":"inbound","outcomeId":"operational-2"},{"kind":"operational","agentId":"inbound","outcomeId":"operational-3"},{"kind":"financial","agentId":"inbound","outcomeId":"financial-1"},{"kind":"financial","agentId":"inbound","outcomeId":"financial-2"},{"kind":"financial","agentId":"inbound","outcomeId":"financial-3"}],
   },
   {
-    "id": "problem-2",
-    "name": "Calls outside working hours",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-2",
+    name: "Calls outside working hours",
+    operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-3",
-    "name": "Missed bookings during calls",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-3",
+    name: "Missed bookings during calls",
+    operationalImpacts: [negativeOperationalImpacts["fewer-appointments-booked"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-4",
-    "name": "Urgent calls not reaching employees",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-4",
+    name: "Urgent calls not reaching employees",
+    operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-existing-customers"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-5",
-    "name": "Slow response to new leads",
-    "operationalImpacts": [
-      {
-        "id": "operational-1",
-        "label": "New leads not reached promptly"
-      },
-      {
-        "id": "operational-2",
-        "label": "Potential buyers lost before qualification"
-      },
-      {
-        "id": "operational-3",
-        "label": "Potential appointments lost"
-      }
-    ],
-    "financialImpacts": [
-      {
-        "id": "financial-1",
-        "label": "Lost potential sales revenue"
-      },
-      {
-        "id": "financial-2",
-        "label": "Wasted marketing spend"
-      }
-    ],
-    "agentIds": [
-      "speed"
-    ],
-    "links": [
-      {
-        "kind": "operational",
-        "impactId": "operational-1",
-        "agentId": "speed",
-        "outcomeId": "operational-1"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-2",
-        "agentId": "speed",
-        "outcomeId": "operational-2"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-3",
-        "agentId": "speed",
-        "outcomeId": "operational-3"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-1",
-        "agentId": "speed",
-        "outcomeId": "financial-1"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-2",
-        "agentId": "speed",
-        "outcomeId": "financial-2"
-      }
-    ]
+    id: "problem-5",
+    name: "Slow response to new leads",
+    operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"], negativeFinancialImpacts["higher-cost-per-customer"]],
+    agentIds: ["speed"],
+    links: [],
+    previewOutcomes: [{"kind":"operational","agentId":"speed","outcomeId":"operational-1"},{"kind":"operational","agentId":"speed","outcomeId":"operational-2"},{"kind":"operational","agentId":"speed","outcomeId":"operational-3"},{"kind":"financial","agentId":"speed","outcomeId":"financial-1"},{"kind":"financial","agentId":"speed","outcomeId":"financial-2"}],
   },
   {
-    "id": "problem-6",
-    "name": "New leads never called",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-6",
+    name: "New leads never called",
+    operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"], negativeFinancialImpacts["higher-cost-per-customer"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-7",
-    "name": "Late lead qualifications",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-7",
+    name: "Late lead qualifications",
+    operationalImpacts: [negativeOperationalImpacts["lost-qualified-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-cost-per-customer"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-8",
-    "name": "Warm leads not contacted",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-8",
+    name: "Warm leads not contacted",
+    operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-9",
-    "name": "Old leads not called",
-    "operationalImpacts": [
-      {
-        "id": "operational-1",
-        "label": "Old leads left uncontacted"
-      },
-      {
-        "id": "operational-2",
-        "label": "Interested old leads not identified"
-      },
-      {
-        "id": "operational-3",
-        "label": "Potential appointments lost"
-      }
-    ],
-    "financialImpacts": [
-      {
-        "id": "financial-1",
-        "label": "Lost potential sales revenue"
-      },
-      {
-        "id": "financial-2",
-        "label": "Wasted past lead acquisition spend"
-      }
-    ],
-    "agentIds": [
-      "revival"
-    ],
-    "links": [
-      {
-        "kind": "operational",
-        "impactId": "operational-1",
-        "agentId": "revival",
-        "outcomeId": "operational-1"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-2",
-        "agentId": "revival",
-        "outcomeId": "operational-2"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-3",
-        "agentId": "revival",
-        "outcomeId": "operational-3"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-1",
-        "agentId": "revival",
-        "outcomeId": "financial-1"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-2",
-        "agentId": "revival",
-        "outcomeId": "financial-2"
-      }
-    ]
+    id: "problem-9",
+    name: "Old leads not called",
+    operationalImpacts: [negativeOperationalImpacts["fewer-old-leads-reactivated"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-marketing-costs"]],
+    agentIds: ["revival"],
+    links: [],
+    previewOutcomes: [{"kind":"operational","agentId":"revival","outcomeId":"operational-1"},{"kind":"operational","agentId":"revival","outcomeId":"operational-2"},{"kind":"operational","agentId":"revival","outcomeId":"operational-3"},{"kind":"financial","agentId":"revival","outcomeId":"financial-1"},{"kind":"financial","agentId":"revival","outcomeId":"financial-2"}],
   },
   {
-    "id": "problem-10",
-    "name": "Inconsistent follow-up with old leads",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-10",
+    name: "Inconsistent follow-up with old leads",
+    operationalImpacts: [negativeOperationalImpacts["fewer-old-leads-reactivated"], negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-marketing-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-11",
-    "name": "Warm old leads not contacted again",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-11",
+    name: "Warm old leads not contacted again",
+    operationalImpacts: [negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-marketing-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-12",
-    "name": "Missed appointment reminders",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-12",
+    name: "Missed appointment reminders",
+    operationalImpacts: [negativeOperationalImpacts["fewer-appointments-attended"], negativeOperationalImpacts["unused-appointment-slots"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-13",
-    "name": "Unconfirmed appointments",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-13",
+    name: "Unconfirmed appointments",
+    operationalImpacts: [negativeOperationalImpacts["fewer-appointments-attended"], negativeOperationalImpacts["unused-appointment-slots"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-14",
-    "name": "Appointment no-shows",
-    "operationalImpacts": [
-      {
-        "id": "operational-1",
-        "label": "Buyers forgetting appointments"
-      },
-      {
-        "id": "operational-2",
-        "label": "Appointments missed without notice"
-      },
-      {
-        "id": "operational-3",
-        "label": "Buyers unable to attend at the booked time"
-      }
-    ],
-    "financialImpacts": [
-      {
-        "id": "financial-1",
-        "label": "Lost potential sales revenue"
-      },
-      {
-        "id": "financial-2",
-        "label": "Employees' time wasted on missed appointments"
-      }
-    ],
-    "agentIds": [
-      "guardian"
-    ],
-    "links": [
-      {
-        "kind": "operational",
-        "impactId": "operational-1",
-        "agentId": "guardian",
-        "outcomeId": "operational-1"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-2",
-        "agentId": "guardian",
-        "outcomeId": "operational-2"
-      },
-      {
-        "kind": "operational",
-        "impactId": "operational-3",
-        "agentId": "guardian",
-        "outcomeId": "operational-3"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-1",
-        "agentId": "guardian",
-        "outcomeId": "financial-1"
-      },
-      {
-        "kind": "financial",
-        "impactId": "financial-2",
-        "agentId": "guardian",
-        "outcomeId": "financial-2"
-      }
-    ]
+    id: "problem-14",
+    name: "Appointment no-shows",
+    operationalImpacts: [negativeOperationalImpacts["unused-appointment-slots"], negativeOperationalImpacts["fewer-customers-served"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
+    agentIds: ["guardian"],
+    links: [],
+    previewOutcomes: [{"kind":"operational","agentId":"guardian","outcomeId":"operational-1"},{"kind":"operational","agentId":"guardian","outcomeId":"operational-2"},{"kind":"operational","agentId":"guardian","outcomeId":"operational-3"},{"kind":"financial","agentId":"guardian","outcomeId":"financial-1"},{"kind":"financial","agentId":"guardian","outcomeId":"financial-2"}],
   },
   {
-    "id": "problem-15",
-    "name": "Time-consuming appointment rescheduling",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-15",
+    name: "Time-consuming appointment rescheduling",
+    operationalImpacts: [negativeOperationalImpacts["fewer-appointments-attended"], negativeOperationalImpacts["less-staff-time-available-for-other-work"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-staffing-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-16",
-    "name": "Empty slots after cancellations",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-16",
+    name: "Empty slots after cancellations",
+    operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-staffing-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-17",
-    "name": "Many routine questions",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-17",
+    name: "Many routine questions",
+    operationalImpacts: [negativeOperationalImpacts["less-staff-time-available-for-other-work"], negativeOperationalImpacts["fewer-tasks-completed"]],
+    financialImpacts: [negativeFinancialImpacts["higher-staffing-costs"], negativeFinancialImpacts["wasted-staffing-costs"], negativeFinancialImpacts["lost-potential-revenue"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-18",
-    "name": "Slow answers to simple questions",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-18",
+    name: "Slow answers to simple questions",
+    operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-existing-customers"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-19",
-    "name": "Employees answering the same questions",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-19",
+    name: "Employees answering the same questions",
+    operationalImpacts: [negativeOperationalImpacts["less-staff-time-available-for-other-work"]],
+    financialImpacts: [negativeFinancialImpacts["wasted-staffing-costs"], negativeFinancialImpacts["higher-staffing-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-20",
-    "name": "Too much manual work",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-20",
+    name: "Too much manual work",
+    operationalImpacts: [negativeOperationalImpacts["less-staff-time-available-for-other-work"], negativeOperationalImpacts["fewer-tasks-completed"], negativeOperationalImpacts["fewer-customers-served"]],
+    financialImpacts: [negativeFinancialImpacts["higher-staffing-costs"], negativeFinancialImpacts["wasted-staffing-costs"], negativeFinancialImpacts["lost-potential-revenue"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-21",
-    "name": "Basic buyer requests not handled",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-21",
+    name: "Basic buyer requests not handled",
+    operationalImpacts: [negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-existing-customers"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-22",
-    "name": "Missed payment reminders",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-22",
+    name: "Missed payment reminders",
+    operationalImpacts: [negativeOperationalImpacts["more-unpaid-invoices"]],
+    financialImpacts: [negativeFinancialImpacts["delayed-cash-collection"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-23",
-    "name": "Invoices not followed up regularly",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-23",
+    name: "Invoices not followed up regularly",
+    operationalImpacts: [negativeOperationalImpacts["more-unpaid-invoices"]],
+    financialImpacts: [negativeFinancialImpacts["delayed-cash-collection"], negativeFinancialImpacts["money-lost-from-unpaid-invoices"], negativeFinancialImpacts["higher-collection-costs"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-24",
-    "name": "Buyers not asked for reviews",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-24",
+    name: "Buyers not asked for reviews",
+    operationalImpacts: [negativeOperationalImpacts["fewer-customer-reviews"], negativeOperationalImpacts["fewer-new-customers"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["higher-cost-per-customer"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-25",
-    "name": "Missing call recordings and outcomes",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-25",
+    name: "Missing call recordings and outcomes",
+    operationalImpacts: [negativeOperationalImpacts["missing-business-information"]],
+    financialImpacts: [],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-26",
-    "name": "Lead details not updated in CRM",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-26",
+    name: "Lead details not updated in CRM",
+    operationalImpacts: [negativeOperationalImpacts["missing-business-information"], negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["lost-potential-revenue"], negativeFinancialImpacts["wasted-marketing-spend"]],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-27",
-    "name": "Hard to see what the AI agent is doing",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
+    id: "problem-27",
+    name: "Hard to see what the AI agent is doing",
+    operationalImpacts: [negativeOperationalImpacts["missing-business-information"]],
+    financialImpacts: [],
+    agentIds: [],
+    links: [],
   },
   {
-    "id": "problem-28",
-    "name": "Employees overloaded",
-    "operationalImpacts": [],
-    "financialImpacts": [],
-    "agentIds": [],
-    "links": []
-  }
+    id: "problem-28",
+    name: "Employees overloaded",
+    operationalImpacts: [negativeOperationalImpacts["fewer-tasks-completed"], negativeOperationalImpacts["fewer-customers-served"], negativeOperationalImpacts["lost-leads"]],
+    financialImpacts: [negativeFinancialImpacts["higher-staffing-costs"], negativeFinancialImpacts["lost-potential-revenue"]],
+    agentIds: [],
+    links: [],
+  },
 ];
 
 export const agents: Record<string, Agent> = {

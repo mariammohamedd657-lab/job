@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("all 28 problems, independent confirmation, expansion, and personalized outcomes", async ({ page }) => {
+test("all 28 problems, independent confirmation, expansion, and pending personalized mappings", async ({ page }) => {
   await page.goto("/");
   const cards = page.locator(".problem-card");
   await expect(cards).toHaveCount(28);
@@ -10,31 +10,31 @@ test("all 28 problems, independent confirmation, expansion, and personalized out
   await missed.getByRole("button", { name: "Expand Missed calls" }).click();
   await expect(confirmation).not.toBeChecked();
   await confirmation.check();
-  await expect(missed.getByRole("checkbox", { name: "Potential buyers lost before qualification" })).not.toBeChecked();
+  await expect(missed.getByRole("checkbox", { name: "Lost leads" })).not.toBeChecked();
   await confirmation.uncheck();
   await expect(missed.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
   await slow.getByRole("button", { name: "Expand Slow response to new leads" }).click();
   await expect(missed.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
   await expect(slow.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
-  const buyer = missed.getByRole("checkbox", { name: "Potential buyers lost before qualification" });
-  const money = missed.getByRole("checkbox", { name: "Lost potential sales revenue" });
+  const buyer = missed.getByRole("checkbox", { name: "Lost leads" });
+  const money = missed.getByRole("checkbox", { name: "Lost potential revenue" });
   await buyer.check();
-  await expect(missed.locator(".outcome-list")).toContainText("More potential buyers reached and qualified");
+  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
   await expect(money).not.toBeChecked();
   await money.check();
-  await expect(missed.locator(".outcome-list").last()).toContainText("Potential additional sales revenue");
-  await expect(slow.getByRole("checkbox", { name: "Potential buyers lost before qualification" })).not.toBeChecked();
+  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
+  await expect(slow.getByRole("checkbox", { name: "Lost leads" })).not.toBeChecked();
   await missed.getByText("How the agent functions", { exact: true }).click();
   await missed.getByText("How it produces operational outcomes", { exact: true }).click();
   await missed.getByText("How it produces financial outcomes", { exact: true }).click();
   await expect(missed.locator("details[open]")).toHaveCount(3);
   await expect(missed.locator(".muted-function")).toContainText("Routes urgent callers");
-  await expect(missed.locator(".explanation")).toHaveCount(2);
+  await expect(missed.locator(".explanation")).toHaveCount(0);
   await missed.getByRole("button", { name: "All benefits" }).click();
   await expect(missed.locator(".outcome-list li")).toHaveCount(6);
   await expect(missed.locator(".muted-function")).toHaveCount(0);
   await expect(missed.locator(".explanation")).toHaveCount(6);
-  await expect(missed.getByRole("checkbox", { name: "Potential appointments lost" })).not.toBeChecked();
+  await expect(missed.getByRole("checkbox", { name: "Wasted marketing spend" })).not.toBeChecked();
   await expect(slow.getByRole("button", { name: "Personalized" })).toHaveAttribute("aria-pressed", "true");
   await missed.getByRole("button", { name: "Collapse Missed calls" }).click();
   await missed.getByRole("button", { name: "Expand Missed calls" }).click();
@@ -43,10 +43,10 @@ test("all 28 problems, independent confirmation, expansion, and personalized out
   await expect(money).toBeChecked();
   await expect(missed.locator("details[open]")).toHaveCount(3);
   await missed.getByRole("button", { name: "Personalized" }).click();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(2);
+  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
   await buyer.uncheck();
-  await expect(missed.locator(".outcome-list li")).toHaveCount(1);
-  await expect(missed.locator(".explanation")).toHaveCount(1);
+  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
+  await expect(missed.locator(".explanation")).toHaveCount(0);
   await expect(money).toBeChecked();
   await missed.getByText("How the agent functions", { exact: true }).click();
   await expect(missed.locator("details[open]")).toHaveCount(2);
@@ -163,20 +163,355 @@ test("all seven category subtitles and all 28 problem cards are in the requested
   await expect(appointment.getByRole("heading", { name: "Solution", exact: true })).toBeVisible();
 });
 
-test("approved buyer and employee wording is used in problem titles and existing content", async ({ page }) => {
+test("existing problem titles and sample agent content are preserved", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".problem-confirm > span")).toHaveText(["Missed calls","Calls outside working hours","Slow response to new leads","New leads never called","Late lead qualifications","Warm leads not contacted","Old leads not called","Inconsistent follow-up with old leads","Warm old leads not contacted again","Missed bookings during calls","Missed appointment reminders","Unconfirmed appointments","Appointment no-shows","Time-consuming appointment rescheduling","Empty slots after cancellations","Urgent calls not reaching employees","Slow answers to simple questions","Basic buyer requests not handled","Many routine questions","Employees answering the same questions","Too much manual work","Employees overloaded","Missed payment reminders","Invoices not followed up regularly","Buyers not asked for reviews","Missing call recordings and outcomes","Lead details not updated in CRM","Hard to see what the AI agent is doing"]);
   const missed = page.locator('[data-problem="problem-1"]');
   await missed.getByRole("button", { name: /^Expand/ }).click();
-  await expect(missed.getByRole("checkbox", { name: "Urgent callers not reaching employees" })).toBeVisible();
+  await expect(missed.getByRole("checkbox", { name: "Lost leads", exact: true })).toBeVisible();
   await missed.getByRole("button", { name: "All benefits" }).click();
   await expect(missed.locator(".outcome-list").getByText("More urgent callers connected to employees", { exact: true })).toBeVisible();
   await missed.getByText("How the agent functions", { exact: true }).click();
   await expect(missed.locator(".function-list")).toContainText("Routes urgent callers to the appropriate employee, when configured.");
   const guardian = page.locator('[data-problem="problem-14"]');
   await guardian.getByRole("button", { name: /^Expand/ }).click();
-  await guardian.getByRole("checkbox", { name: "Buyers forgetting appointments" }).check();
+  await guardian.getByRole("checkbox", { name: "Unused appointment slots" }).check();
+  await guardian.getByRole("checkbox", { name: "Wasted staffing costs" }).check();
+  await expect(guardian.locator(".outcome-list li")).toHaveCount(0);
+  await guardian.getByRole("button", { name: "All benefits" }).click();
   await expect(guardian.locator(".outcome-list").getByText("More buyers reminded before appointments", { exact: true })).toBeVisible();
-  await guardian.getByRole("checkbox", { name: "Employees' time wasted on missed appointments" }).check();
   await expect(guardian.locator(".outcome-list").getByText("Potentially less wasted employees' time", { exact: true })).toBeVisible();
+});
+
+test("all approved negative impacts appear exactly in order, default unchecked, and remain independent", async ({ page }) => {
+  test.setTimeout(120000);
+  await page.goto("/");
+  const expected = [
+  {
+    "id": "problem-1",
+    "operational": [
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted marketing spend",
+      "Higher cost per customer"
+    ]
+  },
+  {
+    "id": "problem-2",
+    "operational": [
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted marketing spend"
+    ]
+  },
+  {
+    "id": "problem-3",
+    "operational": [
+      "Fewer appointments booked"
+    ],
+    "financial": [
+      "Lost potential revenue"
+    ]
+  },
+  {
+    "id": "problem-4",
+    "operational": [
+      "Fewer customers served",
+      "Lost existing customers"
+    ],
+    "financial": [
+      "Lost potential revenue"
+    ]
+  },
+  {
+    "id": "problem-5",
+    "operational": [
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted marketing spend",
+      "Higher cost per customer"
+    ]
+  },
+  {
+    "id": "problem-6",
+    "operational": [
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted marketing spend",
+      "Higher cost per customer"
+    ]
+  },
+  {
+    "id": "problem-7",
+    "operational": [
+      "Lost qualified leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Higher cost per customer"
+    ]
+  },
+  {
+    "id": "problem-8",
+    "operational": [
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted marketing spend"
+    ]
+  },
+  {
+    "id": "problem-9",
+    "operational": [
+      "Fewer old leads reactivated"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Higher marketing costs"
+    ]
+  },
+  {
+    "id": "problem-10",
+    "operational": [
+      "Fewer old leads reactivated",
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Higher marketing costs"
+    ]
+  },
+  {
+    "id": "problem-11",
+    "operational": [
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Higher marketing costs"
+    ]
+  },
+  {
+    "id": "problem-12",
+    "operational": [
+      "Fewer appointments attended",
+      "Unused appointment slots"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted staffing costs"
+    ]
+  },
+  {
+    "id": "problem-13",
+    "operational": [
+      "Fewer appointments attended",
+      "Unused appointment slots"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted staffing costs"
+    ]
+  },
+  {
+    "id": "problem-14",
+    "operational": [
+      "Unused appointment slots",
+      "Fewer customers served"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted staffing costs"
+    ]
+  },
+  {
+    "id": "problem-15",
+    "operational": [
+      "Fewer appointments attended",
+      "Less staff time available for other work"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Higher staffing costs"
+    ]
+  },
+  {
+    "id": "problem-16",
+    "operational": [
+      "Fewer customers served"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted staffing costs"
+    ]
+  },
+  {
+    "id": "problem-17",
+    "operational": [
+      "Less staff time available for other work",
+      "Fewer tasks completed"
+    ],
+    "financial": [
+      "Higher staffing costs",
+      "Wasted staffing costs",
+      "Lost potential revenue"
+    ]
+  },
+  {
+    "id": "problem-18",
+    "operational": [
+      "Fewer customers served",
+      "Lost existing customers"
+    ],
+    "financial": [
+      "Lost potential revenue"
+    ]
+  },
+  {
+    "id": "problem-19",
+    "operational": [
+      "Less staff time available for other work"
+    ],
+    "financial": [
+      "Wasted staffing costs",
+      "Higher staffing costs"
+    ]
+  },
+  {
+    "id": "problem-20",
+    "operational": [
+      "Less staff time available for other work",
+      "Fewer tasks completed",
+      "Fewer customers served"
+    ],
+    "financial": [
+      "Higher staffing costs",
+      "Wasted staffing costs",
+      "Lost potential revenue"
+    ]
+  },
+  {
+    "id": "problem-21",
+    "operational": [
+      "Fewer customers served",
+      "Lost existing customers"
+    ],
+    "financial": [
+      "Lost potential revenue"
+    ]
+  },
+  {
+    "id": "problem-22",
+    "operational": [
+      "More unpaid invoices"
+    ],
+    "financial": [
+      "Delayed cash collection"
+    ]
+  },
+  {
+    "id": "problem-23",
+    "operational": [
+      "More unpaid invoices"
+    ],
+    "financial": [
+      "Delayed cash collection",
+      "Money lost from unpaid invoices",
+      "Higher collection costs"
+    ]
+  },
+  {
+    "id": "problem-24",
+    "operational": [
+      "Fewer customer reviews",
+      "Fewer new customers"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Higher cost per customer"
+    ]
+  },
+  {
+    "id": "problem-25",
+    "operational": [
+      "Missing business information"
+    ],
+    "financial": []
+  },
+  {
+    "id": "problem-26",
+    "operational": [
+      "Missing business information",
+      "Lost leads"
+    ],
+    "financial": [
+      "Lost potential revenue",
+      "Wasted marketing spend"
+    ]
+  },
+  {
+    "id": "problem-27",
+    "operational": [
+      "Missing business information"
+    ],
+    "financial": []
+  },
+  {
+    "id": "problem-28",
+    "operational": [
+      "Fewer tasks completed",
+      "Fewer customers served",
+      "Lost leads"
+    ],
+    "financial": [
+      "Higher staffing costs",
+      "Lost potential revenue"
+    ]
+  }
+];
+  await expect(page.locator(".problem-card")).toHaveCount(28);
+  await expect(page.locator("input[type=checkbox]:checked")).toHaveCount(0);
+  for (const item of expected) {
+    const card = page.locator('[data-problem="' + item.id + '"]');
+    await card.getByRole("button", { name: /^Expand/ }).click();
+    for (const [i, labels] of [item.operational, item.financial].entries()) {
+      const column = card.locator(".impact-columns > div").nth(i);
+      const inputs = column.getByRole("checkbox");
+      await expect(inputs).toHaveCount(labels.length);
+      expect(await column.locator(".circle-label > span").allTextContents()).toEqual(labels);
+      if (!labels.length) await expect(column.locator(".empty-note, .impact-list")).toHaveCount(0);
+      for (const label of labels) {
+        const input = column.getByRole("checkbox", { name: label, exact: true });
+        await expect(input).not.toBeChecked();
+        await input.check();
+        await expect(input).toBeChecked();
+        await expect(card.locator(".solution-card .outcome-list li")).toHaveCount(0);
+        await input.uncheck();
+        await expect(input).not.toBeChecked();
+      }
+    }
+    await expect(card.getByRole("checkbox").first()).not.toBeChecked();
+    await card.getByRole("button", { name: /^Collapse/ }).click();
+  }
+  const missed = page.locator('[data-problem="problem-1"]');
+  const slow = page.locator('[data-problem="problem-5"]');
+  for (const card of [missed, slow]) await card.getByRole("button", { name: /^Expand/ }).click();
+  await missed.getByRole("checkbox", { name: "Lost leads", exact: true }).check();
+  await missed.getByRole("checkbox", { name: "Lost potential revenue", exact: true }).check();
+  await expect(slow.getByRole("checkbox", { name: "Lost leads", exact: true })).not.toBeChecked();
+  await expect(slow.getByRole("checkbox", { name: "Lost potential revenue", exact: true })).not.toBeChecked();
+  await missed.getByRole("button", { name: /^Collapse/ }).click();
+  await missed.getByRole("button", { name: /^Expand/ }).click();
+  await expect(missed.getByRole("checkbox", { name: "Lost leads", exact: true })).toBeChecked();
+  await expect(missed.getByRole("checkbox", { name: "Lost potential revenue", exact: true })).toBeChecked();
+  await expect(missed.locator(".outcome-list li")).toHaveCount(0);
 });

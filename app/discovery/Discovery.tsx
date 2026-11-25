@@ -71,7 +71,7 @@ export function ProblemCard({ problem }: { problem: Problem }) {
         {(["operational","financial"] as const).map(kind => {
           const impacts = kind === "operational" ? problem.operationalImpacts : problem.financialImpacts;
           return <div key={kind}><h4 className="impact-heading"><span className={`impact-tone-${kind}`}>Confirmed {kind} impacts</span></h4>
-            {impacts.length ? <div className="impact-list">{impacts.map(impact => <CircleInput key={impact.id} checked={state.selected[kind].includes(impact.id)} onChange={() => dispatch({type:"impact",kind,id:impact.id})} label={impact.label}/>)}</div> : <Empty>Content not yet provided.</Empty>}
+            {impacts.length ? <div className="impact-list">{impacts.map(impact => <CircleInput key={impact.id} checked={state.selected[kind].includes(impact.id)} onChange={() => dispatch({type:"impact",kind,id:impact.id})} label={impact.label}/>)}</div> : null}
           </div>;
         })}
       </div>

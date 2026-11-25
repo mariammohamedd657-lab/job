@@ -28,8 +28,12 @@ export function visibleOutcomes(problem: Problem, agent: Agent, kind: ImpactKind
   const outcomes = kind === "operational" ? agent.operationalOutcomes : agent.financialOutcomes;
   // Only outcomes associated with this problem are applicable, even if the agent is shared.
   const links = problem.links.filter(link => link.kind === kind && link.agentId === agent.id);
+  // Existing sample benefits can still be viewed in All benefits, but must never be
+  // personalized from newly approved impacts until an explicit approved link exists.
+  const preview = state.mode === "all" ? (problem.previewOutcomes ?? []).filter(item => item.kind === kind && item.agentId === agent.id) : [];
   return outcomes.filter(outcome => links.some(link => link.outcomeId === outcome.id &&
-    (state.mode === "all" || state.selected[kind].includes(link.impactId))));
+    (state.mode === "all" || state.selected[kind].includes(link.impactId))) ||
+    preview.some(item => item.outcomeId === outcome.id));
 }
 
 export function relevantFunctions(problem: Problem, agent: Agent, state: ProblemState) {
