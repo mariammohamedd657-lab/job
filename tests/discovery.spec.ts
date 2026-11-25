@@ -170,13 +170,13 @@ test("approved buyer and employee wording is used in problem titles and existing
   await missed.getByRole("button", { name: /^Expand/ }).click();
   await expect(missed.getByRole("checkbox", { name: "Urgent callers not reaching employees" })).toBeVisible();
   await missed.getByRole("button", { name: "All benefits" }).click();
-  await expect(missed.getByText("More urgent callers connected to employees", { exact: true })).toBeVisible();
+  await expect(missed.locator(".outcome-list").getByText("More urgent callers connected to employees", { exact: true })).toBeVisible();
   await missed.getByText("How the agent functions", { exact: true }).click();
   await expect(missed.locator(".function-list")).toContainText("Routes urgent callers to the appropriate employee, when configured.");
   const guardian = page.locator('[data-problem="problem-14"]');
   await guardian.getByRole("button", { name: /^Expand/ }).click();
   await guardian.getByRole("checkbox", { name: "Buyers forgetting appointments" }).check();
-  await expect(guardian.getByText("More buyers reminded before appointments", { exact: true })).toBeVisible();
+  await expect(guardian.locator(".outcome-list").getByText("More buyers reminded before appointments", { exact: true })).toBeVisible();
   await guardian.getByRole("checkbox", { name: "Employees' time wasted on missed appointments" }).check();
-  await expect(guardian.getByText("Potentially less wasted employees' time", { exact: true })).toBeVisible();
+  await expect(guardian.locator(".outcome-list").getByText("Potentially less wasted employees' time", { exact: true })).toBeVisible();
 });
