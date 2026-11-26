@@ -1,4 +1,5 @@
 import type { AlgebraEquation, Consequence } from "./algebra";
+import type { PopulationLink } from "./information-links";
 type Limit={value:number;deps:Set<string>};
 type Range={lo:Limit;hi:Limit};
 const limit=(value:number,deps:Iterable<string>=[]):Limit=>({value,deps:new Set(deps)});
@@ -7,12 +8,13 @@ const plus=(a:Limit,b:Limit)=>limit(a.value+b.value,deps(a,b));
 const times=(a:Limit,n:number)=>limit(a.value*n,a.deps);
 const multiply=(a:Limit,b:Limit,f:number)=>limit(a.value===0||b.value===0?0:a.value*b.value*f,deps(a,b));
 const tolerance=(a:number,b:number)=>16*Number.EPSILON*Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>){
+export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[]){
  const ranges=new Map<string,Range>();
  const results:Consequence[]=[];
  const conflicts:{dependencies:string[];label:string}[]=[];
  const active=equations.filter(e=>!e.keys.some(k=>blocked.has(k)));
- for(const key of new Set(active.flatMap(e=>e.keys))){
+ const links=populationLinks.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member));
+ for(const key of new Set([...active.flatMap(e=>e.keys),...links.flatMap(link=>[link.population,link.member])])){
   const [lo,hi]=domain(key);
   ranges.set(key,Number.isFinite(known[key])?{lo:limit(known[key],[key]),hi:limit(known[key],[key])}:{lo:limit(lo),hi:limit(hi)});
  }
@@ -38,6 +40,16 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
  for(const [rate,key] of Object.entries(denominators))if(Number.isFinite(known[rate])&&integerKeys.has(key))narrow(key,"lo",limit(1,[rate]),"A specified rate requires a positive denominator");
  for(let pass=0;pass<48&&!conflicts.length;pass++){
   changed=false;
+  for(const link of links){
+   const parent=ranges.get(link.population)!,child=ranges.get(link.member)!;
+   if(link.kind==="subset"){
+    narrow(link.member,"hi",parent.hi,link.label);
+    narrow(link.population,"lo",child.lo,link.label);
+   }else{
+    if(parent.hi.value===0)narrow(link.member,"hi",parent.hi,link.label);
+    if(child.lo.value>0&&integerKeys.has(link.population))narrow(link.population,"lo",limit(1,child.lo.deps),link.label);
+   }
+  }
   for(const equation of active){
    // Fully known equations have already been checked by the original
    // validation pass with display-precision tolerance. Do not reinterpret them.

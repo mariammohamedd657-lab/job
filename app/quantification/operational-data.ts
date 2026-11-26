@@ -1,9 +1,10 @@
 import { problems } from "../discovery/data";
+import { operationalPopulationLinks, type PopulationLink } from "./information-links";
 import type { Config, Field } from "./config";
 import { product, format, type AdditionalEquations, type AdditionalConstraint, type Relation, type ZeroInference } from "./solver";
 
 export type ImpactField=Field&{shared?:boolean;primary?:boolean;integer?:boolean};
-export type OperationalPanel={id:string;name:string;fields:ImpactField[];primaryKey:string;relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];example?:Record<string,string>;verified:boolean;estimated?:boolean;inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
+export type OperationalPanel={id:string;name:string;fields:ImpactField[];primaryKey:string;relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];example?:Record<string,string>;verified:boolean;populationLinks?:PopulationLink[];estimated?:boolean;inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 const prefix="negative-operational-";
 type Method="calls"|"leads"|"qualified"|"reactivation"|"booking"|"attendance"|"slots"|"new-buyers"|"existing-buyers"|"unserved"|"time"|"tasks"|"invoices"|"reviews"|"information"|"direct-leads";
 // Explicit, reviewed problem-to-impact mapping. Do not infer a method from a similar problem name.
@@ -78,7 +79,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
   const primaryKey="op:"+key+":result";
   const support=(suffix:string,label:string,unit:string,integer=false)=>field("op:"+key+":"+suffix,label,unit,integer);
   const primary=(label:string,unit:string,integer=true):ImpactField=>({...field(primaryKey,label,unit,integer),primary:true});
-  const panel=(fields:ImpactField[],relations:Relation[]=[],extra:Partial<OperationalPanel>={}):OperationalPanel=>({id:impact.id,name:impact.label,fields,primaryKey:fields.find(f=>f.primary)!.key,relations,verified:true,...extra});
+  const panel=(fields:ImpactField[],relations:Relation[]=[],extra:Partial<OperationalPanel>={}):OperationalPanel=>({id:impact.id,name:impact.label,fields,primaryKey:fields.find(f=>f.primary)!.key,relations,verified:true,populationLinks:operationalPopulationLinks(config.id,method,fields.find(f=>f.primary)!.key),...extra});
   const direct=(label:string,unit:string,estimated=false)=>{const result=primary(label,unit,!estimated);return panel([result],[],{estimated,example:{[result.key]:"7"}});};
   const ratePanel=(population:ImpactField,rate:ImpactField,result:ImpactField,others:ImpactField[]=[],context:ImpactField[]=[],estimated=false,example?:Record<string,string>)=>{
    const relations=[product(result.key,population.key,rate.key,.01,result.label+" = "+population.label+" × "+rate.label+" ÷ 100")];
@@ -139,5 +140,5 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
  });
 }
 export function operationalEquations(panels:OperationalPanel[]):AdditionalEquations{
- return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
+ return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
 }

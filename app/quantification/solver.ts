@@ -1,6 +1,7 @@
 import type { Config } from "./config";
 import { algebraicConsequences, type Term } from "./algebra";
 import { rangeConsequences } from "./ranges";
+import type { PopulationLink } from "./information-links";
 export type Figures=Record<string,string>;
 export type Result={values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>};
 export type Relation={keys:string[]; label:string; terms?:Term[]; operation?:(v:Record<string,number>,key:string)=>string; impossible?:(v:Record<string,number>,key:string)=>boolean; derive:(v:Record<string,number>, key:string)=>number|undefined; valid:(v:Record<string,number>)=>boolean};
@@ -13,7 +14,7 @@ function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{r
 const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
 export type ZeroInference={target:string;dependencies:string[];label:string};
-export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
+export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  const integerKeys=new Set(["total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
@@ -86,7 +87,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
    if(!changed&&!added){
     const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
     const linear=algebraicConsequences(algebra,known,blocked,domain);
-    const ranges=rangeConsequences(algebra,known,blocked,domain,integerKeys,rateDenominators);
+    const ranges=rangeConsequences(algebra,known,blocked,domain,integerKeys,rateDenominators,additional?.populationLinks??[]);
     const deductions={results:[...linear.results,...ranges.results],conflicts:[...linear.conflicts,...ranges.conflicts]};
     for(const conflict of deductions.conflicts)if(conflict.dependencies.every(active))contradict(conflict.dependencies,"Contradictory entries: "+conflict.label+".");
     for(const inferred of deductions.results){

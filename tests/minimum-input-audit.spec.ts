@@ -36,7 +36,7 @@ function fixture(c:Config,panels:OperationalPanel[],example:number):Fixture{
    case "calls":case "leads":case "qualified":case "booking":{
     const pop=method==="calls"?op+"unique-leads":method==="leads"?"affected":method==="qualified"?op+"affected-qualified-leads":op+"intended-bookings";
     const recovered=op+"recovered",pending=op+"pending",rate=op+"loss-rate";
-    if(pop!=="affected")values[pop]=80*scale;
+    if(pop!=="affected")values[pop]=(method==="calls"||method==="qualified"?40:80)*scale;
     values[recovered]=values[pop]*(example===0?.25:.2);
     values[pending]=values[pop]*(example===0?.25:.2);
     values[key]=values[pop]-values[recovered]-values[pending];
