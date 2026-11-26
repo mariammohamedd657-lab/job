@@ -43,3 +43,9 @@
 .q-controls>div{display:flex;gap:8px;}.q-controls button{border:1px solid #4a4a4a;background:transparent;color:#aaa;border-radius:999px;padding:5px 12px;font:inherit;cursor:pointer;}
 .q-note{margin:12px 0 0;color:#aaa;font-size:14px;}
 @media(max-width:480px){.workspace-nav{margin:0 4px;padding:10px 8px;}.workspace-nav a{padding:7px 8px;}.q-page{padding:12px 8px;}.q-calculator{padding:10px;}.q-field label{grid-template-columns:minmax(0,1fr) 76px 45px;gap:6px;font-size:13px;}.q-panel-content{padding:0 8px 8px;}.q-calculator h2{font-size:21px;}}
+
+/* The approved prototype is a centered, compact separate page. */
+.workspace-quantification {max-width:780px;margin:12px auto;border:1px solid #363636;border-radius:18px;background:#181818;}
+.workspace-quantification .workspace-nav {border-radius:18px 18px 0 0;}
+.workspace-quantification .q-page {border-radius:0 0 18px 18px;min-height:0;}
+@media(max-width:800px){.workspace-quantification{margin:4px;}}
