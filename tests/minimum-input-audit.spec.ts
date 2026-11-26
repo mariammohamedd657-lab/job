@@ -88,7 +88,7 @@ function rulesFor(keys:string[],blocks:Block[]):Rule[]{
   for(let m=1;m<1<<b.keys.length;m++){
    const local=mask(b.keys.filter((_,i)=>m&(1<<i)));
    if(popcount(m)===b.threshold&&!exceptions.some(e=>(local&e)===local))rules.push({requires:local,adds:all});
-   for(const e of exceptions)if((local&e)===local&&popcount(local)===2)rules.push({requires:local,adds:e});
+   for(const e of exceptions)if((local&e)===local&&popcount(local)===popcount(e)-1)rules.push({requires:local,adds:e});
   }
  }
  return rules;

@@ -97,7 +97,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
       const known=components.filter(f=>Number.isFinite(v[f.key]));
       const missing=components.filter(f=>!Number.isFinite(v[f.key]));
       const sum=known.reduce((n,f)=>n+v[f.key],0);
-      if(Math.abs(sum-v[population.key])<=1e-10)for(const f of missing)infer(f.key,[population.key,...known.map(f=>f.key)],"Known quantities account for all of "+population.label);
+      if(sum===v[population.key])for(const f of missing)infer(f.key,[population.key,...known.map(f=>f.key)],"Known quantities account for all of "+population.label);
      }
      return zeros;
     },

@@ -68,7 +68,7 @@ export function algebraicConsequences(equations:AlgebraEquation[],known:Record<s
     if(!finite(n)){usable=false;break;}
     bound+=c*n;endpoints.set(key,n);
    }
-   if(usable&&Math.abs(row.rhs-bound)<=EPS*Math.max(1,Math.abs(row.rhs),Math.abs(bound)))for(const [key,n] of endpoints)add(row,key,n);
+   if(usable&&row.rhs===bound)for(const [key,n] of endpoints)add(row,key,n);
   }
  }
  return {results,conflicts};
