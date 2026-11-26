@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { configs, sectionOrder } from "../app/quantification/config";
 import { solve } from "../app/quantification/solver";
+import { quantificationStatus } from "../app/quantification/status";
 import { problems } from "../app/discovery/data";
 
 test("all 28 problems use stable configurations and valid examples",()=>{
@@ -99,4 +100,63 @@ test("quantification panels, calculator state, and Discovery survive route navig
    else await expect(section.locator("button")).toBeDisabled();
   }
  }
+});
+
+test("quantification status uses valid resolved figures and problem-specific minimums",()=>{
+ for(const c of configs){
+  expect(quantificationStatus(c,c.example,false)).toBe("default");
+  expect(quantificationStatus(c,{},true)).toBe("incomplete");
+  expect(quantificationStatus(c,c.example,true)).toBe("complete");
+ }
+ const count=configs.find(c=>c.id==="problem-1")!;
+ expect(quantificationStatus(count,{months:"3"},true)).toBe("incomplete");
+ expect(quantificationStatus(count,{total:"100",unaffected:"80"},true)).toBe("complete");
+ expect(quantificationStatus(count,{total:"100",affected:"0"},true)).toBe("complete");
+ expect(quantificationStatus(count,{affected:"20",days:"30"},true)).toBe("complete");
+ expect(quantificationStatus(count,{total:"100",affected:"110"},true)).toBe("incomplete");
+ const timed=configs.find(c=>c.id==="problem-20")!;
+ expect(quantificationStatus(timed,{total:"100",affected:"20"},true)).toBe("incomplete");
+ expect(quantificationStatus(timed,{total:"100",affected:"20",averageMinutes:"15"},true)).toBe("complete");
+ const money=configs.find(c=>c.id==="problem-23")!;
+ expect(quantificationStatus(money,{total:"100",affected:"20"},true)).toBe("incomplete");
+ expect(quantificationStatus(money,{total:"100",affected:"20",moneyAverage:"50"},true)).toBe("complete");
+ const overload=configs.find(c=>c.id==="problem-28")!;
+ expect(quantificationStatus(overload,{hours:"10"},true)).toBe("incomplete");
+ expect(quantificationStatus(overload,{hours:"10",target:"8"},true)).toBe("complete");
+});
+test("problem selector colors follow Discovery confirmation and valid figures without changing state",async({page})=>{
+ await page.goto("/");
+ const problem=page.locator('[data-problem="problem-1"]');
+ const confirmation=problem.getByRole("checkbox",{name:"Missed calls",exact:true});
+ await confirmation.check();
+ await page.getByRole("link",{name:"Quantification"}).click();
+ const select=page.locator("#q-problem");
+ const option=select.locator('option[value="problem-1"]');
+ const other=select.locator('option[value="problem-6"]');
+ const color=async(status:string,rgb:string)=>{
+  await expect(select).toHaveAttribute("data-status",status);
+  await expect(option).toHaveAttribute("data-status",status);
+  await expect(select).toHaveCSS("color",rgb);
+  await expect(option).toHaveCSS("color",rgb);
+ };
+ await color("incomplete","rgb(242, 173, 173)");
+ await expect(other).toHaveCSS("color","rgb(244, 244, 244)");
+ const total=page.locator('[data-section="Quantity"] input[data-quantity="total"]');
+ const unaffected=page.locator('[data-section="Quantity"] input[data-quantity="unaffected"]');
+ await total.fill("100");await unaffected.fill("80");
+ await color("complete","rgb(16, 184, 92)");
+ await unaffected.fill("110");await color("incomplete","rgb(242, 173, 173)");
+ await unaffected.fill("80");await color("complete","rgb(16, 184, 92)");
+ await unaffected.fill("");await color("incomplete","rgb(242, 173, 173)");
+ await unaffected.fill("80");await color("complete","rgb(16, 184, 92)");
+ await select.selectOption("problem-6");
+ await expect(select).toHaveCSS("color","rgb(244, 244, 244)");
+ await expect(option).toHaveCSS("color","rgb(16, 184, 92)");
+ await select.selectOption("problem-1");
+ await page.getByRole("link",{name:"Discovery",exact:true}).click();
+ await confirmation.uncheck();
+ await page.getByRole("link",{name:"Quantification"}).click();
+ await color("default","rgb(244, 244, 244)");
+ await expect(total).toHaveValue("100");
+ await expect(unaffected).toHaveValue("80");
 });

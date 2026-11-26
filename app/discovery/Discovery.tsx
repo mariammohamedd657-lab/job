@@ -67,12 +67,12 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
     </div>
   </div>;
 }
-export function ProblemCard({ problem }: { problem: Problem }) {
+export function ProblemCard({ problem, onProblemConfirmation }: { problem: Problem; onProblemConfirmation?: (id: string, confirmed: boolean) => void }) {
   const [state, dispatch] = useReducer(problemReducer, initialState);
   const matching = matchedSolutions(problem, agents);
   return <section className="problem-card" data-problem={problem.id}>
     <div className="problem-header">
-      <CircleInput className="problem-confirm" checked={state.confirmed} onChange={() => dispatch({type:"confirm"})} label={problem.name}/>
+      <CircleInput className="problem-confirm" checked={state.confirmed} onChange={() => { dispatch({type:"confirm"}); onProblemConfirmation?.(problem.id,!state.confirmed); }} label={problem.name}/>
       <button type="button" className="problem-toggle" aria-expanded={state.expanded} aria-controls={`${problem.id}-content`} aria-label={`${state.expanded ? "Collapse" : "Expand"} ${problem.name}`} onClick={() => dispatch({type:"expand"})}><Chevron open={state.expanded}/></button>
     </div>
     <div className="problem-content" id={`${problem.id}-content`} hidden={!state.expanded}>
@@ -93,6 +93,6 @@ export function ProblemCard({ problem }: { problem: Problem }) {
 }
 const problemsById: Record<string, Problem> = Object.fromEntries(problems.map(problem => [problem.id, problem]));
 
-export default function Discovery() {
-  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problemCategories.map(category => <section className="problem-category" key={category.title}><h2 className="problem-category-title">{category.title}</h2><div className="problem-list">{category.problemIds.map(id => <ProblemCard key={id} problem={problemsById[id]}/>)}</div></section>)}</div></section></main>;
+export default function Discovery({ onProblemConfirmation }: { onProblemConfirmation?: (id:string,confirmed:boolean)=>void } = {}) {
+  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problemCategories.map(category => <section className="problem-category" key={category.title}><h2 className="problem-category-title">{category.title}</h2><div className="problem-list">{category.problemIds.map(id => <ProblemCard key={id} problem={problemsById[id]} onProblemConfirmation={onProblemConfirmation}/>)}</div></section>)}</div></section></main>;
 }

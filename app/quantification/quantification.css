@@ -49,3 +49,8 @@
 .workspace-quantification .workspace-nav {border-radius:18px 18px 0 0;}
 .workspace-quantification .q-page {border-radius:0 0 18px 18px;min-height:0;}
 @media(max-width:800px){.workspace-quantification{margin:4px;}}
+
+/* Status colors apply only to the existing business problem selector. */
+#q-problem optgroup, #q-problem option[data-status="default"] { color: #f4f4f4; }
+#q-problem[data-status="incomplete"], #q-problem option[data-status="incomplete"] { color: #F2ADAD; }
+#q-problem[data-status="complete"], #q-problem option[data-status="complete"] { color: #10b85c; }
