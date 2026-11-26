@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { configs, type Config } from "../app/quantification/config";
 import { problems } from "../app/discovery/data";
 import { operationalPanels, operationalEquations, operationalMethods, type OperationalPanel } from "../app/quantification/operational-data";
@@ -245,4 +245,125 @@ test("redundant display-rounded figures do not create false contradictions",()=>
  check(!small.errors.length&&small.values.unaffected===2,"Rounded percentage must not invalidate exact known counts: "+small.errors.join("; "));
  const large=solve(c,{total:"3000000000",affected:"1000000000",affectedPct:"33.33333333"});
  check(!large.errors.length&&large.values.unaffected===2000000000,"Large consistent figures must not be blocked by an absolute residual tolerance: "+large.errors.join("; "));
+});
+
+
+// Exercise the actual input elements, not internal state. The fixture above is
+// independent of the solver, and each field is identified by its existing ID.
+for(const c of configs)test("universal editable numerical fields "+c.id,async({page})=>{
+ test.setTimeout(180000);
+ const problem=problems.find(p=>p.id===c.id)!;
+ const panels=operationalPanels(c,problem.operationalImpacts.map(i=>i.id));
+ const {values,blocks}=fixture(c,panels,0);
+ const derivable=new Set(blocks.flatMap(b=>b.keys));
+ await page.goto("/");
+ const discovery=page.locator('[data-problem="'+c.id+'"]');
+ await discovery.getByRole("button",{name:/^Expand/}).click();
+ for(const impact of problem.operationalImpacts)await discovery.getByRole("checkbox",{name:impact.label,exact:true}).check();
+ await page.getByRole("link",{name:"Quantification"}).click();
+ await page.locator("#q-problem").click();
+ await page.locator('#q-problem-options [data-value="'+c.id+'"]').click();
+ await page.locator(".op-panel > button").click();
+ const input=page.locator('.q-page input[type="number"]');
+ const keyOf=async(i:number)=>(await input.nth(i).getAttribute("data-quantity"))!;
+ const copies=(key:string)=>page.locator('.q-page input[type="number"][data-quantity="'+key+'"]');
+ const count=await input.count();
+ const expectedFields=Object.values(c.fields).flat().length+panels.reduce((n,p)=>n+p.fields.length,0);
+ expect(count).toBe(expectedFields);
+ let blankEdits=0,calculatedEdits=0,directEdits=0,sharedChecks=0;
+ const keys=[...new Set(await input.evaluateAll(nodes=>nodes.map(n=>n.getAttribute("data-quantity")!)))];
+ const expected=(key:string)=>String(Number(values[key].toPrecision(10)));
+ // Every occurrence accepts genuine keyboard input when blank. Clearing the
+ // only manual constraint returns that occurrence and all equivalent ones to blank.
+ for(let i=0;i<count;i++){
+  const field=input.nth(i),key=await keyOf(i);
+  await expect(field).toBeEditable();
+  await expect(field).toHaveValue("");
+  await field.click();
+  await field.pressSequentially("7");
+  for(const copy of await copies(key).all())await expect(copy).toHaveValue("7");
+  await field.press("ControlOrMeta+a");
+  await field.press("Backspace");
+  await expect(field).toHaveValue("");
+  await field.blur();
+  for(const copy of await copies(key).all())await expect(copy).toHaveValue("");
+  blankEdits++;
+ }
+ // Enter a coherent independent fixture through the existing inputs.
+ for(const key of keys)await copies(key).first().fill(String(values[key]));
+ await input.last().blur();
+ await expect(page.locator(".q-errors")).toHaveCount(0);
+ for(let i=0;i<count;i++){
+  const field=input.nth(i),key=await keyOf(i);
+  const original=String(values[key]);
+  await field.fill("");
+  await field.blur();
+  if(derivable.has(key)){
+   await expect(field).toHaveValue(expected(key));
+   await expect(field).toBeEditable();
+   const row=field.locator("xpath=../..");
+   if(await field.locator("xpath=ancestor::section[contains(@class,'op-impact-card')]").count())
+    await expect(row.locator(".op-auto")).toHaveText("Automatically calculated");
+   else await expect(field).toHaveClass(/q-calculated/);
+   // Important: delete the actual displayed derived value before typing.
+   // Previously it was immediately restored, obstructing sequential entry.
+   await field.click();
+   await field.press("ControlOrMeta+a");
+   await field.press("Backspace");
+   await expect(field).toHaveValue("");
+   calculatedEdits++;
+  }else{
+   await expect(field).toHaveValue("");
+   directEdits++;
+  }
+  // An intentionally different manual constraint is preserved even when it
+  // contradicts another entry. All equivalent fields show the manual value.
+  await field.pressSequentially(key==="difference"?"-7":"17");
+  const replacement=key==="difference"?"-7":"17";
+  await expect(field).toHaveValue(replacement);
+  for(const copy of await copies(key).all()){
+   await expect(copy).toHaveValue(replacement);
+   sharedChecks++;
+  }
+  await field.fill(original);
+  await field.blur();
+  for(const copy of await copies(key).all())await expect(copy).toHaveValue(original);
+  await expect(page.locator(".q-errors")).toHaveCount(0);
+ }
+ for(const panel of panels)await expect(page.locator('.op-impact-card[data-impact="'+panel.id+'"] .op-result-row strong')).toHaveText(expected(panel.primaryKey));
+ console.log("EDITABILITY_AUDIT "+JSON.stringify({problem:c.id,fields:count,uniqueQuantities:keys.length,blankEdits,calculatedEdits,directEdits,sharedChecks}));
+});
+
+test("clearing an inferred value allows replacement typing and independently recalculates equivalent fields",async({page})=>{
+ await page.goto("/");
+ const problem=page.locator('[data-problem="problem-6"]');
+ await problem.getByRole("button",{name:/^Expand/}).click();
+ await problem.getByRole("checkbox",{name:"Lost leads",exact:true}).check();
+ await page.getByRole("link",{name:"Quantification"}).click();
+ await page.locator("#q-problem").click();
+ await page.locator('#q-problem-options [data-value="problem-6"]').click();
+ const base=(key:string)=>page.locator('[data-section="Quantity"] input[data-quantity="'+key+'"]');
+ await base("total").fill("100");await base("unaffected").fill("80");
+ await page.locator(".op-panel > button").click();
+ const op=(key:string)=>page.locator('.op-impact-card input[data-quantity="'+key+'"]');
+ await expect(op("affected")).toHaveValue("20");
+ await op("op:lost-leads:recovered").fill("8");await op("op:lost-leads:pending").fill("7");
+ const lost=op("op:lost-leads:result");
+ await expect(lost).toHaveValue("5");
+ await lost.click();await lost.press("ControlOrMeta+a");await lost.press("Backspace");
+ await expect(lost).toHaveValue("");
+ await lost.pressSequentially("6");
+ await expect(lost).toHaveValue("6");
+ await expect(page.locator(".q-errors").first()).toBeVisible();
+ await expect(op("op:lost-leads:recovered")).toHaveValue("8");
+ await base("unaffected").fill("");
+ await expect(base("affected")).toHaveValue("21");
+ await expect(op("affected")).toHaveValue("21");
+ await expect(base("unaffected")).toHaveValue(""); // still editing the cleared constraint
+ await base("unaffected").blur();
+ await expect(base("unaffected")).toHaveValue("79");
+ await expect(page.locator(".op-result-row strong")).toHaveText("6");
+ await lost.fill("");await lost.blur();
+ await expect(lost).toHaveValue("");
+ await expect(base("affected")).toHaveValue("");
 });

@@ -2,6 +2,7 @@
 import {useState,type ReactNode} from "react";
 import type {OperationalPanel} from "./operational-data";
 import {format,type Figures,type Result} from "./solver";
+import NumericalInput, {resolveQuantity} from "./NumericalInput";
 import "./operational.css";
 
 function Icon({kind}:{kind:"check"|"link"|"calculator"|"chevron"}){
@@ -12,11 +13,7 @@ type Props={problemId:string;panels:OperationalPanel[];raw:Figures;result:Result
 export default function OperationalImpacts({problemId,panels,raw,result,show,setShow,update,setRaw}:Props){
  const [collapsed,setCollapsed]=useState<Record<string,boolean>>({});
  if(!panels.length)return <div className="op-empty">No confirmed operational impacts.</div>;
- const resolved=(key:string)=>{
-  const manual=raw[key]??"";
-  const valid=Number.isFinite(result.values[key])&&!result.blocked.has(key);
-  return {value:manual.trim()!==""?manual:valid?format(result.values[key]):"",computed:manual.trim()===""&&valid,valid};
- };
+ const resolved=(key:string)=>resolveQuantity(key,raw,result);
  const example=Object.assign({},...panels.map(p=>p.example??{})) as Figures;
  const reset=()=>{const next={...raw};for(const panel of panels)for(const field of panel.fields)delete next[field.key];setRaw(next);};
  return <div className="op-impact-content">
@@ -32,7 +29,7 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
         <div className="op-impact-fields">{panel.fields.map(field=>{
           const v=resolved(field.key);
           return <div className="q-field" key={field.key}>
-            <label className={field.primary?"op-primary":field.shared?"q-general":""}><span>{field.shared&&<span className="op-linked-icon"><Icon kind="link"/></span>}{field.label}</span><input type="number" step="any" min={0} max={field.unit==="%"?100:undefined} aria-label={field.label} data-quantity={field.key} value={v.value} placeholder="—" className={result.blocked.has(field.key)?"q-invalid":""} onChange={e=>update(field.key,e.target.value)}/><span className="q-unit">{field.unit}</span></label>
+            <label className={field.primary?"op-primary":field.shared?"q-general":""}><span>{field.shared&&<span className="op-linked-icon"><Icon kind="link"/></span>}{field.label}</span><NumericalInput step="any" min={0} max={field.unit==="%"?100:undefined} aria-label={field.label} data-quantity={field.key} value={v.value} placeholder="—" className={result.blocked.has(field.key)?"q-invalid":""} onValueChange={value=>update(field.key,value)}/><span className="q-unit">{field.unit}</span></label>
             {v.computed&&<div className="op-auto"><Icon kind="calculator"/>Automatically calculated</div>}
             {show&&v.computed&&<div className="q-formula">{result.calculated[field.key]}</div>}
           </div>;
