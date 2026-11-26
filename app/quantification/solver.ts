@@ -92,7 +92,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
      if(!isValid(k,inferred.value,true)){contradict(inferred.dependencies,"Contradictory entries: "+inferred.label+".");continue;}
      if(active(k)){if(!close(values[k],inferred.value))contradict([...inferred.dependencies,k],"Contradictory entries: "+inferred.label+".");continue;}
      if(k in manual)continue;
-     values[k]=integerKeys.has(k)?Math.round(inferred.value):Math.abs(inferred.value)<1e-12?0:inferred.value;
+     values[k]=integerKeys.has(k)?Math.round(inferred.value):inferred.value===0?0:inferred.value;
      roots[k]=new Set(inferred.dependencies.flatMap(x=>[...roots[x]]));
      calculated[k]=(labels[k]??k)+" = "+format(values[k])+" (combined: "+inferred.label+")";
      added=true;

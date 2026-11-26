@@ -12,7 +12,7 @@ const singleton=(key:string)=>!key.includes(SEP);
 const finite=Number.isFinite;
 function normalize(row:Row){
  const scale=Math.max(...Array.from(row.coeff.values(),Math.abs),0);
- if(scale>0){for(const [k,v] of row.coeff){if(Math.abs(v/scale)<=EPS)row.coeff.delete(k);else row.coeff.set(k,v/scale);}row.rhs/=scale;}
+ if(scale>0){for(const [k,v] of row.coeff){row.coeff.set(k,v/scale);}row.rhs/=scale;}
  return row;
 }
 export function algebraicConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number]){
@@ -42,12 +42,13 @@ export function algebraicConsequences(equations:AlgebraEquation[],known:Record<s
   for(let i=0;i<rows.length;i++){
    if(i===pivot)continue;
    const row=rows[i],f=row.coeff.get(col)??0;if(Math.abs(f)<=EPS)continue;
-   for(const [key,c] of p.coeff){const prev=row.coeff.get(key)??0,next=prev-f*c;if(Math.abs(next)<=EPS*Math.max(Math.abs(prev),Math.abs(f*c),1))row.coeff.delete(key);else row.coeff.set(key,next);}
+   for(const [key,c] of p.coeff){const prev=row.coeff.get(key)??0,next=prev-f*c;if(Math.abs(next)<=EPS*Math.max(Math.abs(prev),Math.abs(f*c)))row.coeff.delete(key);else row.coeff.set(key,next);}
    row.rhs-=f*p.rhs;for(const k of p.dependencies)row.dependencies.add(k);for(const label of p.labels)row.labels.add(label);
   }
   pivot++;
  }
  const results:Consequence[]=[];
+ const conflicts:{dependencies:string[];label:string}[]=[];
  const add=(row:Row,key:string,value:number)=>{
   if(!singleton(key)||!finite(value)||finite(known[key]))return;
   // A zero denominator may make a rate undefined. The calling solver handles
@@ -55,6 +56,7 @@ export function algebraicConsequences(equations:AlgebraEquation[],known:Record<s
   results.push({key,value,dependencies:[...row.dependencies],label:[...row.labels].join("; ")});
  };
  for(const row of [...original,...rows]){
+  if(row.coeff.size===0){if(Math.abs(row.rhs)>1e-8)conflicts.push({dependencies:[...row.dependencies],label:[...row.labels].join("; ")});continue;}
   if(row.coeff.size===1){const [key,c]=[...row.coeff][0];add(row,key,row.rhs/c);continue;}
   // A linear sum can force several quantities to a domain endpoint at once.
   // For example, nonnegative terms summing to zero are individually zero.
@@ -69,5 +71,5 @@ export function algebraicConsequences(equations:AlgebraEquation[],known:Record<s
    if(usable&&Math.abs(row.rhs-bound)<=EPS*Math.max(1,Math.abs(row.rhs),Math.abs(bound)))for(const [key,n] of endpoints)add(row,key,n);
   }
  }
- return results;
+ return {results,conflicts};
 }
