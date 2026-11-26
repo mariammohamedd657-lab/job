@@ -4,23 +4,19 @@ import { configs, sectionOrder, type Section, type Field } from "./config";
 import { solve, format, type Figures } from "./solver";
 import { quantificationStatus } from "./status";
 import ProblemSelector from "./ProblemSelector";
+import OperationalImpacts from "./OperationalImpacts";
+import { operationalPanels, operationalEquations } from "./operational-data";
+import type { Config } from "./config";
+import type { Result } from "./solver";
 import "./quantification.css";
 export function QuantIcon({name}:{name:string}){
  const paths:Record<string,ReactNode>={calculator:<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h1m6 0h1M8 15h1m6 0h1M8 18h1m6 0h1"/></>,down:<path d="m3 6 6 6 4-4 8 8m-5 0h5v-5"/>,up:<path d="m3 18 6-6 4 4 8-8m-5 0h5v5"/>,wallet:<><path d="M20 8V5H5a2 2 0 0 0-2 2v12h17v-4M3 8h17"/><rect x="14" y="10" width="8" height="6" rx="2"/><path d="M17 13h.1"/></>,lock:<><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></>,unlock:<><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7-2"/></>,chevron:<path d="m6 9 6 6 6-6"/>,check:<><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="m8 12 3 3 5-6" stroke="#181818"/></>};
  return <svg className="q-icon" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 const panels=[["Problem quantification","calculator","purple"],["Negative operational impacts","down","yellow"],["Negative financial impacts","down","blue"],["Positive operational outcomes","up","yellow"],["Positive financial outcomes","up","blue"],["Investment and financial requirements","wallet","green"]];
-function Calculator({confirmedProblems}:{confirmedProblems:Record<string,boolean>}){
- const [selected,setSelected]=useState(configs[0].id);
- const [figures,setFigures]=useState<Record<string,Figures>>({});
+type CalculatorProps={selected:string;setSelected:(id:string)=>void;c:Config;raw:Figures;result:Result;statuses:Record<string,ReturnType<typeof quantificationStatus>>;setRaw:(next:Figures)=>void;update:(key:string,value:string)=>void;show:boolean;setShow:(value:boolean)=>void};
+function Calculator({selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow}:CalculatorProps){
  const [sectionStates,setSectionStates]=useState<Record<string,Partial<Record<Section,boolean>>>>({});
- const [show,setShow]=useState(false);
- const c=configs.find(x=>x.id===selected)!;
- const raw=figures[selected]??{};
- const result=solve(c,raw);
- const statuses=Object.fromEntries(configs.map(config=>[config.id,quantificationStatus(config,figures[config.id]??{},!!confirmedProblems[config.id])]));
- const setRaw=(next:Figures)=>setFigures(old=>({...old,[selected]:next}));
- const update=(key:string,value:string)=>setFigures(old=>({...old,[selected]:{...old[selected],[key]:value}}));
  // Resolve each quantity once per problem. Every occurrence uses the same actual
  // input value, whether entered directly or calculated in another section.
  const displayedValues=Object.fromEntries([...new Set(Object.values(c.fields).flat().map(f=>f.key))].map(key=>{
@@ -35,10 +31,23 @@ function Calculator({confirmedProblems}:{confirmedProblems:Record<string,boolean
  <div className="q-indicators">{sectionOrder.map(s=><span key={s} className={c.fields[s].length?"q-available":"q-locked"}><QuantIcon name={c.fields[s].length?"unlock":"lock"}/>{s}</span>)}</div>
  <div className="q-sections">{sectionOrder.map(s=>{const fields=c.fields[s];const open=sectionStates[selected]?.[s]??true;return <section key={s} className={"q-section "+(!fields.length?"q-disabled":"")} data-section={s}><button type="button" className="q-section-header" disabled={!fields.length} aria-expanded={!!fields.length&&open} onClick={()=>setSectionStates(old=>({...old,[selected]:{...old[selected],[s]:!open}}))}><QuantIcon name={fields.length?"unlock":"lock"}/><span>{s}</span>{fields.length?<span className={"q-arrow "+(open?"q-open":"")}><QuantIcon name="chevron"/></span>:<span className="q-na">Not applicable</span>}</button>{fields.length>0&&<div className="q-fields" hidden={!open}>{fields.map(row)}{s==="Quantity"&&bar&&<div className="q-percentage" aria-label="Affected and unaffected percentages"><div className="q-percentage-bar"><span style={{width:p+"%"}}/><span style={{width:u+"%"}}/></div><div className="q-meta"><span>{format(p)}% affected</span><span>{format(u)}% unaffected</span></div></div>}</div>}</section>})}</div>
  {result.errors.length>0&&<div className="q-errors" role="alert">{result.errors.map(e=><div key={e}>{e}</div>)}</div>}
- <div className="q-controls"><label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/>Show calculations</label><div><button type="button" onClick={()=>setRaw({})}>Reset</button><button type="button" onClick={()=>setRaw({...c.example})}>Load example</button></div></div>
+ <div className="q-controls"><label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/>Show calculations</label><div><button type="button" onClick={()=>{const next={...raw};for(const field of Object.values(c.fields).flat())delete next[field.key];setRaw(next);}}>Reset</button><button type="button" onClick={()=>{const next={...raw};for(const field of Object.values(c.fields).flat())delete next[field.key];setRaw({...next,...c.example});}}>Load example</button></div></div>
  <p className="q-note">Green values are calculated automatically. Figures entered manually are preserved when switching problems. Example figures are hypothetical.</p></div>;
 }
-export default function Quantification({confirmedProblems = {}}:{confirmedProblems?:Record<string,boolean>} = {}){
+export default function Quantification({confirmedProblems = {},operationalSelections = {}}:{confirmedProblems?:Record<string,boolean>;operationalSelections?:Record<string,string[]>} = {}){
  const [open,setOpen]=useState<boolean[]>([true,false,false,false,false,false]);
- return <main className="q-page"><h1>Quantification</h1><div className="q-panels">{panels.map(([title,icon,tone],i)=><section className={"q-panel q-"+tone} key={title}><button className="q-panel-header" aria-expanded={open[i]} onClick={()=>setOpen(old=>old.map((v,j)=>j===i?!v:v))}><QuantIcon name={icon}/><span>{title}</span>{i===0&&<span className="q-complete"><QuantIcon name="check"/></span>}<span className={"q-arrow "+(open[i]?"q-open":"")}><QuantIcon name="chevron"/></span></button><div className="q-panel-content" hidden={!open[i]}>{i===0?<Calculator confirmedProblems={confirmedProblems}/>:<div className="q-placeholder"><div>To be developed</div><p>The quantities and calculations for this section have not been approved yet.</p></div>}</div></section>)}</div></main>;
+ const [selected,setSelected]=useState(configs[0].id);
+ const [figures,setFigures]=useState<Record<string,Figures>>({});
+ const [show,setShow]=useState(false);
+ const c=configs.find(x=>x.id===selected)!;
+ const raw=figures[selected]??{};
+ const impacts=operationalPanels(c,operationalSelections[selected]??[]);
+ const result=solve(c,raw,operationalEquations(impacts));
+ const statuses=Object.fromEntries(configs.map(config=>{
+  const inputs=figures[config.id]??{};
+  return [config.id,quantificationStatus(config,inputs,!!confirmedProblems[config.id],solve(config,inputs,operationalEquations(operationalPanels(config,operationalSelections[config.id]??[]))))];
+ }));
+ const setRaw=(next:Figures)=>setFigures(old=>({...old,[selected]:next}));
+ const update=(key:string,value:string)=>setFigures(old=>({...old,[selected]:{...old[selected],[key]:value}}));
+ return <main className="q-page"><h1>Quantification</h1><div className="q-panels">{panels.map(([title,icon,tone],i)=><section className={"q-panel q-"+tone+(i===1?" op-panel":"")} key={title}><button className="q-panel-header" aria-expanded={open[i]} onClick={()=>setOpen(old=>old.map((v,j)=>j===i?!v:v))}><QuantIcon name={icon}/><span>{title}</span>{i===0&&<span className="q-complete"><QuantIcon name="check"/></span>}{i===1&&impacts.length>0&&<span className="op-panel-count">{impacts.filter(p=>Number.isFinite(result.values[p.primaryKey])&&!result.blocked.has(p.primaryKey)).length}/{impacts.length}</span>}<span className={"q-arrow "+(open[i]?"q-open":"")}><QuantIcon name="chevron"/></span></button><div className="q-panel-content" hidden={!open[i]}>{i===0?<Calculator {...{selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow}}/>:i===1?<OperationalImpacts {...{problemId:selected,panels:impacts,raw,result,show,setShow,update,setRaw}}/>:<div className="q-placeholder"><div>To be developed</div><p>The quantities and calculations for this section have not been approved yet.</p></div>}</div></section>)}</div></main>;
 }

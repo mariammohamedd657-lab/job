@@ -44,7 +44,7 @@ export function solve(config:Config,raw:Figures):Result{
     const known=rel.keys.filter(x=>x!==k);if(!known.every(active))continue;
     if(rel.impossible?.(values,k)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     const n=rel.derive(values,k);if(n===undefined)continue;
-    if(!validValue(k,n)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
+    if(!isValid(k,n)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     values[k]=Math.abs(n)<1e-12?0:n;
     roots[k]=new Set(known.flatMap(x=>[...roots[x]]));
     calculated[k]=(labels[k]??k)+" = "+(rel.operation?.(values,k)??rel.label)+" = "+format(n);

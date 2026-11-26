@@ -1,13 +1,13 @@
 import type { Config } from "./config";
-import { solve, type Figures } from "./solver";
+import { solve, type Figures, type Result } from "./solver";
 
 export type QuantificationStatus = "default" | "incomplete" | "complete";
 
 // Completion measures the problem itself, not every optional calculation.
 // Use resolved figures (including valid calculated values) and never treat blanks as zero.
-export function quantificationStatus(config: Config, figures: Figures, confirmed: boolean): QuantificationStatus {
+export function quantificationStatus(config: Config, figures: Figures, confirmed: boolean, resolved?: Result): QuantificationStatus {
   if (!confirmed) return "default";
-  const result = solve(config, figures);
+  const result = resolved ?? solve(config, figures);
   if (result.errors.length || result.blocked.size) return "incomplete";
   const has = (key: string) => Number.isFinite(result.values[key]) && !result.blocked.has(key);
   const positive = (key: string) => has(key) && result.values[key] > 0;

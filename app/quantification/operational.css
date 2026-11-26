@@ -1,0 +1,26 @@
+/* Only the newly populated operational impact panel is styled here. */
+.q-panel.op-panel{color:#F0D985;}
+.op-panel .op-panel-count{margin-left:auto;color:#aaa;font-size:13px;}
+.op-panel .op-panel-count+.q-arrow{margin-left:0;}
+.op-confirmed-heading{color:#aaa;margin:0 0 10px;}
+.op-confirmed-list{display:flex;flex-direction:column;gap:8px;color:#f4f4f4;padding-bottom:18px;border-bottom:1px solid #333;margin-bottom:19px;}
+.op-confirmed-list>div{display:flex;align-items:center;gap:8px;}
+.op-confirmed-check{color:#f4f4f4;display:flex;}.op-confirmed-check .q-icon{width:23px;height:23px;}
+.op-impact-panels{display:flex;flex-direction:column;gap:12px;}
+.op-impact-card{border:1px solid #40394d;border-radius:12px;background:#1b1b1b;overflow:hidden;}
+.op-impact-toggle{display:flex;align-items:center;gap:7px;width:100%;border:0;background:none;color:#F0D985;text-align:left;font:inherit;font-size:15px;padding:14px 12px;cursor:pointer;}
+.op-result-tick{display:flex;color:#10b85c;}.op-result-tick .q-icon{width:15px;height:15px;}
+.op-impact-body{padding:0 12px 12px;}.op-impact-body[hidden]{display:none;}
+.op-impact-fields{border-top:1px solid #333;padding:18px 0;display:flex;flex-direction:column;gap:10px;}
+.op-impact-fields .op-primary>span:first-child{color:#F2ADAD;}
+.op-linked-icon{display:inline-flex;margin-right:6px;vertical-align:middle;}.op-linked-icon .q-icon{width:13px;height:13px;}
+.op-auto{display:flex;align-items:center;gap:3px;color:#10b85c;font-size:12px;margin-top:4px;}.op-auto .q-icon{width:12px;height:12px;}
+.op-impact-fields .q-formula{color:#10b85c;}
+.op-result-wrap{border-top:1px solid #333;padding-top:19px;}
+.op-result{border:1px solid #604141;background:#151515;border-radius:8px;padding:11px 12px;color:#aaa;}
+.op-result-row{display:flex;gap:8px;align-items:center;margin:5px 0;color:#F2ADAD;}
+.op-result-row>span:first-child{margin-right:auto;font-weight:500;}
+.op-result-row strong{font-size:32px;line-height:1.25;font-weight:650;}
+.op-result-row>span:last-child{font-size:13px;color:#aaa;}
+.op-pending,.op-empty{color:#aaa;font-size:13px;margin:0 0 12px;}
+.op-impact-content .q-controls button:disabled{opacity:.45;cursor:default;}
