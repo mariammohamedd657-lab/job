@@ -1,9 +1,9 @@
 import { problems } from "../discovery/data";
 import type { Config, Field } from "./config";
-import { product, format, type AdditionalEquations, type AdditionalConstraint, type Relation } from "./solver";
+import { product, format, type AdditionalEquations, type AdditionalConstraint, type Relation, type ZeroInference } from "./solver";
 
 export type ImpactField=Field&{shared?:boolean;primary?:boolean;integer?:boolean};
-export type OperationalPanel={id:string;name:string;fields:ImpactField[];primaryKey:string;relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];example?:Record<string,string>;verified:boolean;estimated?:boolean};
+export type OperationalPanel={id:string;name:string;fields:ImpactField[];primaryKey:string;relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];example?:Record<string,string>;verified:boolean;estimated?:boolean;inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 const prefix="negative-operational-";
 type Method="calls"|"leads"|"qualified"|"reactivation"|"booking"|"attendance"|"slots"|"new-buyers"|"existing-buyers"|"unserved"|"time"|"tasks"|"invoices"|"reviews"|"information"|"direct-leads";
 // Explicit, reviewed problem-to-impact mapping. Do not infer a method from a similar problem name.
@@ -85,6 +85,21 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
    if(others.length)relations.push(combined(population,others,rate));
    return panel([...context,population,...others,rate,result],relations,{
     estimated,constraints:[bounded(population,[...others,result])],
+    inferZeros:v=>{
+     const zeros:ZeroInference[]=[];
+     const components=[...others,result];
+     const infer=(target:string,dependencies:string[],label:string)=>zeros.push({target,dependencies,label});
+     if(v[population.key]===0)for(const f of components)infer(f.key,[population.key],population.label+" is zero");
+     if(v[rate.key]===0)infer(result.key,[rate.key],rate.label+" is zero");
+     if(v[rate.key]===100)for(const f of others)infer(f.key,[rate.key],rate.label+" is 100%");
+     if(others.length&&Number.isFinite(v[population.key])){
+      const known=components.filter(f=>Number.isFinite(v[f.key]));
+      const missing=components.filter(f=>!Number.isFinite(v[f.key]));
+      const sum=known.reduce((n,f)=>n+v[f.key],0);
+      if(Math.abs(sum-v[population.key])<=1e-10)for(const f of missing)infer(f.key,[population.key,...known.map(f=>f.key)],"Known quantities account for all of "+population.label);
+     }
+     return zeros;
+    },
     undefinedRates:[{denominator:population.key,rate:rate.key}],
     example:example??{[population.key]:"40",[rate.key]:"50",...Object.fromEntries(others.map(f=>[f.key,String(20/others.length)]))}
    });
@@ -123,5 +138,5 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
  });
 }
 export function operationalEquations(panels:OperationalPanel[]):AdditionalEquations{
- return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))]};
+ return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
 }

@@ -10,7 +10,8 @@ export function product(a:string,b:string,c:string,factor:number,label:string):R
 function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{return product(a,b,c,factor,label);}
 const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
-export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[]};
+export type ZeroInference={target:string;dependencies:string[];label:string};
+export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  const integerKeys=new Set(additional?.integerKeys??[]);
@@ -55,6 +56,25 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
     roots[k]=new Set(known.flatMap(x=>[...roots[x]]));
     calculated[k]=(labels[k]??k)+" = "+(rel.operation?.(values,k)??rel.label)+" = "+format(values[k]);
     added=true;
+   }
+   // Boundary cases of the approved operational equations: a zero population,
+   // a zero/100% rate, or an exhausted nonnegative breakdown can force zero
+   // even when several fields were initially unknown.
+   if(additional?.inferZeros){
+    const known=Object.fromEntries(Object.entries(values).filter(([k])=>active(k)));
+    for(const inference of additional.inferZeros(known)){
+     const k=inference.target;
+     if(blocked.has(k)||!inference.dependencies.every(active))continue;
+     if(active(k)){
+      if(values[k]!==0)contradict([...inference.dependencies,k],"Contradictory entries: "+inference.label+".");
+      continue;
+     }
+     if(k in manual)continue;
+     values[k]=0;
+     roots[k]=new Set(inference.dependencies.flatMap(x=>[...roots[x]]));
+     calculated[k]=(labels[k]??k)+" = 0 ("+inference.label+")";
+     added=true;
+    }
    }
    if(changed||!added)break;
   }

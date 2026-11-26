@@ -236,3 +236,37 @@ test("multiple impacts combine only approved shared quantities; edits propagate 
   expect(solve(config,{total:"100",unaffected:"75"},operationalEquations([panel])).values[panel.primaryKey]).toBe(25);
  }
 });
+
+test("zero and 100% boundaries determine zero counts without inventing unknown denominators",()=>{
+ for(const c of configs){
+  const problem=problems.find(p=>p.id===c.id)!;
+  for(const panel of operationalPanels(c,problem.operationalImpacts.map(i=>i.id))){
+   const rate=panel.fields.find(f=>f.unit==="%");
+   if(!rate)continue;
+   const eq=operationalEquations([panel]);
+   const pair=panel.undefinedRates![0];
+   const zero=solve(c,{[pair.denominator]:"0"},eq);
+   expect(zero.errors,c.id+" / "+panel.name).toEqual([]);
+   expect(zero.values[panel.primaryKey]).toBe(0);
+   expect(zero.values[rate.key]).toBeUndefined();
+   const rateZero=solve(c,{[rate.key]:"0"},eq);
+   expect(rateZero.errors).toEqual([]);
+   expect(rateZero.values[panel.primaryKey]).toBe(0);
+   expect(rateZero.values[pair.denominator]).toBeUndefined();
+   expect(solve(c,{[pair.denominator]:"0",[rate.key]:"50"},eq).errors.length).toBeGreaterThan(0);
+  }
+ }
+ const result=solve(config,{affected:"26",[recovered]:"26"},equations);
+ expect(result.errors).toEqual([]);
+ expect(result.values[lost]).toBe(0);
+ expect(result.values[pending]).toBe(0);
+ expect(result.values[rate]).toBe(0);
+ const allLost=solve(config,{affected:"26",[rate]:"100"},equations);
+ expect(allLost.errors).toEqual([]);
+ expect(allLost.values[lost]).toBe(26);
+ expect(allLost.values[recovered]).toBe(0);
+ expect(allLost.values[pending]).toBe(0);
+ const unknown=solve(config,{[rate]:"100"},equations);
+ expect(unknown.values[recovered]).toBe(0);expect(unknown.values[pending]).toBe(0);
+ expect(unknown.values.affected).toBeUndefined();expect(unknown.values[lost]).toBeUndefined();
+});
