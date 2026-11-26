@@ -1,9 +1,9 @@
 import { problems } from "../discovery/data";
 import type { Config, Field } from "./config";
-import { product, format, type AdditionalEquations, type Relation } from "./solver";
+import { product, format, type AdditionalEquations, type AdditionalConstraint, type Relation } from "./solver";
 
 export type ImpactField=Field&{shared?:boolean;primary?:boolean};
-export type OperationalPanel={id:string;name:string;fields:ImpactField[];primaryKey:string;relations:Relation[];example?:Record<string,string>;verified:boolean};
+export type OperationalPanel={id:string;name:string;fields:ImpactField[];primaryKey:string;relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];example?:Record<string,string>;verified:boolean};
 
 const prefix="negative-operational-";
 const units:Record<string,string>={
@@ -53,7 +53,9 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
    const fields=[affected,recovered,pending,...(shared?[rate]:[]),primary];
    const relations=[breakdown(affected.key,recovered.key,pending.key,primaryKey)];
    if(shared)relations.push(product(primaryKey,affected.key,rate.key,.01,"Lost leads = affected leads × loss rate ÷ 100"),combined(affected.key,recovered.key,pending.key,rate.key));
-   return {id:impact.id,name:impact.label,fields,primaryKey,relations,verified:true,...(shared?{example:{affected:"26",[recovered.key]:"8",[pending.key]:"9"}}:{})};
+   const components=[recovered.key,pending.key,primaryKey];
+   const constraints=[{keys:[affected.key,...components],message:"Contradictory entries: the lead breakdown exceeds the affected lead count.",violated:(v:Record<string,number>)=>Number.isFinite(v[affected.key])&&components.reduce((n,k)=>n+(v[k]??0),0)>v[affected.key]&&!close(components.reduce((n,k)=>n+(v[k]??0),0),v[affected.key])}];
+   return {id:impact.id,name:impact.label,fields,primaryKey,relations,constraints,undefinedRates:shared?[{denominator:affected.key,rate:rate.key}]:[],verified:true,...(shared?{example:{affected:"26",[recovered.key]:"8",[pending.key]:"9"}}:{})};
   }
   // Primary result is an approved impact name; supporting quantities are pending
   // the original problem-specific schema. No estimated loss or formula is inferred.
@@ -61,5 +63,5 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
  });
 }
 export function operationalEquations(panels:OperationalPanel[]):AdditionalEquations{
- return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations)};
+ return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[])};
 }
