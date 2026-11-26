@@ -16,7 +16,7 @@ const popcount=(n:number)=>{let c=0;while(n){n&=n-1;c++;}return c;};
 // all denominators positive, rates strictly between 0 and 100, difference nonzero.
 function fixture(c:Config,panels:OperationalPanel[],example:number):Fixture{
  const scale=example===0?1:2;
- const values:Record<string,number>={total:200*scale,affected:60*scale,unaffected:140*scale,affectedPct:30,unaffectedPct:70,months:3+example};
+ const values:Record<string,number>={total:example===0?200:300,affected:60*scale,unaffected:example===0?140:180,affectedPct:example===0?30:40,unaffectedPct:example===0?70:60,months:3+example};
  const blocks:Block[]=[];
  const block=(keys:string[],threshold:number,groups:string[][]=[])=>blocks.push({keys,threshold,groups});
  block(["total","affected","unaffected","affectedPct","unaffectedPct"],2,[["affectedPct","unaffectedPct"]]);
@@ -38,7 +38,7 @@ function fixture(c:Config,panels:OperationalPanel[],example:number):Fixture{
     const recovered=op+"recovered",pending=op+"pending",rate=op+"loss-rate";
     if(pop!=="affected")values[pop]=80*scale;
     values[recovered]=values[pop]*(example===0?.25:.2);
-    values[pending]=values[pop]*(example===0?.25:.3);
+    values[pending]=values[pop]*(example===0?.25:.2);
     values[key]=values[pop]-values[recovered]-values[pending];
     values[rate]=100*values[key]/values[pop];
     block([pop,recovered,pending,key,rate],3,[[pop,key,rate]]);

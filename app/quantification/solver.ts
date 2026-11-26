@@ -57,7 +57,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
     if(rel.impossible?.(values,k)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     const n=rel.derive(values,k);if(n===undefined)continue;
     if(!isValid(k,n,true)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
-    values[k]=integerKeys.has(k)?Math.round(n):Math.abs(n)<1e-12?0:n;
+    values[k]=integerKeys.has(k)?Math.round(n):n===0?0:n;
     roots[k]=new Set(known.flatMap(x=>[...roots[x]]));
     calculated[k]=(labels[k]??k)+" = "+(rel.operation?.(values,k)??rel.label)+" = "+format(values[k]);
     added=true;
