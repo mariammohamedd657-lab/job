@@ -15,7 +15,13 @@ export function solve(config:Config,raw:Figures):Result{
  if(config.fields.Quantity.length)relations.push(sum("total","affected","unaffected","Total = affected + unaffected"),ratio("affected","total","affectedPct",.01,"Affected = total × affected % ÷ 100"),ratio("unaffected","total","unaffectedPct",.01,"Unaffected = total × unaffected % ÷ 100"),{keys:["affectedPct","unaffectedPct"],label:"Affected % + unaffected % = 100",operation:(v,k)=>"100 − "+format(v[k==="affectedPct"?"unaffectedPct":"affectedPct"]),derive:(v,k)=>100-v[k==="affectedPct"?"unaffectedPct":"affectedPct"],valid:v=>close(v.affectedPct+v.unaffectedPct,100)});
  if(config.timePopulation)relations.push(product("hours",config.timePopulation,"averageMinutes",1/60,"Hours = quantity × average minutes ÷ 60"));
  if(config.fields.Frequency.length)relations.push(product("affected","days","daily",1,"Affected quantity = days × quantity per day"));
- if(config.actualKey)relations.push(sum(config.actualKey,"target","difference","Actual = target + difference"),ratio(config.actualKey,"target","targetPct",.01,"Actual = target × percentage of target ÷ 100"));
+ if(config.actualKey)relations.push(sum(config.actualKey,"target","difference","Actual = target + difference"),ratio(config.actualKey,"target","targetPct",.01,"Actual = target × percentage of target ÷ 100"),{
+  keys:["difference","target","targetPct"],label:"Difference = target × (percentage of target ÷ 100 − 1)",
+  derive:(v,k)=>k==="difference"?v.target*(v.targetPct/100-1):k==="target"?div(v.difference,v.targetPct/100-1):v.target===0?undefined:(1+v.difference/v.target)*100,
+  operation:(v,k)=>k==="difference"?format(v.target)+" × ("+format(v.targetPct)+" ÷ 100 − 1)":k==="target"?format(v.difference)+" ÷ ("+format(v.targetPct)+" ÷ 100 − 1)":"(1 + "+format(v.difference)+" ÷ "+format(v.target)+") × 100",
+  impossible:(v,k)=>k==="target"&&v.targetPct===100&&v.difference!==0||k==="targetPct"&&v.target===0&&v.difference!==0,
+  valid:v=>close(v.difference,v.target*(v.targetPct/100-1))
+ });
  if(config.moneyPopulation)relations.push(product("moneyTotal",config.moneyPopulation,"moneyAverage",1,"Total amount = quantity × average amount"));
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!validValue(k,n)){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}

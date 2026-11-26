@@ -33,6 +33,8 @@ test("quantity, percentages, time, frequency, comparison and money calculate in 
  expect(solve(c,{affected:"20",daily:"2"}).values.days).toBe(10);
  expect(solve(c,{target:"8",difference:"-3"}).values.hours).toBe(5);
  expect(solve(c,{hours:"5",targetPct:"50"}).values.target).toBe(10);
+ expect(solve(c,{difference:"-5",targetPct:"50"}).values.target).toBe(10);
+ expect(solve(c,{difference:"-5",targetPct:"50"}).values.hours).toBe(5);
  expect(solve(pay,{moneyTotal:"1000",moneyAverage:"50"}).values.affected).toBe(20);
  expect(solve(pay,{moneyTotal:"1000",affected:"20"}).values.moneyAverage).toBe(50);
  expect(solve(c,{total:"0",affected:"0"}).values.unaffected).toBe(0);
