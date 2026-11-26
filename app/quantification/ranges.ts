@@ -39,6 +39,9 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
  for(let pass=0;pass<48&&!conflicts.length;pass++){
   changed=false;
   for(const equation of active){
+   // Fully known equations have already been checked by the original
+   // validation pass with display-precision tolerance. Do not reinterpret them.
+   if(equation.keys.every(k=>Number.isFinite(known[k])))continue;
    const product=equation.terms.find(t=>t.keys.length===2);
    if(product){
     const linear=equation.terms.find(t=>t.keys.length===1);

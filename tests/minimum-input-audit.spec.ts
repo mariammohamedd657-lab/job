@@ -4,7 +4,7 @@ import { problems } from "../app/discovery/data";
 import { operationalPanels, operationalEquations, operationalMethods, type OperationalPanel } from "../app/quantification/operational-data";
 import { solve, type Figures } from "../app/quantification/solver";
 
-type Block={keys:string[];groups:string[][];threshold:number};
+type Block={keys:string[];groups:string[][];threshold:number;direct:string[][]};
 type Fixture={values:Record<string,number>;blocks:Block[]};
 const prefix="negative-operational-";
 const check=(condition:unknown,message:string)=>{if(!condition)throw new Error(message);};
@@ -18,8 +18,8 @@ function fixture(c:Config,panels:OperationalPanel[],example:number):Fixture{
  const scale=example===0?1:2;
  const values:Record<string,number>={total:example===0?200:300,affected:60*scale,unaffected:example===0?140:180,affectedPct:example===0?30:40,unaffectedPct:example===0?70:60,months:3+example};
  const blocks:Block[]=[];
- const block=(keys:string[],threshold:number,groups:string[][]=[])=>blocks.push({keys,threshold,groups});
- block(["total","affected","unaffected","affectedPct","unaffectedPct"],2,[["affectedPct","unaffectedPct"]]);
+ const block=(keys:string[],threshold:number,groups:string[][]=[],direct:string[][]=[keys])=>blocks.push({keys,threshold,groups,direct});
+ block(["total","affected","unaffected","affectedPct","unaffectedPct"],2,[["affectedPct","unaffectedPct"]],[["total","affected","unaffected"],["affected","total","affectedPct"],["unaffected","total","unaffectedPct"],["affectedPct","unaffectedPct"]]);
  if(c.timePopulation){
   if(c.timePopulation==="recordedUnits")values.recordedUnits=40*scale;
   values.averageMinutes=example===0?18:24;
@@ -27,7 +27,7 @@ function fixture(c:Config,panels:OperationalPanel[],example:number):Fixture{
   block(["hours",c.timePopulation,"averageMinutes"],2);
  }
  if(c.fields.Frequency.length){values.days=example===0?12:15;values.daily=values.affected/values.days;block(["affected","days","daily"],2);}
- if(c.actualKey){values.target=values[c.actualKey]*(example===0?.8:1.25);values.difference=values[c.actualKey]-values.target;values.targetPct=values[c.actualKey]/values.target*100;block([c.actualKey,"target","difference","targetPct"],2);}
+ if(c.actualKey){values.target=values[c.actualKey]*(example===0?.8:1.25);values.difference=values[c.actualKey]-values.target;values.targetPct=values[c.actualKey]/values.target*100;block([c.actualKey,"target","difference","targetPct"],2,[],[[c.actualKey,"target","difference"],[c.actualKey,"target","targetPct"]]);}
  if(c.moneyPopulation){values.moneyAverage=example===0?25.5:71.25;values.moneyTotal=values[c.moneyPopulation]*values.moneyAverage;block(["moneyTotal",c.moneyPopulation,"moneyAverage"],2);}
  for(const panel of panels){
   const method=operationalMethods[c.id][panel.id.slice(prefix.length)];
@@ -41,7 +41,7 @@ function fixture(c:Config,panels:OperationalPanel[],example:number):Fixture{
     values[pending]=values[pop]*(example===0?.25:.2);
     values[key]=values[pop]-values[recovered]-values[pending];
     values[rate]=100*values[key]/values[pop];
-    block([pop,recovered,pending,key,rate],3,[[pop,key,rate]]);
+    block([pop,recovered,pending,key,rate],3,[[pop,key,rate]],[[pop,recovered,pending,key],[pop,key,rate]]);
     break;
    }
    case "reactivation":case "attendance":case "invoices":case "reviews":{
@@ -58,7 +58,7 @@ function fixture(c:Config,panels:OperationalPanel[],example:number):Fixture{
     values[rate]=example===0?25:40;
     values[key]=values.hours*values[rate]/100;
     values[necessary]=values.hours-values[key];
-    block(["hours",necessary,key,rate],2);break;
+    block(["hours",necessary,key,rate],2,[],[["hours",necessary,key],["hours",key,rate]]);break;
    }
    case "information":break;
    default:values[key]=example===0?7:11;
@@ -109,7 +109,7 @@ for(const c of configs)test("minimum-input audit "+c.id,()=>{
  test.setTimeout(180000);
  const problem=problems.find(p=>p.id===c.id)!;
  const impactIds=problem.operationalImpacts.map(i=>i.id);
- let configurations=0,quantityOccurrences=0,subsetEnumerations=0,minimumTargetCombinations=0,minimumSets=0,removalSets=0,solverCases=0,combinedCases=0,verifiedTargets=0;
+ let configurations=0,quantityOccurrences=0,subsetEnumerations=0,minimumTargetCombinations=0,minimumSets=0,removalSets=0,solverCases=0,combinedCases=0,chainedOrCombinedCases=0,algebraicCases=0,verifiedTargets=0;
  const uniqueKeys=new Set<string>();
  for(let selection=0;selection<1<<impactIds.length;selection++){
   const panels=operationalPanels(c,impactIds.filter((_,i)=>selection&(1<<i)));
@@ -123,6 +123,7 @@ for(const c of configs)test("minimum-input audit "+c.id,()=>{
    for(const group of components(keys,blocks)){
     check(group.length<25,"Audit component exceeds practical enumeration limit");
     const rules=rulesFor(group,blocks),size=1<<group.length;
+    const directMasks=blocks.filter(b=>b.keys.every(k=>group.includes(k))).flatMap(b=>b.direct.map(eq=>eq.reduce((n,k)=>n|(1<<group.indexOf(k)),0)));
     const closures=new Uint32Array(size),cases=new Set<number>([0,size-1]),minimal=new Set<number>(),removals=new Set<number>();
     for(let mask=0;mask<size;mask++)closures[mask]=closeMask(mask,rules);
     subsetEnumerations+=size;
@@ -146,6 +147,10 @@ for(const c of configs)test("minimum-input audit "+c.id,()=>{
      const determined=closures[mask];
      const known=new Set(group.filter((_,i)=>determined&(1<<i)));
      if(popcount(determined&~mask)>1)combinedCases++;
+     let firstStep=mask;
+     for(const equation of directMasks)if(popcount(equation&~mask)===1)firstStep|=equation;
+     if(determined&~firstStep)chainedOrCombinedCases++;
+     if(Object.values(result.calculated).some(s=>s.includes("(combined:")))algebraicCases++;
      for(const key of keys){
       if(known.has(key)){verifiedTargets++;check(eq(result.values[key],values[key]),label+" expected "+key+" = "+values[key]+", got "+result.values[key]);}
       else check(result.values[key]===undefined,label+" unexpectedly determined "+key+" = "+result.values[key]);
@@ -154,7 +159,7 @@ for(const c of configs)test("minimum-input audit "+c.id,()=>{
    }
   }
  }
- console.log("MINIMUM_AUDIT "+JSON.stringify({problem:c.id,impactCount:impactIds.length,configurations,uniqueQuantities:uniqueKeys.size,quantityOccurrences,subsetEnumerations,minimumTargetCombinations,minimumSets,removalSets,solverCases,combinedCases,verifiedTargets}));
+ console.log("MINIMUM_AUDIT "+JSON.stringify({problem:c.id,impactCount:impactIds.length,configurations,uniqueQuantities:uniqueKeys.size,quantityOccurrences,subsetEnumerations,minimumTargetCombinations,minimumSets,removalSets,solverCases,combinedCases,chainedOrCombinedCases,algebraicCases,verifiedTargets}));
 });
 
 test("algebraic boundary routes, ambiguity, contradiction isolation and exact count validation",()=>{
@@ -201,4 +206,43 @@ test("bounded rates and counts can determine a result without entering an interm
  const lostPanels=operationalPanels(lostC,["negative-operational-lost-leads"]),lostEq=operationalEquations(lostPanels);
  const unique=solve(lostC,{total:"10","op:lost-leads:recovered":"5","op:lost-leads:loss-rate":"30"},lostEq);
  check(!unique.errors.length&&unique.values.affected===10&&unique.values["op:lost-leads:result"]===3&&unique.values["op:lost-leads:pending"]===2,"Integer count and rate ranges identify the only feasible count");
+});
+
+test("all 28 problems preserve zero quantities and undefined percentages at base equation boundaries",()=>{
+ let cases=0;
+ for(const c of configs){
+  const zero=solve(c,{total:"0"});
+  check(!zero.errors.length&&zero.values.affected===0&&zero.values.unaffected===0,c.id+" zero population");
+  check(zero.values.affectedPct===undefined&&zero.values.unaffectedPct===undefined,c.id+" zero denominator");
+  cases++;
+  for(const [key,value,expected] of [["affectedPct","0","affected"],["unaffectedPct","100","affected"],["affectedPct","100","unaffected"],["unaffectedPct","0","unaffected"]]){
+   const r=solve(c,{[key]:value});
+   check(!r.errors.length&&r.values[expected]===0&&r.values.total===undefined,c.id+" boundary "+key+"="+value);
+   cases++;
+  }
+  if(c.actualKey){
+   const equality=solve(c,{targetPct:"100"}),zeroActual=solve(c,{targetPct:"0"});
+   check(equality.values.difference===0&&equality.values[c.actualKey]===undefined,c.id+" 100% comparison");
+   check(zeroActual.values[c.actualKey]===0&&zeroActual.values.target===undefined,c.id+" zero comparison");
+   cases+=2;
+  }
+  if(c.fields.Frequency.length){
+   const r=solve(c,{days:"0"});
+   check(r.values.affected===0&&r.values.daily===undefined,c.id+" zero days");
+   cases++;
+  }
+  if(c.timePopulation){const r=solve(c,{averageMinutes:"0"});check(r.values.hours===0&&r.values[c.timePopulation]===undefined,c.id+" zero average time");cases++;}
+  if(c.moneyPopulation){const r=solve(c,{moneyAverage:"0"});check(r.values.moneyTotal===0&&r.values.affected===undefined,c.id+" zero money");cases++;}
+  const contradiction=solve(c,{total:"0",affectedPct:"50",months:"3"});
+  check(contradiction.errors.length&&contradiction.values.months===3,c.id+" invalid zero denominator");
+  cases++;
+ }
+ console.log("BOUNDARY_AUDIT "+JSON.stringify({problems:28,cases}));
+});
+test("redundant display-rounded figures do not create false contradictions",()=>{
+ const c=configs.find(x=>x.id==="problem-6")!;
+ const small=solve(c,{total:"3",affected:"1",affectedPct:"33.33333333"});
+ check(!small.errors.length&&small.values.unaffected===2,"Rounded percentage must not invalidate exact known counts: "+small.errors.join("; "));
+ const large=solve(c,{total:"3000000000",affected:"1000000000",affectedPct:"33.33333333"});
+ check(!large.errors.length&&large.values.unaffected===2000000000,"Large consistent figures must not be blocked by an absolute residual tolerance: "+large.errors.join("; "));
 });

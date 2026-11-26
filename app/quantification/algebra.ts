@@ -5,32 +5,32 @@
 export type Term={coefficient:number;keys:string[]};
 export type AlgebraEquation={terms:Term[];label:string;keys:string[]};
 export type Consequence={key:string;value:number;dependencies:string[];label:string};
-type Row={coeff:Map<string,number>;rhs:number;dependencies:Set<string>;labels:Set<string>};
+type Row={coeff:Map<string,number>;rhs:number;magnitude:number;dependencies:Set<string>;labels:Set<string>};
 const SEP="\u001f";
 const EPS=1e-12;
 const singleton=(key:string)=>!key.includes(SEP);
 const finite=Number.isFinite;
 function normalize(row:Row){
  const scale=Math.max(...Array.from(row.coeff.values(),Math.abs),0);
- if(scale>0){for(const [k,v] of row.coeff){row.coeff.set(k,v/scale);}row.rhs/=scale;}
+ if(scale>0){for(const [k,v] of row.coeff){row.coeff.set(k,v/scale);}row.rhs/=scale;row.magnitude/=scale;}
  return row;
 }
 export function algebraicConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number]){
  const rows:Row[]=[];
  for(const equation of equations){
-  if(equation.keys.some(k=>blocked.has(k)))continue;
-  const row:Row={coeff:new Map(),rhs:0,dependencies:new Set(),labels:new Set([equation.label])};
+  if(equation.keys.some(k=>blocked.has(k))||equation.keys.every(k=>finite(known[k])))continue;
+  const row:Row={coeff:new Map(),rhs:0,magnitude:0,dependencies:new Set(),labels:new Set([equation.label])};
   for(const term of equation.terms){
    let c=term.coefficient;const unknown:string[]=[];
    for(const k of term.keys){if(finite(known[k])){c*=known[k];row.dependencies.add(k);}else unknown.push(k);}
    if(c===0)continue;
-   if(!unknown.length)row.rhs-=c;
+   if(!unknown.length){row.rhs-=c;row.magnitude+=Math.abs(c);}
    else{const key=unknown.sort().join(SEP);row.coeff.set(key,(row.coeff.get(key)??0)+c);}
   }
   for(const [key,c] of row.coeff)if(c===0)row.coeff.delete(key);
   rows.push(normalize(row));
  }
- const original=rows.map(row=>({coeff:new Map(row.coeff),rhs:row.rhs,dependencies:new Set(row.dependencies),labels:new Set(row.labels)}));
+ const original=rows.map(row=>({coeff:new Map(row.coeff),rhs:row.rhs,magnitude:row.magnitude,dependencies:new Set(row.dependencies),labels:new Set(row.labels)}));
  const columns=[...new Set(rows.flatMap(row=>[...row.coeff.keys()]))].sort((a,b)=>Number(singleton(a))-Number(singleton(b))||a.localeCompare(b));
  let pivot=0;
  for(const col of columns){
@@ -38,12 +38,12 @@ export function algebraicConsequences(equations:AlgebraEquation[],known:Record<s
   if(best<0)continue;
   [rows[pivot],rows[best]]=[rows[best],rows[pivot]];
   const p=rows[pivot],v=p.coeff.get(col)!;
-  for(const [key,c] of p.coeff)p.coeff.set(key,c/v);p.rhs/=v;
+  for(const [key,c] of p.coeff)p.coeff.set(key,c/v);p.rhs/=v;p.magnitude/=Math.abs(v);
   for(let i=0;i<rows.length;i++){
    if(i===pivot)continue;
    const row=rows[i],f=row.coeff.get(col)??0;if(Math.abs(f)<=EPS)continue;
    for(const [key,c] of p.coeff){const prev=row.coeff.get(key)??0,next=prev-f*c;if(Math.abs(next)<=EPS*Math.max(Math.abs(prev),Math.abs(f*c)))row.coeff.delete(key);else row.coeff.set(key,next);}
-   row.rhs-=f*p.rhs;for(const k of p.dependencies)row.dependencies.add(k);for(const label of p.labels)row.labels.add(label);
+   row.rhs-=f*p.rhs;row.magnitude+=Math.abs(f)*p.magnitude;for(const k of p.dependencies)row.dependencies.add(k);for(const label of p.labels)row.labels.add(label);
   }
   pivot++;
  }
@@ -56,7 +56,7 @@ export function algebraicConsequences(equations:AlgebraEquation[],known:Record<s
   results.push({key,value,dependencies:[...row.dependencies],label:[...row.labels].join("; ")});
  };
  for(const row of [...original,...rows]){
-  if(row.coeff.size===0){if(Math.abs(row.rhs)>1e-8)conflicts.push({dependencies:[...row.dependencies],label:[...row.labels].join("; ")});continue;}
+  if(row.coeff.size===0){if(Math.abs(row.rhs)>1e-8*Math.max(1,row.magnitude))conflicts.push({dependencies:[...row.dependencies],label:[...row.labels].join("; ")});continue;}
   if(row.coeff.size===1){const [key,c]=[...row.coeff][0];add(row,key,row.rhs/c);continue;}
   // A linear sum can force several quantities to a domain endpoint at once.
   // For example, nonnegative terms summing to zero are individually zero.
