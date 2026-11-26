@@ -1,5 +1,6 @@
 import type { Config } from "./config";
 import { algebraicConsequences, type Term } from "./algebra";
+import { rangeConsequences } from "./ranges";
 export type Figures=Record<string,string>;
 export type Result={values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>};
 export type Relation={keys:string[]; label:string; terms?:Term[]; operation?:(v:Record<string,number>,key:string)=>string; impossible?:(v:Record<string,number>,key:string)=>boolean; derive:(v:Record<string,number>, key:string)=>number|undefined; valid:(v:Record<string,number>)=>boolean};
@@ -16,7 +17,7 @@ export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  const integerKeys=new Set(["total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
- const isValid=(key:string,n:number,computed=false)=>validValue(key,n)&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100)&&(!integerKeys.has(key)||(computed?Math.abs(n-Math.round(n))<=1e-7:Number.isInteger(n)));
+ const isValid=(key:string,n:number,computed=false)=>validValue(key,n)&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100)&&(!integerKeys.has(key)||(computed?Number.isSafeInteger(Math.round(n))&&Math.abs(n-Math.round(n))<=Math.min(1e-8,8*Number.EPSILON*Math.max(1,Math.abs(n))):Number.isSafeInteger(n)));
 
  const relations:Relation[]=[];
  if(config.fields.Quantity.length)relations.push(sum("total","affected","unaffected","Total = affected + unaffected"),ratio("affected","total","affectedPct",.01,"Affected = total × affected % ÷ 100"),ratio("unaffected","total","unaffectedPct",.01,"Unaffected = total × unaffected % ÷ 100"),{keys:["affectedPct","unaffectedPct"],label:"Affected % + unaffected % = 100",terms:[{coefficient:1,keys:["affectedPct"]},{coefficient:1,keys:["unaffectedPct"]},{coefficient:-100,keys:[]}],operation:(v,k)=>"100 − "+format(v[k==="affectedPct"?"unaffectedPct":"affectedPct"]),derive:(v,k)=>100-v[k==="affectedPct"?"unaffectedPct":"affectedPct"],valid:v=>close(v.affectedPct+v.unaffectedPct,100)});
@@ -84,7 +85,9 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
    // routes have reached a fixed point. Re-enter the same loop on any new value.
    if(!changed&&!added){
     const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
-    const deductions=algebraicConsequences(algebra,known,blocked,domain);
+    const linear=algebraicConsequences(algebra,known,blocked,domain);
+    const ranges=rangeConsequences(algebra,known,blocked,domain,integerKeys,rateDenominators);
+    const deductions={results:[...linear.results,...ranges.results],conflicts:[...linear.conflicts,...ranges.conflicts]};
     for(const conflict of deductions.conflicts)if(conflict.dependencies.every(active))contradict(conflict.dependencies,"Contradictory entries: "+conflict.label+".");
     for(const inferred of deductions.results){
      const k=inferred.key;

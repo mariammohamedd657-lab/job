@@ -184,3 +184,21 @@ test("algebraic boundary routes, ambiguity, contradiction isolation and exact co
  const edited=solve(c,{...input,unaffected:"60"},equations);check(edited.values.affected===40&&edited.values.hours===10,"Edited input recalculates");
  const removed=solve(c,{total:"100",averageMinutes:"15",days:"10"},equations);check(removed.values.affected===undefined&&removed.values.hours===undefined,"Removing information clears underdetermined values");
 });
+
+test("bounded rates and counts can determine a result without entering an intermediate population",()=>{
+ const c=configs.find(x=>x.id==="problem-9")!;
+ const ps=operationalPanels(c,problems.find(x=>x.id===c.id)!.operationalImpacts.map(x=>x.id));
+ const eqs=operationalEquations(ps);
+ const primary=ps[0].primaryKey,rate=ps[0].fields.find(x=>x.unit==="%")!.key;
+ const saturated=solve(c,{total:"40",[primary]:"40"},eqs);
+ check(!saturated.errors.length,"Saturated rate example contradicts: "+saturated.errors.join("; "));
+ check(saturated.values.affected===40&&saturated.values.unaffected===0&&saturated.values[rate]===100,"Maximum possible result fixes population, remaining count and rate");
+ const nonunique=solve(c,{total:"40",[primary]:"20"},eqs);
+ check(!nonunique.errors.length&&nonunique.values.affected===undefined&&nonunique.values[rate]===undefined,"Do not guess a value from a non-singleton range");
+ const impossible=solve(c,{total:"40",[primary]:"41",months:"3"},eqs);
+ check(impossible.errors.length&&impossible.values.months===3,"Impossible bounds must not disable unrelated duration");
+ const lostC=configs.find(x=>x.id==="problem-6")!;
+ const lostPanels=operationalPanels(lostC,["negative-operational-lost-leads"]),lostEq=operationalEquations(lostPanels);
+ const unique=solve(lostC,{total:"10","op:lost-leads:recovered":"5","op:lost-leads:loss-rate":"30"},lostEq);
+ check(!unique.errors.length&&unique.values.affected===10&&unique.values["op:lost-leads:result"]===3&&unique.values["op:lost-leads:pending"]===2,"Integer count and rate ranges identify the only feasible count");
+});
