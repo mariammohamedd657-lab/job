@@ -15,7 +15,7 @@ export type ZeroInference={target:string;dependencies:string[];label:string};
 export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
- const integerKeys=new Set(additional?.integerKeys??[]);
+ const integerKeys=new Set(["total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
  const isValid=(key:string,n:number,computed=false)=>validValue(key,n)&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100)&&(!integerKeys.has(key)||(computed?Math.abs(n-Math.round(n))<=1e-7:Number.isInteger(n)));
 
  const relations:Relation[]=[];
@@ -84,7 +84,9 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
    // routes have reached a fixed point. Re-enter the same loop on any new value.
    if(!changed&&!added){
     const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
-    for(const inferred of algebraicConsequences(algebra,known,blocked,domain)){
+    const deductions=algebraicConsequences(algebra,known,blocked,domain);
+    for(const conflict of deductions.conflicts)if(conflict.dependencies.every(active))contradict(conflict.dependencies,"Contradictory entries: "+conflict.label+".");
+    for(const inferred of deductions.results){
      const k=inferred.key;
      if(blocked.has(k)||!inferred.dependencies.every(active))continue;
      const denominator=rateDenominators[k];
