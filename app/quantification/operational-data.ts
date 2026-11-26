@@ -48,6 +48,7 @@ function shared(config:Config,key:string,integer=false):ImpactField{
 function breakdown(total:ImpactField,parts:ImpactField[]):Relation{
  const keys=parts.map(p=>p.key),a=total.key;
  return {keys:[a,...keys],label:total.label+" = "+parts.map(p=>p.label).join(" + "),
+  terms:[{coefficient:1,keys:[a]},...keys.map(key=>({coefficient:-1,keys:[key]}))],
   derive:(v,k)=>k===a?keys.reduce((n,p)=>n+v[p],0):v[a]-keys.filter(p=>p!==k).reduce((n,p)=>n+v[p],0),
   operation:(v,k)=>k===a?keys.map(p=>format(v[p])).join(" + "):format(v[a])+" − "+keys.filter(p=>p!==k).map(p=>format(v[p])).join(" − "),
   valid:v=>close(v[a],keys.reduce((n,p)=>n+v[p],0))};
