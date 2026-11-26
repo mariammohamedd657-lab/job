@@ -209,3 +209,97 @@ test("custom problem menu renders all three status colors simultaneously and sup
  await expect(page.locator('[data-section="Quantity"] input[data-quantity="affected"]')).toHaveValue("20");
  await expect(trigger).toHaveCSS("color","rgb(16, 184, 92)");
 });
+
+test("every repeated quantity in all 28 problems synchronizes actual input values in both directions",async({page})=>{
+ test.setTimeout(180000);
+ await page.goto("/quantification");
+ for(const config of configs){
+  await chooseProblem(page,config.id);
+  await page.getByRole("button",{name:"Reset",exact:true}).click();
+  const field=(section:string,key:string)=>page.locator('[data-section="'+section+'"] input[data-quantity="'+key+'"]');
+  const allFields=(key:string)=>page.locator('.q-calculator input[data-quantity="'+key+'"]');
+  const repeated=[...new Set(Object.values(config.fields).flat().map(f=>f.key))].filter(key=>sectionOrder.filter(s=>config.fields[s].some(f=>f.key===key)).length>1);
+  for(const key of repeated){
+   const sections=sectionOrder.filter(s=>config.fields[s].some(f=>f.key===key));
+   for(const [i,section] of sections.entries()){
+    const value=String(12+i);
+    await field(section,key).fill(value);
+    await expect(allFields(key)).toHaveCount(sections.length);
+    for(const input of await allFields(key).all())await expect(input).toHaveValue(value);
+   }
+   await field(sections[0],key).fill("0");
+   for(const input of await allFields(key).all())await expect(input).toHaveValue("0");
+   await field(sections[sections.length-1],key).fill("");
+   for(const input of await allFields(key).all())await expect(input).toHaveValue("");
+  }
+  // Calculate affected quantity from two other quantities, without entering it.
+  await field("Quantity","total").fill("100");
+  await field("Quantity","unaffected").fill("80");
+  for(const input of await allFields("affected").all()){
+   await expect(input).toHaveValue("20");
+   await expect(input).toHaveCSS("color","rgb(120, 197, 155)");
+  }
+  await field("Quantity","unaffected").fill("70");
+  for(const input of await allFields("affected").all())await expect(input).toHaveValue("30");
+  if(config.timePopulation){
+   if(config.timePopulation==="recordedUnits")await field("Time","recordedUnits").fill("12");
+   await field("Time","averageMinutes").fill("15");
+   const expectedHours=config.timePopulation==="recordedUnits"?"3":"7.5";
+   for(const input of await allFields("hours").all())await expect(input).toHaveValue(expectedHours);
+  }
+  if(config.fields.Frequency.length){
+   await field("Frequency","days").fill("10");
+   await expect(field("Frequency","daily")).toHaveValue("3");
+  }
+  if(config.moneyPopulation){
+   await field("Money","moneyAverage").fill("50");
+   await expect(field("Money","moneyTotal")).toHaveValue("1500");
+  }
+  // Example/reset keep the same shared display state, including collapsed fields.
+  await page.getByRole("button",{name:"Load example"}).click();
+  const expected=solve(config,config.example);
+  for(const key of repeated){
+   const value=config.example[key]??String(Number(expected.values[key].toPrecision(10)));
+   for(const input of await allFields(key).all())await expect(input).toHaveValue(value);
+  }
+  await page.getByRole("button",{name:"Reset",exact:true}).click();
+  for(const key of repeated)for(const input of await allFields(key).all())await expect(input).toHaveValue("");
+ }
+});
+
+test("repeated fields update dependent calculations from either section without copying calculated values into manual state",async({page})=>{
+ await page.goto("/quantification");
+ await chooseProblem(page,"problem-20");
+ const input=(section:string,key:string)=>page.locator('[data-section="'+section+'"] input[data-quantity="'+key+'"]');
+ await input("Frequency","affected").fill("20");
+ await input("Frequency","days").fill("10");
+ await input("Time","averageMinutes").fill("15");
+ await input("Comparison","target").fill("8");
+ await expect(input("Quantity","affected")).toHaveValue("20");
+ await expect(input("Time","hours")).toHaveValue("5");
+ await expect(input("Comparison","hours")).toHaveValue("5");
+ await expect(input("Comparison","difference")).toHaveValue("-3");
+ await input("Quantity","affected").fill("40");
+ await expect(input("Frequency","affected")).toHaveValue("40");
+ await expect(input("Frequency","daily")).toHaveValue("4");
+ await expect(input("Comparison","hours")).toHaveValue("10");
+ await expect(input("Comparison","difference")).toHaveValue("2");
+ await input("Frequency","affected").fill("");
+ await expect(input("Quantity","affected")).toHaveValue("");
+ await expect(input("Time","hours")).toHaveValue("");
+ await expect(input("Comparison","hours")).toHaveValue("");
+ await input("Comparison","hours").fill("5");
+ await expect(input("Time","hours")).toHaveValue("5");
+ await expect(input("Quantity","affected")).toHaveValue("20");
+ await expect(input("Frequency","affected")).toHaveValue("20");
+ await input("Time","hours").fill("10");
+ await expect(input("Comparison","hours")).toHaveValue("10");
+ await expect(input("Quantity","affected")).toHaveValue("40");
+ await expect(input("Frequency","daily")).toHaveValue("4");
+ await page.locator('[data-section="Time"] button').click();
+ await input("Comparison","hours").fill("15");
+ await expect(input("Time","hours")).toHaveValue("15");
+ await page.locator('[data-section="Time"] button').click();
+ await expect(input("Time","hours")).toHaveValue("15");
+ await expect(input("Quantity","affected")).toHaveValue("60");
+});

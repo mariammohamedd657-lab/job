@@ -21,7 +21,14 @@ function Calculator({confirmedProblems}:{confirmedProblems:Record<string,boolean
  const statuses=Object.fromEntries(configs.map(config=>[config.id,quantificationStatus(config,figures[config.id]??{},!!confirmedProblems[config.id])]));
  const setRaw=(next:Figures)=>setFigures(old=>({...old,[selected]:next}));
  const update=(key:string,value:string)=>setFigures(old=>({...old,[selected]:{...old[selected],[key]:value}}));
- const row=(f:Field)=>{const manual=raw[f.key]??"";const computed=manual.trim()===""&&result.calculated[f.key]!==undefined&&!result.blocked.has(f.key);const value=manual.trim()!==""?manual:computed?format(result.values[f.key]):"";return <div className="q-field" key={f.key}><label className={f.general?"q-general":""}><span>{f.label}</span><input type="number" step="any" min={f.key==="difference"?undefined:0} max={f.key==="affectedPct"||f.key==="unaffectedPct"?100:undefined} aria-label={f.label} data-quantity={f.key} className={computed?"q-calculated":result.blocked.has(f.key)?"q-invalid":""} value={value} placeholder="—" onChange={e=>update(f.key,e.target.value)}/><span className="q-unit">{f.unit}</span></label>{show&&computed&&<div className="q-formula">{result.calculated[f.key]}</div>}</div>};
+ // Resolve each quantity once per problem. Every occurrence uses the same actual
+ // input value, whether entered directly or calculated in another section.
+ const displayedValues=Object.fromEntries([...new Set(Object.values(c.fields).flat().map(f=>f.key))].map(key=>{
+   const manual=raw[key]??"";
+   const computed=manual.trim()===""&&Number.isFinite(result.values[key])&&!result.blocked.has(key);
+   return [key,{value:manual.trim()!==""?manual:computed?format(result.values[key]):"",computed}];
+ }));
+ const row=(f:Field)=>{const {value,computed}=displayedValues[f.key];return <div className="q-field" key={f.key}><label className={f.general?"q-general":""}><span>{f.label}</span><input type="number" step="any" min={f.key==="difference"?undefined:0} max={f.key==="affectedPct"||f.key==="unaffectedPct"?100:undefined} aria-label={f.label} data-quantity={f.key} className={computed?"q-calculated":result.blocked.has(f.key)?"q-invalid":""} value={value} placeholder="—" onChange={e=>update(f.key,e.target.value)}/><span className="q-unit">{f.unit}</span></label>{show&&computed&&<div className="q-formula">{result.calculated[f.key]}</div>}</div>};
  const p=result.values.affectedPct,u=result.values.unaffectedPct;
  const bar=p!==undefined&&u!==undefined&&!result.blocked.has("affectedPct")&&!result.blocked.has("unaffectedPct")&&Math.abs(p+u-100)<.001;
  return <div className="q-calculator"><h2>Business problem quantification</h2><label className="q-select-label" id="q-problem-label" htmlFor="q-problem">Select a business problem</label><ProblemSelector selected={selected} statuses={statuses} onChange={setSelected}/><div className="q-meta"><span>{c.category}</span><span>{sectionOrder.filter(s=>c.fields[s].length).length} of 5 sections available</span></div>
