@@ -1,8 +1,15 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { configs, sectionOrder } from "../app/quantification/config";
 import { solve } from "../app/quantification/solver";
 import { quantificationStatus } from "../app/quantification/status";
 import { problems } from "../app/discovery/data";
+
+async function chooseProblem(page:Page,id:string){
+ const trigger=page.locator("#q-problem");
+ if(await trigger.getAttribute("aria-expanded")!=="true")await trigger.click();
+ await page.locator('#q-problem-options [role="option"][data-value="'+id+'"]').click();
+ await expect(trigger).toHaveAttribute("data-value",id);
+}
 
 test("all 28 problems use stable configurations and valid examples",()=>{
  expect(configs).toHaveLength(28);
@@ -59,8 +66,9 @@ test("quantification panels, calculator state, and Discovery survive route navig
  await expect(page.locator(".q-panel")).toHaveCount(6);
  await expect(page.locator(".q-panel-header[aria-expanded=true]")).toHaveCount(1);
  const select=page.locator("#q-problem");
- await expect(select.locator("option")).toHaveCount(28);
- await select.selectOption("problem-6");
+ await select.click();
+ await expect(page.locator("#q-problem-options").getByRole("option")).toHaveCount(28);
+ await chooseProblem(page,"problem-6");
  await expect(page.locator(".q-meta").first()).toHaveText("Leads4 of 5 sections available");
  await expect(page.locator('[data-section="Money"] button')).toBeDisabled();
  const total=page.locator('[data-section="Quantity"] input[data-quantity="total"]');
@@ -75,25 +83,25 @@ test("quantification panels, calculator state, and Discovery survive route navig
  await page.getByRole("button",{name:"Negative operational impacts",exact:true}).click();
  await expect(page.locator(".q-panel-header[aria-expanded=true]")).toHaveCount(2);
  await page.locator('[data-section="Quantity"] button').click();
- await select.selectOption("problem-20");
+ await chooseProblem(page,"problem-20");
  await page.getByRole("button",{name:"Load example"}).click();
  await expect(page.locator('[data-section="Time"] input[data-quantity="hours"]')).toHaveValue("5");
  await expect(page.locator('[data-section="Comparison"] input[data-quantity="hours"]')).toHaveValue("5");
  await page.getByRole("button",{name:"Reset",exact:true}).click();
  await expect(page.locator('[data-section="Time"] input[data-quantity="hours"]')).toHaveValue("");
- await select.selectOption("problem-6");
+ await chooseProblem(page,"problem-6");
  await expect(page.locator('[data-section="Quantity"] button')).toHaveAttribute("aria-expanded","false");
  await page.getByRole("link",{name:"Discovery",exact:true}).click();
  await expect(problem.getByRole("checkbox",{name:"Lost leads",exact:true})).toBeChecked();
  await page.getByRole("link",{name:"Quantification"}).click();
- await expect(select).toHaveValue("problem-6");
+ await expect(select).toHaveAttribute("data-value","problem-6");
  await expect(page.locator(".q-panel-header[aria-expanded=true]")).toHaveCount(2);
  await page.locator('[data-section="Quantity"] button').click();
  await expect(total).toHaveValue("100");
  await expect(affected).toHaveValue("25");
  await expect(unaffected).toHaveValue("75");
  for(const c of configs){
-  await select.selectOption(c.id);
+  await chooseProblem(page,c.id);
   for(const s of sectionOrder){
    const section=page.locator('[data-section="'+s+'"]');
    if(c.fields[s].length)await expect(section.locator("button")).toBeEnabled();
@@ -131,13 +139,16 @@ test("problem selector colors follow Discovery confirmation and valid figures wi
  await confirmation.check();
  await page.getByRole("link",{name:"Quantification"}).click();
  const select=page.locator("#q-problem");
- const option=select.locator('option[value="problem-1"]');
- const other=select.locator('option[value="problem-6"]');
+ const option=page.locator('#q-problem-options [data-value="problem-1"]');
+ const other=page.locator('#q-problem-options [data-value="problem-6"]');
  const color=async(status:string,rgb:string)=>{
   await expect(select).toHaveAttribute("data-status",status);
   await expect(option).toHaveAttribute("data-status",status);
   await expect(select).toHaveCSS("color",rgb);
+  await select.click();
+  await expect(option).toBeVisible();
   await expect(option).toHaveCSS("color",rgb);
+  await select.press("Escape");
  };
  await color("incomplete","rgb(242, 173, 173)");
  await expect(other).toHaveCSS("color","rgb(244, 244, 244)");
@@ -149,14 +160,52 @@ test("problem selector colors follow Discovery confirmation and valid figures wi
  await unaffected.fill("80");await color("complete","rgb(16, 184, 92)");
  await unaffected.fill("");await color("incomplete","rgb(242, 173, 173)");
  await unaffected.fill("80");await color("complete","rgb(16, 184, 92)");
- await select.selectOption("problem-6");
+ await chooseProblem(page,"problem-6");
  await expect(select).toHaveCSS("color","rgb(244, 244, 244)");
  await expect(option).toHaveCSS("color","rgb(16, 184, 92)");
- await select.selectOption("problem-1");
+ await chooseProblem(page,"problem-1");
  await page.getByRole("link",{name:"Discovery",exact:true}).click();
  await confirmation.uncheck();
  await page.getByRole("link",{name:"Quantification"}).click();
  await color("default","rgb(244, 244, 244)");
  await expect(total).toHaveValue("100");
  await expect(unaffected).toHaveValue("80");
+});
+
+test("custom problem menu renders all three status colors simultaneously and supports keyboard and dismissal",async({page})=>{
+ await page.goto("/");
+ for(const id of ["problem-1","problem-6"])await page.locator('[data-problem="'+id+'"] .problem-confirm input').check();
+ await page.getByRole("link",{name:"Quantification"}).click();
+ const trigger=page.getByRole("combobox",{name:"Select a business problem"});
+ const menu=page.getByRole("listbox",{name:"Select a business problem"});
+ await page.locator('[data-section="Quantity"] input[data-quantity="total"]').fill("100");
+ await page.locator('[data-section="Quantity"] input[data-quantity="affected"]').fill("20");
+ await trigger.click();
+ await expect(menu).toBeVisible();
+ await expect(menu.getByRole("option")).toHaveCount(28);
+ await expect(menu.getByRole("group")).toHaveCount(7);
+ await expect(menu.getByRole("option",{name:"Missed calls",exact:true})).toHaveCSS("color","rgb(16, 184, 92)");
+ await expect(menu.getByRole("option",{name:"New leads never called",exact:true})).toHaveCSS("color","rgb(242, 173, 173)");
+ await expect(menu.getByRole("option",{name:"Calls outside working hours",exact:true})).toHaveCSS("color","rgb(244, 244, 244)");
+ await expect(trigger).toHaveCSS("color","rgb(16, 184, 92)");
+ await trigger.press("ArrowDown");
+ await trigger.press("Enter");
+ await expect(trigger).toHaveAttribute("data-value","problem-2");
+ await expect(menu).not.toBeVisible();
+ await expect(trigger).toHaveCSS("color","rgb(244, 244, 244)");
+ await trigger.press("Enter");
+ await trigger.press("End");
+ await trigger.press("Escape");
+ await expect(menu).not.toBeVisible();
+ await expect(trigger).toHaveAttribute("data-value","problem-2");
+ await trigger.click();
+ await page.getByRole("heading",{name:"Business problem quantification"}).click();
+ await expect(menu).not.toBeVisible();
+ await trigger.press("Enter");
+ await trigger.press("Home");
+ await trigger.press("Enter");
+ await expect(trigger).toHaveAttribute("data-value","problem-1");
+ await expect(page.locator('[data-section="Quantity"] input[data-quantity="total"]')).toHaveValue("100");
+ await expect(page.locator('[data-section="Quantity"] input[data-quantity="affected"]')).toHaveValue("20");
+ await expect(trigger).toHaveCSS("color","rgb(16, 184, 92)");
 });

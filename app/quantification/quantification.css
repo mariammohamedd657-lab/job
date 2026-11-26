@@ -20,7 +20,7 @@
 .q-calculator h2{color:#f4f4f4;font-size:26px;line-height:1.25;margin:3px 0 13px;font-weight:650;}
 .q-select-label{display:block;margin-bottom:10px;}
 .q-select-wrap{position:relative;}.q-select-wrap>.q-icon{position:absolute;right:12px;top:12px;pointer-events:none;color:#aaa;}
-.q-select-wrap select{appearance:none;width:100%;border:1px solid #4a4a4a;border-radius:999px;background:#181818;color:#f4f4f4;font:inherit;padding:10px 36px 10px 16px;}
+.q-select-wrap .q-problem-trigger{appearance:none;width:100%;border:1px solid #4a4a4a;border-radius:999px;background:#181818;color:#f4f4f4;font:inherit;padding:10px 36px 10px 16px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
 .q-meta{display:flex;justify-content:space-between;gap:10px;margin:10px 0;color:#aaa;}
 .q-indicators{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;}
 .q-indicators span{display:inline-flex;align-items:center;gap:4px;padding:9px 8px;border-radius:7px;font-size:12px;}
@@ -51,6 +51,13 @@
 @media(max-width:800px){.workspace-quantification{margin:4px;}}
 
 /* Status colors apply only to the existing business problem selector. */
-#q-problem optgroup, #q-problem option[data-status="default"] { color: #f4f4f4; }
-#q-problem[data-status="incomplete"], #q-problem option[data-status="incomplete"] { color: #F2ADAD; }
-#q-problem[data-status="complete"], #q-problem option[data-status="complete"] { color: #10b85c; }
+#q-problem-options .q-problem-group, #q-problem-options [data-status="default"] { color: #f4f4f4; }
+#q-problem[data-status="incomplete"], #q-problem-options [data-status="incomplete"] { color: #F2ADAD; }
+#q-problem[data-status="complete"], #q-problem-options [data-status="complete"] { color: #10b85c; }
+/* Only the opened problem selector uses the custom menu. */
+.q-select-wrap .q-problem-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:20;max-height:min(360px,50vh);overflow-y:auto;overscroll-behavior:contain;border:1px solid #4a4a4a;border-radius:12px;background:#181818;font:inherit;padding:4px 0;}
+.q-select-wrap .q-problem-menu[hidden]{display:none;}
+.q-select-wrap .q-problem-group{padding:7px 16px 3px;font-size:12px;font-weight:600;}
+.q-select-wrap .q-problem-option{padding:8px 16px;cursor:pointer;overflow-wrap:anywhere;}
+.q-select-wrap .q-problem-option[data-active="true"],.q-select-wrap .q-problem-option:hover{background:#282828;}
+.q-select-wrap .q-problem-trigger:focus-visible{outline:2px solid #1685ef;outline-offset:3px;}
