@@ -10,10 +10,12 @@ export function product(a:string,b:string,c:string,factor:number,label:string):R
 function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{return product(a,b,c,factor,label);}
 const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
-export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[]};
+export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[]};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
- const isValid=(key:string,n:number)=>validValue(key,n)&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100);
+ const integerKeys=new Set(additional?.integerKeys??[]);
+ const isValid=(key:string,n:number,computed=false)=>validValue(key,n)&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100)&&(!integerKeys.has(key)||(computed?Math.abs(n-Math.round(n))<=1e-7:Number.isInteger(n)));
+
  const relations:Relation[]=[];
  if(config.fields.Quantity.length)relations.push(sum("total","affected","unaffected","Total = affected + unaffected"),ratio("affected","total","affectedPct",.01,"Affected = total × affected % ÷ 100"),ratio("unaffected","total","unaffectedPct",.01,"Unaffected = total × unaffected % ÷ 100"),{keys:["affectedPct","unaffectedPct"],label:"Affected % + unaffected % = 100",operation:(v,k)=>"100 − "+format(v[k==="affectedPct"?"unaffectedPct":"affectedPct"]),derive:(v,k)=>100-v[k==="affectedPct"?"unaffectedPct":"affectedPct"],valid:v=>close(v.affectedPct+v.unaffectedPct,100)});
  if(config.timePopulation)relations.push(product("hours",config.timePopulation,"averageMinutes",1/60,"Hours = quantity × average minutes ÷ 60"));
@@ -48,10 +50,10 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
     const known=rel.keys.filter(x=>x!==k);if(!known.every(active))continue;
     if(rel.impossible?.(values,k)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     const n=rel.derive(values,k);if(n===undefined)continue;
-    if(!isValid(k,n)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
-    values[k]=Math.abs(n)<1e-12?0:n;
+    if(!isValid(k,n,true)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
+    values[k]=integerKeys.has(k)?Math.round(n):Math.abs(n)<1e-12?0:n;
     roots[k]=new Set(known.flatMap(x=>[...roots[x]]));
-    calculated[k]=(labels[k]??k)+" = "+(rel.operation?.(values,k)??rel.label)+" = "+format(n);
+    calculated[k]=(labels[k]??k)+" = "+(rel.operation?.(values,k)??rel.label)+" = "+format(values[k]);
     added=true;
    }
    if(changed||!added)break;
@@ -64,7 +66,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
   const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
   for(const constraint of additional?.constraints??[])if(constraint.violated(known))contradict(constraint.keys.filter(active),constraint.message);
   for(const {denominator,rate} of additional?.undefinedRates??[])if(active(denominator)&&values[denominator]===0&&active(rate)){
-   if(rate in manual)contradict([denominator,rate],"Loss rate is undefined when the affected lead count is zero.");
+   if(rate in manual)contradict([denominator,rate],(labels[rate]??"Rate")+" is undefined when "+(labels[denominator]??"the population")+" is zero.");
    else {delete values[rate];delete calculated[rate];}
   }
   if(!changed)break;

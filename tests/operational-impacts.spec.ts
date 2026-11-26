@@ -2,7 +2,7 @@ import {test,expect,type Page} from "@playwright/test";
 import {configs} from "../app/quantification/config";
 import {problems} from "../app/discovery/data";
 import {solve} from "../app/quantification/solver";
-import {operationalPanels,operationalEquations} from "../app/quantification/operational-data";
+import {operationalPanels,operationalEquations,operationalMethods} from "../app/quantification/operational-data";
 
 const config=configs.find(c=>c.id==="problem-6")!;
 const lostId="negative-operational-lost-leads";
@@ -71,6 +71,7 @@ test("all approved operational impact panels follow Discovery selections and pre
    await primary.fill("7");
    await expect(card.locator(".op-result-row strong")).toHaveText("7");
    await expect(card.locator(".op-result")).toContainText("Directly entered");
+   if(panel.estimated)await expect(card.locator(".op-result")).toContainText("Estimated");
    await card.locator(".op-impact-toggle").click();
    await expect(primary).toHaveValue("7");
    await card.locator(".op-impact-toggle").click();
@@ -122,4 +123,116 @@ test("screenshot lead panel shares editable and calculated values with Problem q
  await page.getByRole("link",{name:"Discovery",exact:true}).click();
  await page.getByRole("link",{name:"Quantification"}).click();
  await expect(input(lost)).toHaveValue("9");
+});
+
+test("all 43 approved assignments are configured, with exact shared base IDs and no unapproved relationships",()=>{
+ const expected:Record<string,string[]>={
+ "problem-1":["lost-leads"],"problem-2":["lost-leads"],"problem-3":["fewer-appointments-booked"],"problem-4":["fewer-customers-served","lost-existing-customers"],"problem-5":["lost-leads"],"problem-6":["lost-leads"],"problem-7":["lost-qualified-leads"],"problem-8":["lost-leads"],"problem-9":["fewer-old-leads-reactivated"],"problem-10":["fewer-old-leads-reactivated","lost-leads"],"problem-11":["lost-leads"],"problem-12":["fewer-appointments-attended","unused-appointment-slots"],"problem-13":["fewer-appointments-attended","unused-appointment-slots"],"problem-14":["unused-appointment-slots","fewer-customers-served"],"problem-15":["fewer-appointments-attended","less-staff-time-available-for-other-work"],"problem-16":["fewer-customers-served"],"problem-17":["less-staff-time-available-for-other-work","fewer-tasks-completed"],"problem-18":["fewer-customers-served","lost-existing-customers"],"problem-19":["less-staff-time-available-for-other-work"],"problem-20":["less-staff-time-available-for-other-work","fewer-tasks-completed","fewer-customers-served"],"problem-21":["fewer-customers-served","lost-existing-customers"],"problem-22":["more-unpaid-invoices"],"problem-23":["more-unpaid-invoices"],"problem-24":["fewer-customer-reviews","fewer-new-customers"],"problem-25":["missing-business-information"],"problem-26":["missing-business-information","lost-leads"],"problem-27":["missing-business-information"],"problem-28":["fewer-tasks-completed","fewer-customers-served","lost-leads"]};
+ expect(Object.keys(operationalMethods)).toHaveLength(28);
+ let count=0;
+ for(const c of configs){
+  const problem=problems.find(p=>p.id===c.id)!;
+  const ids=expected[c.id].map(k=>"negative-operational-"+k);
+  expect(problem.operationalImpacts.map(i=>i.id)).toEqual(ids);
+  expect(Object.keys(operationalMethods[c.id])).toEqual(expected[c.id]);
+  const panels=operationalPanels(c,ids);
+  count+=panels.length;
+  expect(panels.every(p=>p.verified)).toBe(true);
+  expect(operationalPanels(c,[])).toEqual([]);
+  for(const panel of panels){
+   expect(panel.fields.filter(f=>f.primary)).toHaveLength(1);
+   expect(new Set(panel.fields.map(f=>f.key)).size).toBe(panel.fields.length);
+   expect(panel.fields.find(f=>f.primary)?.key).toBe(panel.primaryKey);
+   for(const f of panel.fields.filter(f=>f.shared)){
+    const baseField=Object.values(c.fields).flat().find(v=>v.key===f.key);
+    expect(baseField).toBeDefined();
+    expect(f.label).toBe(baseField?.label);expect(f.unit).toBe(baseField?.unit);
+   }
+   for(const rel of panel.relations)for(const key of rel.keys)expect(panel.fields.some(f=>f.key===key)).toBe(true);
+  }
+ }
+ expect(count).toBe(43);
+});
+
+test("every configured equation solves every single-unknown position and combined routes",()=>{
+ let directions=0;
+ for(const c of configs){
+  const problem=problems.find(p=>p.id===c.id)!;
+  for(const panel of operationalPanels(c,problem.operationalImpacts.map(i=>i.id))){
+   const eq=operationalEquations([panel]);
+   const example=panel.example??{};
+   const complete=solve(c,example,eq);
+   expect(complete.errors, c.id+" / "+panel.name).toEqual([]);
+   expect(complete.values[panel.primaryKey]).toBeDefined();
+   if(!panel.relations.length){
+    expect(complete.calculated[panel.primaryKey]).toBeUndefined();
+    continue;
+   }
+   for(const rel of panel.relations){
+    for(const missing of rel.keys){
+     const raw=Object.fromEntries(rel.keys.filter(k=>k!==missing).map(k=>[k,String(complete.values[k])]));
+     const result=solve(c,raw,eq);
+     expect(result.errors,c.id+" / "+panel.name+" / "+rel.label+" / "+missing).toEqual([]);
+     expect(result.values[missing],c.id+" / "+rel.label+" / "+missing).toBeCloseTo(complete.values[missing],7);
+     expect(result.calculated[missing]).toBeDefined();
+     directions++;
+    }
+   }
+  }
+ }
+ expect(directions).toBeGreaterThan(100);
+});
+
+test("confirmed counts reject fractions; potential outcomes allow decimals; direct entry and population identity remain distinct",()=>{
+ const panelFor=(id:string,key:string)=>{
+  const c=configs.find(x=>x.id===id)!;
+  return {c,p:operationalPanels(c,["negative-operational-"+key])[0]};
+ };
+ const lostPanel=panelFor("problem-6","lost-leads");
+ expect(solve(lostPanel.c,{affected:"10",[rate]:"15"},operationalEquations([lostPanel.p])).errors.length).toBeGreaterThan(0);
+ expect(solve(lostPanel.c,{[lost]:"1.5"},operationalEquations([lostPanel.p])).errors.length).toBeGreaterThan(0);
+ const react=panelFor("problem-9","fewer-old-leads-reactivated");
+ const rr=react.p.fields.find(f=>f.unit==="%")!;
+ expect(solve(react.c,{affected:"3",[rr.key]:"50"},operationalEquations([react.p])).values[react.p.primaryKey]).toBe(1.5);
+ const review=panelFor("problem-24","fewer-customer-reviews");
+ expect(solve(review.c,{affected:"5",[review.p.fields.find(f=>f.unit==="%")!.key]:"30"},operationalEquations([review.p])).values[review.p.primaryKey]).toBeCloseTo(1.5);
+ for(const id of ["problem-1","problem-2"]){
+  const {c,p}=panelFor(id,"lost-leads");
+  const result=solve(c,{affected:"50",[p.fields[0].key]:"30",[recovered]:"8",[pending]:"10"},operationalEquations([p]));
+  expect(result.errors).toEqual([]);expect(result.values.affected).toBe(50);expect(result.values[p.primaryKey]).toBe(12);
+ }
+ for(const [id,key] of [["problem-3","fewer-appointments-booked"],["problem-7","lost-qualified-leads"],["problem-22","more-unpaid-invoices"]]){
+  const {c,p}=panelFor(id,key);
+  const result=solve(c,{affected:"50"},operationalEquations([p]));
+  expect(result.values[p.primaryKey]).toBeUndefined();
+ }
+ const overload=panelFor("problem-28","fewer-tasks-completed");
+ expect(overload.p.primaryKey).not.toBe("affected");
+ expect(solve(overload.c,{affected:"50"},operationalEquations([overload.p])).values[overload.p.primaryKey]).toBeUndefined();
+ const slots=panelFor("problem-14","unused-appointment-slots");
+ expect(solve(slots.c,{affected:"50"},operationalEquations([slots.p])).values[slots.p.primaryKey]).toBeUndefined();
+});
+
+test("multiple impacts combine only approved shared quantities; edits propagate through existing problem equations",()=>{
+ const c=configs.find(x=>x.id==="problem-10")!;
+ const ps=operationalPanels(c,["negative-operational-fewer-old-leads-reactivated",lostId]);
+ const react=ps[0], loss=ps[1];
+ const reactRate=react.fields.find(f=>f.unit==="%")!.key;
+ const result=solve(c,{total:"100",[recovered]:"10",[pending]:"10",[lost]:"20",[reactRate]:"25",days:"10"},operationalEquations(ps));
+ expect(result.errors).toEqual([]);
+ expect(result.values.affected).toBe(40);expect(result.values.unaffected).toBe(60);expect(result.values.daily).toBe(4);
+ expect(result.values[react.primaryKey]).toBe(10);expect(result.values[loss.primaryKey]).toBe(20);
+ const manual=configs.find(x=>x.id==="problem-20")!;
+ const p=operationalPanels(manual,["negative-operational-less-staff-time-available-for-other-work","negative-operational-fewer-tasks-completed","negative-operational-fewer-customers-served"]);
+ const necessary=p[0].fields.find(f=>f.label==="Necessary time")!.key;
+ const r=solve(manual,{[necessary]:"3",[p[0].primaryKey]:"2",averageMinutes:"15",total:"100",[p[1].primaryKey]:"7",[p[2].primaryKey]:"4"},operationalEquations(p));
+ expect(r.errors).toEqual([]);expect(r.values.hours).toBe(5);expect(r.values.affected).toBe(20);expect(r.values.unaffected).toBe(80);
+ expect(r.values[p[0].fields.find(f=>f.unit==="%")!.key]).toBe(40);
+ expect(r.values[p[1].primaryKey]).toBe(7);expect(r.values[p[2].primaryKey]).toBe(4);
+ for(const id of ["problem-25","problem-26","problem-27"]){
+  const config=configs.find(x=>x.id===id)!;
+  const panel=operationalPanels(config,["negative-operational-missing-business-information"])[0];
+  expect(panel.fields).toHaveLength(1);expect(panel.primaryKey).toBe("affected");
+  expect(solve(config,{total:"100",unaffected:"75"},operationalEquations([panel])).values[panel.primaryKey]).toBe(25);
+ }
 });
