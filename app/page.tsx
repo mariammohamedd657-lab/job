@@ -1,5 +1,2 @@
-import Discovery from "./discovery/Discovery";
-
-export default function Home() {
-  return <Discovery />;
-}
+// The persistent workspace is rendered by the root layout.
+export default function Home() { return null; }
