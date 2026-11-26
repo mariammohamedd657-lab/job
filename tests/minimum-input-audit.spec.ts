@@ -418,3 +418,23 @@ test("actual simultaneous algebraic deduction is displayed and editable without 
  await expect(page.locator('[data-section="Quantity"] input[data-quantity="affected"]')).toHaveValue("13");
  await expect(input("targetPct")).toHaveValue("130");
 });
+
+
+test("retyping the same calculated number explicitly retains it as a manual constraint",async({page})=>{
+ await page.goto("/quantification");
+ const quantity=page.locator('[data-section="Quantity"]');
+ const input=(key:string)=>quantity.locator('input[data-quantity="'+key+'"]');
+ await input("total").fill("10");await input("unaffected").fill("5");
+ await expect(input("affected")).toHaveValue("5");
+ await expect(input("affected")).toHaveClass(/q-calculated/);
+ await input("affected").click();await input("affected").press("ControlOrMeta+a");
+ await input("affected").pressSequentially("5");
+ await expect(input("affected")).not.toHaveClass(/q-calculated/);
+ await input("unaffected").fill("");await input("unaffected").blur();
+ await expect(input("affected")).toHaveValue("5");
+ await expect(input("unaffected")).toHaveValue("5");
+ await input("total").fill("");await input("total").blur();
+ await expect(input("affected")).toHaveValue("5");
+ await expect(input("total")).toHaveValue("");
+ await expect(input("unaffected")).toHaveValue("");
+});

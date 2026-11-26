@@ -11,7 +11,7 @@ export function resolveQuantity(key:string,raw:Figures,result:Result){
  const computed=manual.trim()===""&&valid;
  return {value:manual.trim()!==""?manual:computed?format(result.values[key]):"",computed,valid};
 }
-type Props=Omit<ComponentPropsWithoutRef<"input">,"type"|"value"|"defaultValue"|"onChange"|"onBlur"|"readOnly"|"disabled">&{
+type Props=Omit<ComponentPropsWithoutRef<"input">,"type"|"value"|"defaultValue"|"onChange"|"onInput"|"onBlur"|"readOnly"|"disabled">&{
  value:string;
  onValueChange:(value:string)=>void;
 };
@@ -20,7 +20,9 @@ type Props=Omit<ComponentPropsWithoutRef<"input">,"type"|"value"|"defaultValue"|
 // display only in this focused occurrence so the next digit can be entered.
 export default function NumericalInput({value,onValueChange,...props}:Props){
  const [emptyDraft,setEmptyDraft]=useState(false);
- return <input {...props} type="number" value={emptyDraft?"":value} onChange={event=>{
+ return <input {...props} type="number" value={emptyDraft?"":value} onInput={event=>{
+  // Native input events also capture a deliberate replacement with the same
+  // number, which must become a manual constraint even if the display agrees.
   const next=event.currentTarget.value;
   setEmptyDraft(next==="");
   onValueChange(next);
