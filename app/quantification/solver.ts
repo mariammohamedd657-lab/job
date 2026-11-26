@@ -1,7 +1,7 @@
 import type { Config } from "./config";
 import { algebraicConsequences, type Term } from "./algebra";
 import { rangeConsequences } from "./ranges";
-import type { PopulationLink } from "./information-links";
+import { basePopulationLinks, type PopulationLink } from "./information-links";
 export type Figures=Record<string,string>;
 export type Result={values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>};
 export type Relation={keys:string[]; label:string; terms?:Term[]; operation?:(v:Record<string,number>,key:string)=>string; impossible?:(v:Record<string,number>,key:string)=>boolean; derive:(v:Record<string,number>, key:string)=>number|undefined; valid:(v:Record<string,number>)=>boolean};
@@ -87,7 +87,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations)
    if(!changed&&!added){
     const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
     const linear=algebraicConsequences(algebra,known,blocked,domain);
-    const ranges=rangeConsequences(algebra,known,blocked,domain,integerKeys,rateDenominators,additional?.populationLinks??[]);
+    const ranges=rangeConsequences(algebra,known,blocked,domain,integerKeys,rateDenominators,[...basePopulationLinks(config),...(additional?.populationLinks??[])]);
     const deductions={results:[...linear.results,...ranges.results],conflicts:[...linear.conflicts,...ranges.conflicts]};
     for(const conflict of deductions.conflicts)if(conflict.dependencies.every(active))contradict(conflict.dependencies,"Contradictory entries: "+conflict.label+".");
     for(const inferred of deductions.results){

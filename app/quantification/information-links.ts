@@ -1,3 +1,5 @@
+import type { Config } from "./config";
+
 // Relationships between distinct populations within ONE problem and its
 // measurement scope. No new fields, numerical inputs or cross-problem aliases.
 export type PopulationLink={
@@ -30,4 +32,10 @@ export function operationalPopulationLinks(problemId:string,method:string,primar
  // determine its exact count. No assumption about overlap of other impacts.
  if(primary!=="affected"&&!links.some(link=>link.member===primary))links.push(attributable(primary));
  return links;
+}
+
+// Recorded-duration units are observations within the same problem population.
+ // They need not be affected units: the recorded sample can include timely responses.
+export function basePopulationLinks(config:Config):PopulationLink[]{
+ return config.timePopulation==="recordedUnits"?[{population:"total",member:"recordedUnits",kind:"subset",label:"Units with recorded duration are a subset of the total quantity"}]:[];
 }

@@ -116,3 +116,59 @@ test("logical population links transfer values across visible inputs and recalcu
  await expect(op(unique)).toHaveValue("67");
  await expect(op(lost)).toHaveValue("60");
 });
+
+test("recorded-duration observations are not automatically treated as affected units",()=>{
+ for(const id of ["problem-5","problem-7","problem-18"]){
+  const c=config(id),e=operationalEquations(panels(id));
+  const zero=solve(c,{total:"0"},e);
+  expect(zero.errors,id).toEqual([]);
+  expect(zero.values.recordedUnits,id).toBe(0);expect(zero.values.hours,id).toBe(0);
+  const known=solve(c,{total:"40",affected:"10",recordedUnits:"30",averageMinutes:"2"},e);
+  expect(known.errors,id).toEqual([]);
+  expect(known.values.hours,id).toBe(1);
+  const conflict=solve(c,{total:"10",recordedUnits:"11",months:"3"},e);
+  expect(conflict.errors.length,id).toBeGreaterThan(0);
+  expect(conflict.values.months,id).toBe(3);
+  const unknown=solve(c,{total:"40",affected:"10"},e);
+  expect(unknown.values.recordedUnits,id).toBeUndefined();
+ }
+});
+
+// Independent finite-population oracle: enumerate every feasible integer
+// breakdown, then group by every possible subset of entered counts. This tests
+// equality/inequality combinations that the interior algebra audit cannot cover.
+test("exhaustive small-population count subsets for all three distinct-lead configurations",()=>{
+ test.setTimeout(120000);
+ let cases=0,targets=0;
+ for(const id of ["problem-1","problem-2","problem-7"]){
+  const c=config(id),e=operationalEquations(panels(id));
+  const u=id==="problem-7"?"op:lost-qualified-leads:affected-qualified-leads":unique;
+  const pre=id==="problem-7"?"op:lost-qualified-leads:":"op:lost-leads:";
+  const keys=["affected","unaffected",u,pre+"recovered",pre+"pending",pre+"result"];
+  for(let total=0;total<=4;total++){
+   const models:number[][]=[];
+   for(let a=0;a<=total;a++)for(let n=0;n<=a;n++)for(let rec=0;rec<=n;rec++)for(let pen=0;pen<=n-rec;pen++)models.push([a,total-a,n,rec,pen,n-rec-pen]);
+   for(let mask=0;mask<(1<<keys.length);mask++){
+    const groups=new Map<string,number[][]>();
+    for(const model of models){
+     const group=model.filter((_,i)=>mask&(1<<i)).join(",");
+     const rows=groups.get(group)??[];rows.push(model);groups.set(group,rows);
+    }
+    for(const rows of groups.values()){
+     const raw:Record<string,string>={total:String(total)};
+     keys.forEach((k,i)=>{if(mask&(1<<i))raw[k]=String(rows[0][i]);});
+     const result=solve(c,raw,e);
+     const context=id+" "+JSON.stringify(raw);
+     if(result.errors.length)throw Error(context+" unexpected contradiction "+result.errors.join("; "));
+     for(const [i,key] of keys.entries()){
+      const expected=rows.every(row=>row[i]===rows[0][i])?rows[0][i]:undefined;
+      if(result.values[key]!==expected)throw Error(context+" expected "+key+" "+expected+" got "+result.values[key]);
+      targets++;
+     }
+     cases++;
+    }
+   }
+  }
+ }
+ console.log("LOGICAL_COUNT_AUDIT "+JSON.stringify({problems:3,cases,targets,maximumTotal:4}));
+});
