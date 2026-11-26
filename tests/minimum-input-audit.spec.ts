@@ -331,7 +331,32 @@ for(const c of configs)test("universal editable numerical fields "+c.id,async({p
   await expect(page.locator(".q-errors")).toHaveCount(0);
  }
  for(const panel of panels)await expect(page.locator('.op-impact-card[data-impact="'+panel.id+'"] .op-result-row strong')).toHaveText(expected(panel.primaryKey));
- console.log("EDITABILITY_AUDIT "+JSON.stringify({problem:c.id,fields:count,uniqueQuantities:keys.length,blankEdits,calculatedEdits,directEdits,sharedChecks}));
+ // Direct-entry impact fields can also be inferred at the zero-cause
+ // boundary. Verify that those inferred zeros are just as editable.
+ let logicalEdits=0;
+ await page.locator(".q-calculator").getByRole("button",{name:"Reset",exact:true}).click();
+ await page.locator(".op-impact-content").getByRole("button",{name:"Reset",exact:true}).click();
+ const affected=page.locator('[data-section="Quantity"] input[data-quantity="affected"]');
+ await affected.fill("0");
+ for(const panel of panels){
+  if(derivable.has(panel.primaryKey))continue;
+  const card=page.locator('.op-impact-card[data-impact="'+panel.id+'"]');
+  const primary=card.locator('input[data-quantity="'+panel.primaryKey+'"]');
+  await expect(primary).toHaveValue("0");
+  await expect(primary).toBeEditable();
+  await primary.click();await primary.press("ControlOrMeta+a");await primary.press("Backspace");
+  await expect(primary).toHaveValue("");
+  await primary.pressSequentially("7");
+  await expect(primary).toHaveValue("7");
+  await expect(affected).toHaveValue("0");
+  await expect(page.locator(".q-errors").first()).toBeVisible();
+  await primary.fill("");await primary.blur();
+  await expect(primary).toHaveValue("0");
+  await expect(card.locator(".op-result-row strong")).toHaveText("0");
+  await expect(page.locator(".q-errors")).toHaveCount(0);
+  logicalEdits++;
+ }
+ console.log("EDITABILITY_AUDIT "+JSON.stringify({problem:c.id,fields:count,uniqueQuantities:keys.length,blankEdits,calculatedEdits,directEdits,logicalEdits,sharedChecks}));
 });
 
 test("clearing an inferred value allows replacement typing and independently recalculates equivalent fields",async({page})=>{
@@ -366,4 +391,30 @@ test("clearing an inferred value allows replacement typing and independently rec
  await lost.fill("");await lost.blur();
  await expect(lost).toHaveValue("");
  await expect(base("affected")).toHaveValue("");
+});
+
+
+test("actual simultaneous algebraic deduction is displayed and editable without an intermediate input",async({page})=>{
+ await page.goto("/quantification");
+ const comparison=page.locator('[data-section="Comparison"]');
+ const input=(key:string)=>comparison.locator('input[data-quantity="'+key+'"]');
+ await input("targetPct").fill("100");
+ await expect(input("difference")).toHaveValue("0");
+ await expect(input("affected")).toHaveValue("");
+ await expect(input("target")).toHaveValue("");
+ await page.locator(".q-calculator").getByRole("checkbox",{name:"Show calculations"}).check();
+ const explanation=input("difference").locator("xpath=../..").locator(".q-formula");
+ await expect(explanation).toContainText("combined:");
+ await expect(explanation).toContainText("Actual = target + difference");
+ await expect(explanation).toContainText("Actual = target × percentage of target");
+ await input("difference").click();await input("difference").press("ControlOrMeta+a");await input("difference").press("Backspace");
+ await expect(input("difference")).toHaveValue("");
+ await input("difference").pressSequentially("3");
+ await expect(input("difference")).toHaveValue("3");
+ await expect(input("targetPct")).toHaveValue("100");
+ await expect(page.locator(".q-errors").first()).toBeVisible();
+ await input("targetPct").fill("");await input("target").fill("10");
+ await expect(input("affected")).toHaveValue("13");
+ await expect(page.locator('[data-section="Quantity"] input[data-quantity="affected"]')).toHaveValue("13");
+ await expect(input("targetPct")).toHaveValue("130");
 });
