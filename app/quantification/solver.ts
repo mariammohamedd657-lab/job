@@ -93,7 +93,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
     const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
-    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,[...(config.id==="problem-28"?[{difference:"difference",result:"step2:staff-shortfall"}]:[]),...(additional?.positiveParts??[])]);
+    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,[...(config.id==="problem-28"?[{difference:"difference",result:"step2:staff-shortfall"}]:[]),...(additional?.positiveParts??[])],precision.externalBounds??{});
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
@@ -251,7 +251,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    const allowed=solve(config,remaining,additional,{...precision,exactInputs:correctionExact,includeBounds:true,correctionKey:undefined});
    if(allowed.bounds?.[key])bounds[key]=allowed.bounds[key];
   }
-  for(const [key,b] of Object.entries(precision.externalBounds??{})){const local=bounds[key];bounds[key]={...local,min:Math.max(local?.min??-Infinity,b.min??-Infinity),max:Math.min(local?.max??Infinity,b.max??Infinity),minReason:b.minReason??local?.minReason,maxReason:b.maxReason??local?.maxReason};}
+  for(const [key,b] of Object.entries(precision.externalBounds??{})){const local=bounds[key];const min=Math.max(local?.min??-Infinity,b.min??-Infinity),max=Math.min(local?.max??Infinity,b.max??Infinity);bounds[key]={...local,min:Number.isFinite(min)?min:undefined,max:Number.isFinite(max)?max:undefined,minExclusive:!!(local?.min===min&&local.minExclusive||b.min===min&&b.minExclusive),maxExclusive:!!(local?.max===max&&local.maxExclusive||b.max===max&&b.maxExclusive),minReason:b.minReason??local?.minReason,maxReason:b.maxReason??local?.maxReason};}
   result.bounds=bounds;
  }
  return result;
