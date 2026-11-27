@@ -20,7 +20,7 @@ export function QuantIcon({name}:{name:string}){
  const paths:Record<string,ReactNode>={calculator:<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h1m6 0h1M8 15h1m6 0h1M8 18h1m6 0h1"/></>,down:<path d="m3 6 6 6 4-4 8 8m-5 0h5v-5"/>,up:<path d="m3 18 6-6 4 4 8-8m-5 0h5v5"/>,wallet:<><path d="M20 8V5H5a2 2 0 0 0-2 2v12h17v-4M3 8h17"/><rect x="14" y="10" width="8" height="6" rx="2"/><path d="M17 13h.1"/></>,lock:<><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></>,unlock:<><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7-2"/></>,chevron:<path d="m6 9 6 6 6-6"/>,check:<><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="m8 12 3 3 5-6" stroke="#181818"/></>};
  return <svg className="q-icon" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
-const panels=[["Problem quantification","calculator","purple"],["Negative operational impacts","down","yellow"],["Negative financial impacts","down","blue"],["Positive operational outcomes","up","yellow"],["Positive financial outcomes","up","blue"],["Investment and financial requirements","wallet","green"]];
+const panels=[["Problem quantification","calculator","purple"],["Negative operational impacts","down","yellow"],["Negative financial impacts","down","blue"],["Investment and financial requirements","wallet","green"]];
 type CalculatorProps={selected:string;setSelected:(id:string)=>void;c:Config;raw:Figures;result:Result;statuses:Record<string,ReturnType<typeof quantificationStatus>>;setRaw:(next:Figures)=>void;update:(key:string,value:string)=>void;show:boolean;setShow:(value:boolean)=>void};
 function Calculator({selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow}:CalculatorProps){
  const [sectionStates,setSectionStates]=useState<Record<string,Partial<Record<Section,boolean>>>>({});
@@ -38,7 +38,7 @@ function Calculator({selected,setSelected,c,raw,result,statuses,setRaw,update,sh
  <p className="q-note">Green values are calculated automatically. Figures entered manually are preserved when switching problems. Example figures are hypothetical.</p></div>;
 }
 export default function Quantification({confirmedProblems = {},operationalSelections = {},financialSelections = {}}:{confirmedProblems?:Record<string,boolean>;operationalSelections?:Record<string,string[]>;financialSelections?:Record<string,string[]>} = {}){
- const [open,setOpen]=useState<boolean[]>([true,false,false,false,false,false]);
+ const [open,setOpen]=useState<boolean[]>([true,false,false,false]);
  const [selected,setSelected]=useState(configs[0].id);
  const [figures,setFigures]=useState<Record<string,Figures>>({});
  const [show,setShow]=useState(false);
