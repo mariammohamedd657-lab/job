@@ -1,7 +1,7 @@
 name: Discovery checks
 on:
   push:
-    branches: [main]
+    branches: [main, development/unified-calculation-engine]
   workflow_dispatch:
 jobs:
   test:
