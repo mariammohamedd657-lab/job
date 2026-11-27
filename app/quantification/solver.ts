@@ -238,6 +238,10 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   // Extra checks belong only to active impact equations; the original problem rules remain unchanged.
   const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
   for(const constraint of additional?.constraints??[])if(constraint.violated(known))contradict(constraint.keys.filter(active),constraint.message);
+  for(const link of [...localLinks,...(compatible?basePopulationLinks(config):[]),...(additional?.populationLinks??[])])if(active(link.population)&&active(link.member)){
+   if(link.kind==="subset"&&values[link.member]>values[link.population]&&!close(values[link.member],values[link.population]))contradict([link.population,link.member],link.label);
+   if(link.kind==="attributed"&&values[link.population]===0&&values[link.member]!==0)contradict([link.population,link.member],link.label);
+  }
   for(const {denominator,rate} of additional?.undefinedRates??[])if(active(denominator)&&values[denominator]===0&&active(rate)){
    if(rate in manual)contradict([denominator,rate],(labels[rate]??"Rate")+" is undefined when "+(labels[denominator]??"the population")+" is zero.");
    else {delete values[rate];delete calculated[rate];}

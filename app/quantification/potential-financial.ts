@@ -1,7 +1,7 @@
 import type {Config} from "./config";
 import {financialContent,routeFields,type ContentRoute} from "./step2-content";
 import {product,sum,type AdditionalEquations,type Relation} from "./solver";
-export function potentialAndCostEquations(config:Config,base:AdditionalEquations,options:{newBuyerMatch?:boolean;matchedBuyerCosts?:boolean;grossComplete?:boolean;netComplete?:boolean;wastedComplete?:boolean;paidLeadContainment?:boolean;simpleInterest?:boolean;estimatedSimpleInterest?:boolean;estimatedGrossComplete?:boolean;estimatedNetComplete?:boolean;shareEstimatedAverages?:boolean;overdueInvoiceMatch?:boolean;overdueInvoiceContainment?:boolean;invoiceBalanceComplete?:boolean}={}):AdditionalEquations{
+export function potentialAndCostEquations(config:Config,base:AdditionalEquations,options:{newBuyerMatch?:boolean;matchedBuyerCosts?:boolean;grossComplete?:boolean;netComplete?:boolean;wastedComplete?:boolean;paidLeadContainment?:boolean;simpleInterest?:boolean;estimatedSimpleInterest?:boolean;estimatedGrossComplete?:boolean;estimatedNetComplete?:boolean;shareEstimatedAverages?:boolean;overdueInvoiceMatch?:boolean;overdueInvoiceContainment?:boolean;invoiceBalanceComplete?:boolean;collectionStaffIncluded?:boolean;estimatedCollectionStaffIncluded?:boolean}={}):AdditionalEquations{
  const outcomes=financialContent(config).filter(o=>["F7","F8","F3","F9","F4","F5","F6","F10"].includes(o.id));
  if(!outcomes.length)return base;
  const fields=[...new Map(outcomes.flatMap(o=>[...o.fields,...routeFields(o.routes)]).map(f=>[f.key,f])).values()];
@@ -69,7 +69,9 @@ export function potentialAndCostEquations(config:Config,base:AdditionalEquations
   prod(x("resource-expenditure"),x("resource-reference-units"),avg("average-additional-resource"),1,x("resource-reference-units"));
   averageKeys.push(avg("average-collection-hour"),avg("average-additional-resource"));
   signedKeys.push(x("collection-difference"),x("financing-difference"),x("net-category-difference"));
-  totalOf(x("gross-increase"),["marketing","staff","collection","financing","other"].map(x),!!(estimated?options.estimatedGrossComplete:options.grossComplete));
+  const collectionIncluded=estimated?options.estimatedCollectionStaffIncluded:options.collectionStaffIncluded;
+  totalOf(x("gross-increase"),["marketing","staff",collectionIncluded?"collection-fees":"collection","financing","other"].map(x),!!(estimated?options.estimatedGrossComplete:options.grossComplete));
+  if(collectionIncluded)populationLinks.push({population:x("staff"),member:x("collection-staff"),kind:"subset",label:"Collection staffing already included in general staffing cannot exceed that staffing expenditure"});
   if(estimated?options.estimatedNetComplete:options.netComplete){totalOf(x("net-category-difference"),["marketing","staff","collection","financing","other"].map(part=>x(part+"-difference")),true);equal(x("difference"),x("net-category-difference"));}
   integerKeys.push(x("paid-leads"),x("employees"),x("incremental-employee-count"),paidCount);
   averageKeys.push(avg("average-paid-lead"),avg("average-additional-hour"),x("employee-cost"));
