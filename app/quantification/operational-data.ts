@@ -62,6 +62,7 @@ function combined(total:ImpactField,others:ImpactField[],rate:ImpactField):Relat
  const sum=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).reduce((n,k)=>n+v[k],0);
  const sumText=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).map(k=>format(v[k])).join(" + ");
  return {keys:[a,...keys,b],label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)",
+  terms:[...keys.map(key=>({coefficient:1,keys:[key]})),{coefficient:-1,keys:[a]},{coefficient:.01,keys:[a,b]}],
   complement:{population:a,components:keys,rate:b,label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)"},
   derive:(v,k)=>{if(k===a){const d=1-v[b]/100;return d===0?undefined:sum(v)/d;}if(k===b)return v[a]===0?undefined:(1-sum(v)/v[a])*100;return v[a]*(1-v[b]/100)-sum(v,k);},
   impossible:(v,k)=>k===a&&v[b]===100&&sum(v)!==0||k===b&&v[a]===0&&sum(v)!==0,
@@ -123,7 +124,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],op
    case "reactivation":{
     const p=ratePanel(shared(config,"affected",true),support("reactivation-rate","Applicable attributable reactivation rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
     const eligible=field("step3:historical:reactivation:eligible","Eligible old leads","Leads",true),converted=field("step3:historical:reactivation:converted","Relevant reactivated leads","Leads",true),rate=field("step3:historical:reactivation:rate","Historical reactivation rate","%");
-    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reactivated leads = eligible old leads × historical reactivation rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],populationLinks:[...(p.populationLinks??[]),{population:eligible.key,member:converted.key,kind:"subset",label:"Historical reactivated leads cannot exceed eligible old leads"}],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}]};
+    return {...p,example:{...p.example,[eligible.key]:"200",[converted.key]:"60"},fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reactivated leads = eligible old leads × historical reactivation rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],populationLinks:[...(p.populationLinks??[]),{population:eligible.key,member:converted.key,kind:"subset",label:"Historical reactivated leads cannot exceed eligible old leads"}],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}]};
    }
    case "booking":return ratePanel(shared(config,"missedBookings",true),support("loss-rate","Booking loss rate","%"),primary("Lost bookings","Bookings"),[support("recovered","Recovered bookings","Bookings",true),support("pending","Pending bookings","Bookings",true)],[shared(config,"affected",true)]);
    case "attendance":return ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attendance loss rate","%"),primary("Lost attendance","Appointments"));
@@ -154,7 +155,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],op
    case "reviews":{
     const p=ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review rate","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
     const eligible=field("step3:historical:reviews:eligible","Eligible buyers in the reference population","Buyers",true),converted=field("step3:historical:reviews:converted","Additional attributable reviews","Reviews",true),rate=field("step3:historical:reviews:rate","Reference additional review rate","%");
-    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reference additional reviews = eligible buyers × reference additional review rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}]};
+    return {...p,example:{...p.example,[eligible.key]:"200",[converted.key]:"60"},fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reference additional reviews = eligible buyers × reference additional review rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}]};
    }
    case "information":return panel([{...shared(config,"affected",true),primary:true}],[],{example:{affected:"7"}});
 
@@ -163,5 +164,5 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],op
  });
 }
 export function operationalEquations(panels:OperationalPanel[]):AdditionalEquations{
- return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],estimatedKeys:panels.filter(panel=>panel.estimated).map(panel=>panel.primaryKey),inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
+ return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],actualIntegerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer&&f.key.startsWith("step3:historical:")).map(f=>f.key)))],estimatedKeys:panels.filter(panel=>panel.estimated).map(panel=>panel.primaryKey),inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
 }

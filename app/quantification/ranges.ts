@@ -28,7 +28,7 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
   }
   if(lo>hi||lo===hi&&(loOpen||hiOpen))conflicts.push({dependencies:Object.keys(known),label:"No feasible value for "+key+" within its numerical domain"});
   if(Number.isFinite(known[key])){
-   const v=known[key];if(v<lo||v>hi||v===lo&&loOpen||v===hi&&hiOpen)conflicts.push({dependencies:[key],label:"Entered value violates the numerical domain of "+key});
+   const v=known[key];if(v<lo&&lo-v>tolerance(v,lo)||v>hi&&v-hi>tolerance(v,hi)||v===lo&&loOpen||v===hi&&hiOpen)conflicts.push({dependencies:[key],label:"Entered value violates the numerical domain of "+key});
    ranges.set(key,{lo:limit(v,[key]),hi:limit(v,[key])});
   }else ranges.set(key,{lo:{...limit(lo),exclusive:loOpen},hi:{...limit(hi),exclusive:hiOpen}});
  }

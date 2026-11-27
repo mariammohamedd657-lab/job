@@ -159,6 +159,25 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
       if(!active(out)&&!(out in manual)&&!blocked.has(out)){values[out]=0;markEstimate(out,derivesEstimate(out,[zero]));roots[out]=new Set(roots[zero]);calculated[out]=(labels[out]??out)+" = 0 (zero factor)";added=true;}
      }
     }
+    if(rel.terms?.length&&rel.terms.every(t=>t.keys.length===1)){
+     const positive=rel.terms.filter(t=>t.coefficient>0),negative=rel.terms.filter(t=>t.coefficient<0);
+     if(positive.length===1&&negative.length>1&&negative.every(t=>domain(t.keys[0])[0]>=0)){
+      const total=positive[0].keys[0];
+      if(active(total)){
+       const supplied=negative.filter(t=>active(t.keys[0]));
+       const remainder=values[total]*positive[0].coefficient+supplied.reduce((n,t)=>n+t.coefficient*values[t.keys[0]],0);
+       if(remainder===0){
+        const dependencies=[total,...supplied.map(t=>t.keys[0])];
+        for(const term of negative){
+         const k=term.keys[0];
+         if(!active(k)&&!(k in manual)&&!blocked.has(k)&&domain(k)[0]===0){
+          values[k]=0;markEstimate(k,derivesEstimate(k,dependencies));roots[k]=new Set(dependencies.flatMap(x=>[...roots[x]]));calculated[k]=(labels[k]??k)+" = 0 (nonnegative breakdown exhausted)";added=true;
+         }
+        }
+       }
+      }
+     }
+    }
     const missing=rel.keys.filter(k=>!active(k));
     if(missing.length===0){if(!rel.valid(values))contradict(rel.keys,"Contradictory entries: "+rel.label+". Entered or derived values: "+rel.keys.map(k=>(labels[k]??k)+" = "+format(values[k])).join("; ")+".");continue;}
     if(missing.length!==1)continue;
@@ -301,4 +320,15 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  }
  return result;
 }
-export function format(n:number){return Number.isFinite(n)?String(Number(n.toPrecision(15))):"—";}
+export function format(n:number){
+ if(!Number.isFinite(n))return "—";
+ if(n===0)return "0";
+ // Prefer a short decimal only when it differs by floating-point noise.
+ // Never feed the display string back into the solver unless the user
+ // explicitly enters it as an independent assertion.
+ for(let digits=1;digits<=14;digits++){
+  const candidate=Number(n.toPrecision(digits));
+  if(candidate!==0&&Math.abs(candidate-n)<=8*Number.EPSILON*Math.abs(n))return String(candidate);
+ }
+ return String(Number(n.toPrecision(16)));
+}
