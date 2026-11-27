@@ -244,7 +244,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    }
    // Recompute the range from the remaining data, with that run's actual
    // estimate provenance, not the conflicting run's blocked inputs.
-   const allowed=solve(config,remaining,additional,{...precision,includeBounds:true});
+   const correctionExact=new Set(precision.exactInputs??[]);if(integerKeys.has(key)&&!inputEstimated(key))correctionExact.add(key);
+   const allowed=solve(config,remaining,additional,{...precision,exactInputs:correctionExact,includeBounds:true,correctionKey:undefined});
    if(allowed.bounds?.[key])bounds[key]=allowed.bounds[key];
   }
   result.bounds=bounds;

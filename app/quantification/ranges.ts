@@ -66,6 +66,9 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
    if(p.lo.value>0&&Number.isFinite(high.value))narrow(rate,"lo",limit(100*(1-high.value/p.lo.value),deps(high,p.lo)),label);
    if(r.hi.value<100)narrow(population,"hi",limit(high.value/(1-r.hi.value/100),deps(high,r.hi)),label);
    if(r.lo.value<100)narrow(population,"lo",limit(low.value/(1-r.lo.value/100),deps(low,r.lo)),label);
+   const complementHi=multiply(p.hi,limit(1-r.lo.value/100,r.lo.deps),1);
+   for(const key of components){const otherMin=components.filter(k=>k!==key).reduce((a,k)=>plus(a,ranges.get(k)!.lo),limit(0));narrow(key,"hi",limit(complementHi.value-otherMin.value,deps(complementHi,otherMin)),label);}
+   if(r.lo.value===100&&low.value>0)conflicts.push({dependencies:[...deps(r.lo,low)],label});
   }
   // Difference and percentage of target describe the same comparison.
   // Their combined relation is signed; it is not an ordinary nonnegative
@@ -156,7 +159,7 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
   const min=Number.isFinite(lo.value)?lo.value:undefined,max=Number.isFinite(hi.value)?hi.value:undefined;
   if(min!==undefined&&max!==undefined&&min>max)continue;
   const diff=comparison&&key===comparison.rate?ranges.get(comparison.difference):undefined;
-  bounds[key]={min,max,minExclusive:min===0&&positive.has(key)||min===100&&!!diff&&diff.lo.value>0,maxExclusive:max===100&&!!diff&&diff.hi.value<0,minReason:lo.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain"),maxReason:hi.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain")};
+  bounds[key]={min,max,minExclusive:min===0&&positive.has(key)||min===100&&!!diff&&diff.lo.value>0,maxExclusive:max===100&&(!!diff&&diff.hi.value<0||complements.some(c=>c.rate===key&&!c.components.some(k=>blocked.has(k))&&c.components.some(k=>(ranges.get(k)?.lo.value??0)>0))),minReason:lo.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain"),maxReason:hi.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain")};
  }
  return {results,conflicts,bounds};
 }

@@ -85,9 +85,12 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
   const direct=(label:string,unit:string,estimated=false)=>{const result=primary(label,unit,!estimated);return panel([result],[],{estimated,example:{[result.key]:"7"}});};
   const ratePanel=(population:ImpactField,rate:ImpactField,result:ImpactField,others:ImpactField[]=[],context:ImpactField[]=[],estimated=false,example?:Record<string,string>)=>{
    const relations=[product(result.key,population.key,rate.key,.01,result.label+" = "+population.label+" × "+rate.label+" ÷ 100")];
+   const isLoss=others.length===2;
+   const remainder=isLoss?support("not-lost","Recovered + pending",""+population.unit):undefined;
+   if(remainder){relations.push(breakdown(remainder,others),breakdown(population,[remainder,result]));}
    if(others.length)relations.unshift(breakdown(population,[...others,result]));
    if(others.length)relations.push(combined(population,others,rate));
-   return panel([...context,population,...others,rate,result],relations,{
+   return panel([...context,population,...others,...(remainder?[remainder]:[]),rate,result],relations,{
     estimated,constraints:[bounded(population,[...others,result])],
     inferZeros:v=>{
      const zeros:ZeroInference[]=[];
@@ -110,14 +113,15 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
   };
   switch(method){
    case "calls":
+   case "direct-leads":
    case "leads":{
-    const population=method==="calls"?support("unique-leads","Unique affected leads","Leads",true):shared(config,"affected",true);
+    const population=method!=="leads"?support("unique-leads","Unique affected leads","Leads",true):shared(config,"affected",true);
     const recovered=support("recovered","Recovered leads","Leads",true),pending=support("pending","Pending leads","Leads",true);
     return ratePanel(population,support("loss-rate","Loss rate","%"),primary("Lost leads","Leads"),[recovered,pending],[],false,{[population.key]:"26",[recovered.key]:"8",[pending.key]:"9"});
    }
    case "qualified":return ratePanel(support("affected-qualified-leads","Affected qualified leads","Leads",true),support("loss-rate","Qualified lead loss rate","%"),primary("Lost qualified leads","Leads"),[support("recovered","Recovered qualified leads","Leads",true),support("pending","Pending qualified leads","Leads",true)],[shared(config,"affected",true)]);
    case "reactivation":return ratePanel(shared(config,"affected",true),support("reactivation-rate","Reactivation rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
-   case "booking":return ratePanel(support("intended-bookings","Intended bookings","Bookings",true),support("loss-rate","Booking loss rate","%"),primary("Lost bookings","Bookings"),[support("recovered","Recovered bookings","Bookings",true),support("pending","Pending bookings","Bookings",true)],[shared(config,"affected",true)]);
+   case "booking":return ratePanel(shared(config,"missedBookings",true),support("loss-rate","Booking loss rate","%"),primary("Lost bookings","Bookings"),[support("recovered","Recovered bookings","Bookings",true),support("pending","Pending bookings","Bookings",true)],[shared(config,"affected",true)]);
    case "attendance":return ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attendance loss rate","%"),primary("Lost attendance","Appointments"));
    case "slots":return direct("Unused appointment slots","Slots");
    case "new-buyers":return direct("Potential new buyers lost","Buyers",true);
@@ -136,7 +140,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
    }
    case "reviews":return ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review rate","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
    case "information":return panel([{...shared(config,"affected",true),primary:true}],[],{example:{affected:"7"}});
-   case "direct-leads":return direct("Lost leads","Leads");
+
    default:throw new Error("Missing approved operational configuration: "+config.id+" / "+impact.id);
   }
  });

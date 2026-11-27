@@ -6,7 +6,7 @@ for(const config of configs.filter(c=>c.actualKey)){
  const actual=config.actualKey!;
  const run=(raw:Figures)=>solve(config,raw,undefined,{includeBounds:true});
  test(config.id+" comparison: all directions",()=>{
-  for(const raw of [{[actual]:"90",target:"60"},{difference:"30",targetPct:"150"},{difference:"-30",targetPct:"50"},{[actual]:"30",targetPct:"50"}]){
+  for(const raw of ([{[actual]:"90",target:"60"},{difference:"30",targetPct:"150"},{difference:"-30",targetPct:"50"},{[actual]:"30",targetPct:"50"}] as Figures[])){
    const result=run(raw);
    expect(result.errors).toEqual([]);
    const negative=raw.difference==="-30"||raw.targetPct==="50";
