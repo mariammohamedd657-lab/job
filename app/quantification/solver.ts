@@ -25,7 +25,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  if(precision.populationClassification==="overlapping"){labels.overlap="Overlap";labels.combined="Unique combined population";}
  const integerKeys=new Set(["intendedBookings","missedBookings","requiredReminders","missedReminders","sentReminders","pendingReminders","reschedulingEvents","affectedInvoices","requiredPayments","missingRecordings","missingOutcomes","missingBoth","requiredUpdates","missedUpdates","completedUpdates","pendingUpdates","overlap","combined", "step2:payments-without-reminders","total","affected","unaffected","remaining","recordedUnits",...(additional?.integerKeys??[])]);
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
- const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
+ const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="averageEventMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
  const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key));
  // Only correct machine-precision residue of an exact integral calculation.
  // Never round an estimated count to an integer.
@@ -72,13 +72,14 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   {population:"total",components:["unaffected"],rate:"affectedPct",label:"Affected rate is the complement of unaffected quantity ÷ total"},
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
- const rateDenominators:Record<string,string>={...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
+ const timeDenominators:Record<string,string>=config.timePopulation?{averageMinutes:config.timePopulation,...(config.id==="problem-15"?{averageEventMinutes:"reschedulingEvents"}:{})}:{};
+ const rateDenominators:Record<string,string>={...timeDenominators,...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
  const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
  const intervals=(known:Record<string,number>)=>{
-    const links=[...localLinks,...basePopulationLinks(config),...(additional?.populationLinks??[]),...(config.fields.Quantity.length&&compatible?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])];
+    const links=[...localLinks,...(compatible?basePopulationLinks(config):[]),...(additional?.populationLinks??[]),...(config.fields.Quantity.length&&compatible?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])];
     // Relax the integer domain only for unknown counts in components with an
     // active estimate. A manual actual count is still an exact fixed value.
     // In an exact-only component retain the existing discrete bound inference.
@@ -100,6 +101,10 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   const contradict=(keys:string[],message:string)=>{errors.add(message);for(const k of keys)for(const x of roots[k]??[]){if(!blocked.has(x)){blocked.add(x);changed=true;}}};
   for(let pass=0;pass<50;pass++){
    let added=false;
+   for(const [average,count] of Object.entries(timeDenominators)){
+    if(active(count)&&values[count]===0&&active(average))contradict([count,average],(labels[average]??average)+" is undefined when the corresponding count is zero.");
+    if(active(average)&&values[average]===0&&active("hours")&&values.hours>0)contradict([average,"hours"],"Positive total duration cannot have a zero average duration.");
+   }
    // A specified frequency requires a positive observation period, even when the frequency is zero.
    if(hasFrequency&&active("days")&&values.days===0){
     if(active("daily"))contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");
@@ -118,6 +123,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const denominator=rateDenominators[k];if(denominator&&active(denominator)&&values[denominator]===0)continue;
     const n=rel.derive(values,k);if(n===undefined)continue;
     if(hasFrequency&&k==="days"&&n===0&&known.includes("daily")){contradict(known,"A defined daily frequency requires a positive measurement period.");continue;}
+    if(Object.entries(timeDenominators).some(([average,count])=>count===k&&n===0&&active(average))){contradict(known,"A defined average duration requires a positive corresponding count.");continue;}
     const estimate=derivesEstimate(k,known);
     if(!isValid(k,n,true,estimate)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     values[k]=numericValue(k,n,estimate);
@@ -161,6 +167,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
      if(denominator&&active(denominator)&&values[denominator]===0)continue;
      const estimate=derivesEstimate(k,inferred.dependencies);
      if(hasFrequency&&k==="days"&&inferred.value===0&&active("daily")){contradict([...inferred.dependencies,"daily"],"A defined daily frequency requires a positive measurement period.");continue;}
+     if(Object.entries(timeDenominators).some(([average,count])=>count===k&&inferred.value===0&&active(average))){contradict([...inferred.dependencies,...Object.keys(timeDenominators).filter(average=>timeDenominators[average]===k&&active(average))],"A defined average duration requires a positive corresponding count.");continue;}
      if(!isValid(k,inferred.value,true,estimate)){contradict(inferred.dependencies,"Contradictory entries: "+inferred.label+".");continue;}
      if(active(k)){if(!close(values[k],inferred.value))contradict([...inferred.dependencies,k],"Contradictory entries: "+inferred.label+".");continue;}
      if(k in manual)continue;
@@ -179,6 +186,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   if(active("target")&&values.target===0&&active("targetPct")){if("targetPct" in manual)contradict(["target","targetPct"],"Percentage of target is undefined when target is zero.");else{delete values.targetPct;delete calculated.targetPct;}}
   if(hasFrequency&&active("days")&&values.days===0&&active("daily")){if("daily" in manual)contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");else{delete values.daily;delete calculated.daily;}}
   if(config.id==="problem-12"&&active("requiredReminders")&&values.requiredReminders===0&&active("missedReminderPct")){if("missedReminderPct" in manual)contradict(["requiredReminders","missedReminderPct"],"Reminder-event percentage is undefined for zero required events.");else{delete values.missedReminderPct;delete calculated.missedReminderPct;}}
+  for(const [average,count] of Object.entries(timeDenominators))if(active(count)&&values[count]===0&&active(average)){if(average in manual)contradict([count,average],(labels[average]??average)+" is undefined when the corresponding count is zero.");else{delete values[average];delete calculated[average];}}
   // Extra checks belong only to active impact equations; the original problem rules remain unchanged.
   const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
   for(const constraint of additional?.constraints??[])if(constraint.violated(known))contradict(constraint.keys.filter(active),constraint.message);
