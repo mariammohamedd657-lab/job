@@ -44,6 +44,8 @@ export function canonicalId(problemId:string,key:string):string{
  if(coreRoles[key])return key==="total"&&(n===20||n===28)?"tasks.total":core.prefix+"."+coreRoles[key];
  const base:Record<string,string>={months:"problem_duration",days:"measurement_period",daily:"affected_daily_rate",recordedUnits:"recorded_units",hours:n===28?"required_staff_hours":[5,7,18].includes(n)?"recorded_duration":"affected_duration",averageMinutes:averages[n],target:n===28?"available_staff_hours":[5,18].includes(n)?"target_response_time":n===7?"target_qualification_time":"target_value",difference:"actual_target_difference",targetPct:"percentage_of_target",moneyTotal:n===22?"payments_without_reminders_amount":"affected_invoices_amount",moneyAverage:n===22?"average_payment_amount":"average_invoice_amount","step2:staff-shortfall":"staff_hour_shortfall","step2:payments-without-reminders":"affected_payments"};
  if(base[key])return base[key];
+ if(key==="step3:historical:reactivation:rate")return "reactivation_rate";
+ if(key==="step3:historical:reviews:rate")return "additional_review_rate";
  if(/^step3:historical:(reactivation|reviews):(eligible|converted)$/.test(key))return key.endsWith(":eligible")?"eligible_conversion_population":"converted_population";
  if(key.startsWith("op:")||key.startsWith("step2:negative-operational-")){
   const [,impact,suffix]=key.split(":");const id=opKeys[impact.replace("negative-operational-","")]?.[suffix];if(id)return id;

@@ -79,6 +79,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   valid:v=>close(v["step2:staff-shortfall"],Math.max(0,v.difference))
  });
  if(additional)relations.push(...additional.relations);
+ if(config.id==="problem-22"&&labels["op:more-unpaid-invoices:affected-invoices"])relations.push(linear(["affectedInvoices","op:more-unpaid-invoices:affected-invoices"],[1,-1],"Same distinct affected invoices"));
+ if(["problem-12","problem-15"].includes(config.id)&&labels["op:fewer-appointments-attended:unique-appointments"])relations.push(linear(["affected","op:fewer-appointments-attended:unique-appointments"],[1,-1],"Same distinct affected appointments"));
  if(config.id==="problem-3"&&labels["op:fewer-appointments-booked:intended-bookings"])relations.push(linear(["intendedBookings","op:fewer-appointments-booked:intended-bookings"],[1,-1],"Same intended individual bookings"));
  const complements:ComplementRate[]=relations.flatMap(rel=>rel.complement?[rel.complement]:[]);
  if(config.fields.Quantity.length&&classification==="complete")complements.push(

@@ -9,7 +9,7 @@ for(const c of configs){
   if(!["calls","leads","direct-leads","qualified","booking"].includes(method))continue;
   test(c.id+" "+id+" minimum sufficient inputs",()=>{
    const p=operationalPanels(c,["negative-operational-"+id])[0],e=operationalEquations([p]),prefix="op:"+id+":";
-   const T=method==="leads"?"affected":prefix+({qualified:"affected-qualified-leads",booking:"intended-bookings"}[method]??"unique-leads"),R=prefix+"recovered",P=prefix+"pending",L=p.primaryKey,r=prefix+"loss-rate";
+   const T=method==="leads"?"affected":prefix+(method==="qualified"?"affected-qualified-leads":method==="booking"?"intended-bookings":"unique-leads"),R=prefix+"recovered",P=prefix+"pending",L=p.primaryKey,r=prefix+"loss-rate";
    const values:Figures={[T]:"100",[R]:"40",[P]:"30",[L]:"30",[r]:"30"};
    const groups=[[T,R,P],[T,R,L],[T,R,r],[T,P,L],[T,P,r],[T,L,r],[R,P,L],[R,P,r],[R,L,r],[P,L,r]];
    for(const group of groups){const raw=Object.fromEntries(group.map(k=>[k,values[k]]));const result=solve(c,raw,e,{populationClassification:"containment",includeBounds:true});expect(result.errors,group.join(",")).toEqual([]);for(const k of Object.keys(values)){if(group.includes(k)||group.join()!==[T,L,r].join()||![R,P].includes(k))expect(result.values[k],k).toBeCloseTo(Number(values[k]),9);} }

@@ -89,7 +89,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],co
    const relations=[product(result.key,population.key,rate.key,.01,result.label+" = "+population.label+" × "+rate.label+" ÷ 100")];
    const lossBreakdown=others.length===2;
    const remainder=lossBreakdown?support("not-lost","Recovered + pending",population.unit):undefined;
-   if(finalized||!lossBreakdown){
+   if(finalized){
     if(others.length)relations.unshift(breakdown(population,[...others,result]));
     if(others.length)relations.push(combined(population,others,rate));
     if(remainder)relations.push(breakdown(population,[remainder,result]));
@@ -125,11 +125,23 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],co
     return ratePanel(population,support("loss-rate","Loss rate","%"),primary("Lost leads","Leads"),[recovered,pending],[],false,{[population.key]:"26",[recovered.key]:"8",[pending.key]:"9"});
    }
    case "qualified":return ratePanel(support("affected-qualified-leads","Affected qualified leads","Leads",true),support("loss-rate","Qualified lead loss rate","%"),primary("Lost qualified leads","Leads"),[support("recovered","Recovered qualified leads","Leads",true),support("pending","Pending qualified leads","Leads",true)],[shared(config,"affected",true)]);
-   case "reactivation":return ratePanel(shared(config,"affected",true),support("reactivation-rate","Reactivation rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
+   case "reactivation":{
+    const p=ratePanel(shared(config,"affected",true),support("reactivation-rate","Attributable reactivation loss rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
+    const eligible=field("step3:historical:reactivation:eligible","Eligible old leads in reference population","Leads",true),converted=field("step3:historical:reactivation:converted","Reactivated leads in reference population","Leads",true),rate=field("step3:historical:reactivation:rate","Historical reactivation rate","%");
+    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reference reactivated leads = eligible leads × reference rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}],example:{...p.example,[eligible.key]:"200",[converted.key]:"30"}};
+   }
    case "booking":return ratePanel(support("intended-bookings","Intended bookings","Bookings",true),support("loss-rate","Booking loss rate","%"),primary("Lost bookings","Bookings"),[support("recovered","Recovered bookings","Bookings",true),support("pending","Pending bookings","Bookings",true)],[shared(config,"affected",true)]);
-   case "attendance":return ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attendance loss rate","%"),primary("Lost attendance","Appointments"));
-   case "slots":return direct("Unused appointment slots","Slots");
-   case "new-buyers":return direct("Potential new buyers lost","Buyers",true);
+   case "attendance":{
+    // Base populations for reminders and rescheduling are now distinct appointments.
+    const p=ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attributable attendance loss rate","%"),primary("Lost attendance","Appointments"));
+    return ["problem-12","problem-15"].includes(config.id)?{...p,fields:[...p.fields,support("unique-appointments","Affected appointments","Appointments",true)]}:p;
+   }
+   case "slots":{
+    const available=support("available","Relevant available appointment slots","Slots",true),filled=support("filled","Filled appointment slots","Slots",true),unused=primary("Unused appointment slots","Slots"),pending=support("pending","Pending or unclassified slots","Slots",true);
+    const parts=finalized?[filled,unused]:[filled,pending,unused];
+    return panel([available,...parts],[breakdown(available,parts)],{constraints:[bounded(available,parts)],example:{[available.key]:"120",[filled.key]:"95",...(finalized?{}:{[pending.key]:"0"})}});
+   }
+   case "new-buyers":return ratePanel(support("exposed","Potential buyers exposed to the review-related problem","Buyers",true),support("rate","Attributable buyer loss rate","%"),primary("Potential new buyers lost","Buyers",false),[],[],true);
    case "existing-buyers":return ratePanel(support("affected","Affected existing buyers","Buyers",true),support("rate","Attributable existing buyer loss rate","%"),primary("Lost existing buyers","Buyers"));
    case "unserved":{
     const population=support("affected","Affected buyers","Buyers",true),served=support("served","Buyers subsequently served","Buyers",true),result=primary("Unserved buyers","Buyers"),pending=support("pending","Pending or otherwise classified buyers","Buyers",true);
@@ -148,7 +160,11 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],co
     const population=config.id==="problem-23"?shared(config,"affected",true):support("affected-invoices","Affected invoices","Invoices",true);
     return ratePanel(population,support("invoice-loss-rate","Invoice loss rate","%"),primary("Additional unpaid invoices","Invoices"),[],config.id==="problem-22"?[shared(config,"affected",true)]:[]);
    }
-   case "reviews":return ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review rate","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
+   case "reviews":{
+    const p=ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review probability","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
+    const eligible=field("step3:historical:reviews:eligible","Eligible buyers in reference population","Buyers",true),converted=field("step3:historical:reviews:converted","Additional attributable reviews","Reviews",true),rate=field("step3:historical:reviews:rate","Reference additional review rate","%");
+    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reference additional reviews = eligible buyers × reference rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}],example:{...p.example,[eligible.key]:"200",[converted.key]:"60"}};
+   }
    case "information":return panel([{...shared(config,"affected",true),primary:true}],[],{example:{affected:"7"}});
 
    default:throw new Error("Missing approved operational configuration: "+config.id+" / "+impact.id);
@@ -156,5 +172,5 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],co
  });
 }
 export function operationalEquations(panels:OperationalPanel[]):AdditionalEquations{
- return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],estimatedKeys:panels.filter(panel=>panel.estimated).map(panel=>panel.primaryKey),inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
+ return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],actualIntegerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer&&f.key.startsWith("step3:historical:")).map(f=>f.key)))],estimatedKeys:panels.filter(panel=>panel.estimated).map(panel=>panel.primaryKey),inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
 }
