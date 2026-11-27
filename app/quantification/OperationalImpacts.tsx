@@ -13,10 +13,9 @@ function Icon({kind}:{kind:"check"|"link"|"calculator"|"chevron"}){
  const paths:Record<string,ReactNode>={check:<><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="m8 12 3 3 5-6" stroke="#181818"/></>,link:<><path d="m10 13 4-4M8 15l-1 1a3 3 0 0 1-4-4l4-4a3 3 0 0 1 4 0M13 9l1-1a3 3 0 0 1 4 4l-4 4a3 3 0 0 1-4 0"/></>,calculator:<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h1m6 0h1M8 15h1m6 0h1M8 18h1m6 0h1"/></>,chevron:<path d="m6 9 6 6 6-6"/>};
  return <svg className="q-icon" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[kind]}</svg>;
 }
-type Props={problemId:string;panels:OperationalPanel[];raw:Figures;result:Result;show:boolean;setShow:(value:boolean)=>void;update:(key:string,value:string)=>void;setRaw:(next:Figures)=>void};
-export default function OperationalImpacts({problemId,panels,raw,result,show,setShow,update,setRaw}:Props){
+type Props={shortfall:boolean;setShortfall:(value:boolean)=>void;problemId:string;panels:OperationalPanel[];raw:Figures;result:Result;show:boolean;setShow:(value:boolean)=>void;update:(key:string,value:string)=>void;setRaw:(next:Figures)=>void};
+export default function OperationalImpacts({problemId,panels,raw,result,show,setShow,update,setRaw,shortfall,setShortfall}:Props){
  const [collapsed,setCollapsed]=useState<Record<string,boolean>>({});
- const [shortfall,setShortfall]=useState(false);
  const [shortfallOpen,setShortfallOpen]=useState(true);
  const config=configs.find(c=>c.id===problemId)!;
  if(!panels.length&&problemId!=="problem-28")return <div className="op-empty">No confirmed operational impacts.</div>;

@@ -115,6 +115,7 @@ export function operationalAlternatives(config:Config,impactId:string):ContentRo
  const p=(suffix:string,label:string,unit:string,percentage=false):ContentField=>({key:"step2:"+impactId+":"+suffix,label,unit,percentage});
  const n=Number(config.id.split("-")[1]);
  switch(method){
+ case "attendance":return n===12||n===15?[alt("appointment-population",[p("unique-appointments","Affected appointments","Appointments")],"Lost attendance = Affected appointments × Attendance loss rate ÷ 100.","Use the unique appointment population where affected reminder or rescheduling events are not identical. The existing legacy calculation requires a matching population; the new population is provisional.")]:[];
  case "slots":return [alt("slots",[p("available","Available affected slots","Slots"),p("filled","Filled affected slots","Slots")],"Unused appointment slots = Available affected slots − Filled affected slots.","Use matching populations and periods.")];
  case "unserved":return [alt("buyers",[p("affected","Affected buyers","Buyers"),p("served","Buyers subsequently served","Buyers")],"Unserved buyers = Affected buyers − Buyers subsequently served.","Only when every remaining affected buyer is classified as unserved.")];
  case "existing-buyers":return [alt("rate",[p("affected","Affected existing buyers","Buyers"),p("rate","Attributable existing buyer loss rate","%",true)],"Lost existing buyers = Affected existing buyers × Attributable existing buyer loss rate ÷ 100.","Distinguish confirmed losses from estimates.")];

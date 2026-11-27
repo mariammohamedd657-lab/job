@@ -79,3 +79,74 @@ test("shared financial quantities, alternative values and legacy calculations su
  await expect(page.locator('[data-section="Quantity"] input[data-quantity="unaffected"]')).toHaveValue("80");
  await page.getByRole("button",{name:"Positive operational outcomes",exact:true}).click();await expect(page.getByText("To be developed",{exact:true}).filter({visible:true})).toHaveCount(1);
 });
+
+test("supplemental operational routes and staff shortfall appear in the actual application",async({page})=>{
+ test.setTimeout(120000);
+ await page.goto("/");
+ for(const c of configs){
+  const problem=problems.find(p=>p.id===c.id)!;
+  const extra=operationalPanels(c,problem.operationalImpacts.map(i=>i.id)).filter(p=>operationalAlternatives(c,p.id).length);
+  if(!extra.length)continue;
+  const discovery=page.locator('[data-problem="'+c.id+'"]');
+  await discovery.getByRole("button",{name:/^Expand/}).click();
+  for(const op of extra)await discovery.getByRole("checkbox",{name:op.name,exact:true}).check();
+  await discovery.getByRole("button",{name:/^Collapse/}).click();
+ }
+ await page.getByRole("link",{name:"Quantification"}).click();
+ await page.locator(".op-panel > button").click();
+ for(const c of configs){
+  const problem=problems.find(p=>p.id===c.id)!;
+  const extra=operationalPanels(c,problem.operationalImpacts.map(i=>i.id)).filter(p=>operationalAlternatives(c,p.id).length);
+  if(!extra.length)continue;
+  await choose(page,c.id);
+  for(const op of extra){
+   const card=page.locator('.op-impact-card[data-impact="'+op.id+'"]');
+   const routes=operationalAlternatives(c,op.id);
+   await expect(card).toBeVisible();
+   for(const route of routes){
+    const button=card.getByRole("button",{name:route.title,exact:true});
+    await button.click();
+    for(const f of route.fields){
+     const input=card.locator('input[data-quantity="'+f.key+'"]').first();
+     await expect(input).toBeEditable();
+     if(!f.shared){await input.fill("3");await expect(input).toHaveValue("3");}
+    }
+    await button.click();await button.click();
+    for(const f of route.fields.filter(f=>!f.shared))await expect(card.locator('input[data-quantity="'+f.key+'"]').first()).toHaveValue("3");
+    await button.click();
+   }
+  }
+ }
+ await choose(page,"problem-28");
+ await page.getByRole("checkbox",{name:"Staff hour shortfall",exact:true}).check();
+ const shortfall=page.locator('[data-step2-impact="shortfall"]');
+ const required=shortfall.locator('input[data-quantity="hours"]'),available=shortfall.locator('input[data-quantity="target"]');
+ await required.fill("120");await available.fill("100");
+ await expect(page.locator('[data-section="Comparison"] input[data-quantity="hours"]')).toHaveValue("120");
+ await expect(shortfall.locator(".op-result-row strong")).toHaveText("—");
+ await shortfall.locator('input[data-quantity="step2:staff-shortfall"]').fill("20");
+ await expect(shortfall.locator(".op-result-row strong")).toHaveText("20");
+ await choose(page,"problem-1");await choose(page,"problem-28");
+ await expect(shortfall.locator('input[data-quantity="step2:staff-shortfall"]')).toHaveValue("20");
+});
+test("existing operational calculation is available inside a financial alternative without a new formula",async({page})=>{
+ await page.goto("/");
+ const p=page.locator('[data-problem="problem-6"]');
+ await p.getByRole("button",{name:/^Expand/}).click();
+ await p.getByRole("checkbox",{name:"Lost leads",exact:true}).check();
+ await page.getByRole("link",{name:"Quantification"}).click();await choose(page,"problem-6");
+ await page.locator('[data-section="Quantity"] input[data-quantity="affected"]').fill("20");
+ await page.locator(".op-panel > button").click();
+ const op=page.locator(".op-impact-card");
+ await op.locator('input[data-quantity="op:lost-leads:loss-rate"]').fill("40");
+ await expect(op.locator('input[data-quantity="op:lost-leads:result"]')).toHaveValue("8");
+ await page.getByRole("button",{name:"Negative financial impacts",exact:true}).click();
+ const card=page.locator('[data-financial-impact="F7"]');await card.getByRole("checkbox").check();
+ await card.getByRole("button",{name:"Alternative calculation methods",exact:true}).click();
+ await card.getByRole("button",{name:"Lost leads",exact:true}).click();
+ await expect(card.locator('input[data-quantity="op:lost-leads:result"]')).toHaveValue("8");
+ await expect(card.locator('input[data-quantity="fin:potential-buyers"]')).toHaveValue("");
+ await expect(card.locator(".op-result-row strong")).toHaveText("—");
+ await op.locator('input[data-quantity="op:lost-leads:loss-rate"]').fill("50");
+ await expect(card.locator('input[data-quantity="op:lost-leads:result"]')).toHaveValue("10");
+});
