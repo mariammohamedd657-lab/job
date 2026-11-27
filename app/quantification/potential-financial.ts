@@ -1,8 +1,8 @@
 import type {Config} from "./config";
 import {financialContent,routeFields,type ContentRoute} from "./step2-content";
 import {product,sum,type AdditionalEquations,type Relation} from "./solver";
-export function potentialAndCostEquations(config:Config,base:AdditionalEquations,options:{newBuyerMatch?:boolean;matchedBuyerCosts?:boolean;grossComplete?:boolean;netComplete?:boolean;wastedComplete?:boolean;paidLeadContainment?:boolean;simpleInterest?:boolean;estimatedSimpleInterest?:boolean;estimatedGrossComplete?:boolean;estimatedNetComplete?:boolean;shareEstimatedAverages?:boolean;overdueInvoiceMatch?:boolean;overdueInvoiceContainment?:boolean}={}):AdditionalEquations{
- const outcomes=financialContent(config).filter(o=>["F7","F8","F3","F9","F4","F5"].includes(o.id));
+export function potentialAndCostEquations(config:Config,base:AdditionalEquations,options:{newBuyerMatch?:boolean;matchedBuyerCosts?:boolean;grossComplete?:boolean;netComplete?:boolean;wastedComplete?:boolean;paidLeadContainment?:boolean;simpleInterest?:boolean;estimatedSimpleInterest?:boolean;estimatedGrossComplete?:boolean;estimatedNetComplete?:boolean;shareEstimatedAverages?:boolean;overdueInvoiceMatch?:boolean;overdueInvoiceContainment?:boolean;invoiceBalanceComplete?:boolean}={}):AdditionalEquations{
+ const outcomes=financialContent(config).filter(o=>["F7","F8","F3","F9","F4","F5","F6","F10"].includes(o.id));
  if(!outcomes.length)return base;
  const fields=[...new Map(outcomes.flatMap(o=>[...o.fields,...routeFields(o.routes)]).map(f=>[f.key,f])).values()];
  // Financial references to an unselected operational card are still the same scoped measurement.
@@ -73,6 +73,20 @@ export function potentialAndCostEquations(config:Config,base:AdditionalEquations
   if(estimated?options.estimatedNetComplete:options.netComplete){totalOf(x("net-category-difference"),["marketing","staff","collection","financing","other"].map(part=>x(part+"-difference")),true);equal(x("difference"),x("net-category-difference"));}
   integerKeys.push(x("paid-leads"),x("employees"),x("incremental-employee-count"),paidCount);
   averageKeys.push(avg("average-paid-lead"),avg("average-additional-hour"),x("employee-cost"));
+ }
+ const confirmedInvoice=outcomes.some(o=>o.id==="F6"),estimatedInvoice=outcomes.some(o=>o.id==="F10");
+ if(confirmedInvoice){
+  const original=k("original-unpaid"),recovered=k("recovered-unpaid"),pending=k("pending-unpaid"),loss=k("unpaid-loss");
+  totalOf(original,[recovered,pending,loss],!!options.invoiceBalanceComplete);
+  prod(loss,k("unrecoverable-invoices"),k("average-unrecoverable"));
+  integerKeys.push(k("unrecoverable-invoices"));averageKeys.push(k("average-unrecoverable"));
+ }
+ if(estimatedInvoice){
+  const pending=k("pending-unpaid"),loss=k("estimated-invoice-loss"),recoverable=k("expected-recoverable"),rate=k("expected-unrecoverable");
+  prod(loss,pending,rate,.01,pending);plus(pending,loss,recoverable);
+  const count=k("pending-invoices"),invoiceRate=k("expected-invoice-rate"),average=k("average-expected-unrecoverable"),factors=[count,invoiceRate,average];
+  relations.push({keys:[loss,...factors],label:"Estimated invoice loss = pending invoices × expected invoice loss rate × average unrecoverable amount ÷ 100",terms:[{coefficient:1,keys:[loss]},{coefficient:-.01,keys:factors}],derive:(v,key)=>{if(key===loss)return factors.reduce((a,b)=>a*v[b],1)/100;const divisor=factors.filter(k=>k!==key).reduce((a,b)=>a*v[b],1);return divisor===0?undefined:v[loss]*100/divisor;},valid:v=>Math.abs(v[loss]-factors.reduce((a,b)=>a*v[b],1)/100)<=1e-8*Math.max(1,Math.abs(v[loss]))});
+  integerKeys.push(count);estimatedKeys.push(loss,recoverable);averageKeys.push(average);
  }
  const delayed=outcomes.find(o=>o.id==="F5");
  if(delayed){

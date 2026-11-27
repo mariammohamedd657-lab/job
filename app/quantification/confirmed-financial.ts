@@ -28,7 +28,8 @@ export function confirmedFinancialEquations(config:Config,operational:Additional
   prod(H,N,G,1,"Total contribution profit = total applicable purchases × average contribution profit per purchase",N);
   prod(C,P,J,1,"Avoided variable costs = confirmed purchases lost × average avoided variable cost per purchase");
   prod(W,N,K,1,"Total variable costs = relevant purchases × average variable cost per purchase",N);
-  if(matchedVariableCost)relations.push(sum(A,G,J,"Average revenue per purchase = average contribution profit per purchase + applicable average avoided variable cost per purchase"));
+  relations.push(sum(A,G,J,"Applicable revenue per lost purchase = contribution profit per lost purchase + applicable avoided variable cost per lost purchase"));
+  if(matchedVariableCost)relations.push({keys:[J,K],label:"Historical variable cost per purchase equals applicable avoided cost per purchase",terms:[{coefficient:1,keys:[J]},{coefficient:-1,keys:[K]}],derive:(v,key)=>v[key===J?K:J],valid:v=>Math.abs(v[J]-v[K])<=1e-8*Math.max(1,Math.abs(v[J]),Math.abs(v[K]))});
  }
  const constraints=[...(operational.constraints??[])];
  if(has("F2"))constraints.push({keys:[R,L],message:"Contribution profit loss cannot exceed corresponding revenue loss.",violated:v=>Number.isFinite(v[R])&&Number.isFinite(v[L])&&v[L]>v[R]+1e-8*Math.max(1,v[R])});

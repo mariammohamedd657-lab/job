@@ -58,6 +58,16 @@ export function algebraicConsequences(equations:AlgebraEquation[],known:Record<s
  for(const row of [...original,...rows]){
   if(row.coeff.size===0){if(Math.abs(row.rhs)>1e-8*Math.max(1,row.magnitude))conflicts.push({dependencies:[...row.dependencies],label:[...row.labels].join("; ")});continue;}
   if(row.coeff.size===1){const [key,c]=[...row.coeff][0];add(row,key,row.rhs/c);continue;}
+  if(row.rhs===0){
+   const factors=[...row.coeff.keys()].map(key=>key.split(SEP));
+   const common=factors[0].filter(key=>factors.every(f=>f.includes(key)));
+   for(const factor of common){const [lo,hi]=domain(factor);if(lo<=0&&hi>=0)continue;
+    const reduced=new Map<string,number>();let constant=0;
+    for(const [key,coefficient] of row.coeff){const parts=key.split(SEP);parts.splice(parts.indexOf(factor),1);const rest=parts.join(SEP);if(rest)reduced.set(rest,(reduced.get(rest)??0)+coefficient);else constant+=coefficient;}
+    for(const [key,coefficient] of reduced)if(coefficient===0)reduced.delete(key);
+    if(reduced.size===1){const [key,coefficient]=[...reduced][0];add(row,key,-constant/coefficient);}
+   }
+  }
   // A linear sum can force several quantities to a domain endpoint at once.
   // For example, nonnegative terms summing to zero are individually zero.
   for(const edge of [0,1] as const){

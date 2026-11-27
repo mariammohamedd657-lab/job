@@ -127,6 +127,7 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
      if(other.lo.value>0&&Number.isFinite(A.hi.value))narrow(key,"hi",limit(A.hi.value/other.lo.value/f,deps(A.hi,other.lo)),equation.label);
     }
    }else{
+    if(equation.terms.some(t=>t.keys.length>1))continue;
     const coefficients=new Map<string,number>();let rhs=0;
     for(const t of equation.terms){if(t.keys.length===0)rhs-=t.coefficient;else if(t.keys.length===1)coefficients.set(t.keys[0],(coefficients.get(t.keys[0])??0)+t.coefficient);}
     for(const [key,c] of coefficients){
