@@ -10,6 +10,7 @@ import FinancialImpacts,{ContentRoutes} from "./FinancialImpacts";
 import {financialContent,baseSupplementalRoutes,baseScopeNotes,routeFields} from "./step2-content";
 import NumericalInput, { resolveQuantity } from "./NumericalInput";
 import { QuantityLimits } from "./QuantityLimits";
+import {potentialAndCostEquations} from "./potential-financial";
 import {confirmedFinancialEquations} from "./confirmed-financial";
 import { operationalPanels, operationalEquations } from "./operational-data";
 import type { Config } from "./config";
@@ -42,6 +43,11 @@ export default function Quantification({confirmedProblems = {},operationalSelect
  const [figures,setFigures]=useState<Record<string,Figures>>({});
  const [show,setShow]=useState(false);
  const [shortfall,setShortfall]=useState(false);
+ const [newBuyerMatches,setNewBuyerMatches]=useState<Record<string,boolean>>({});
+ const [buyerCostMatches,setBuyerCostMatches]=useState<Record<string,boolean>>({});
+ const newBuyerMatch=newBuyerMatches[selected]??false,matchedBuyerCosts=buyerCostMatches[selected]??false;
+ const setNewBuyerMatch=(value:boolean)=>setNewBuyerMatches(old=>({...old,[selected]:value}));
+ const setMatchedBuyerCosts=(value:boolean)=>setBuyerCostMatches(old=>({...old,[selected]:value}));
  const [matchedCost,setMatchedCost]=useState<Record<string,boolean>>({});
  const matchedVariableCost=matchedCost[selected]??false;
  const setMatchedVariableCost=(value:boolean)=>setMatchedCost(old=>({...old,[selected]:value}));
@@ -61,12 +67,12 @@ export default function Quantification({confirmedProblems = {},operationalSelect
  const raw=figures[selected]??{};
  const impacts=operationalPanels(c,operationalSelections[selected]??[],{finalizedSlots,finalizedBuyers,finalizedTasks});
  const includeShortfall=selected==="problem-28"&&shortfall;
- const result=solve(c,raw,confirmedFinancialEquations(c,operationalEquations(impacts),matchedVariableCost),{populationClassification:classification,includeBounds:true,correctionKey:lastEdited[selected]});
+ const result=solve(c,raw,potentialAndCostEquations(c,confirmedFinancialEquations(c,operationalEquations(impacts),matchedVariableCost),{newBuyerMatch,matchedBuyerCosts}),{populationClassification:classification,includeBounds:true,correctionKey:lastEdited[selected]});
  const statuses=Object.fromEntries(configs.map(config=>{
   const inputs=figures[config.id]??{};
   return [config.id,confirmedProblems[config.id]?quantificationStatus(config,inputs,true,config.id===selected?result:solve(config,inputs,operationalEquations(operationalPanels(config,operationalSelections[config.id]??[],{finalizedSlots:slotFinalized[config.id]??false,finalizedBuyers:buyerFinalized[config.id]??false,finalizedTasks:taskFinalized[config.id]??false})),{populationClassification:classifications[config.id]??"unknown"})):"default" as const];
  }));
  const setRaw=(next:Figures)=>{setLastEdited(old=>{const next={...old};delete next[selected];return next;});setFigures(old=>({...old,[selected]:next}));};
  const update=(key:string,value:string)=>{setLastEdited(old=>({...old,[selected]:key}));setFigures(old=>{const next={...old[selected]};if(value==="")delete next[key];else next[key]=value;return {...old,[selected]:next};});};
- return <QuantityRegistryProvider problemId={selected} raw={raw} result={result}><main className="q-page"><h1>Quantification</h1><div className="q-panels">{panels.map(([title,icon,tone],i)=><section className={"q-panel q-"+tone+(i===1?" op-panel":"")} key={title}><button className="q-panel-header" aria-expanded={open[i]} onClick={()=>setOpen(old=>old.map((v,j)=>j===i?!v:v))}><QuantIcon name={icon}/><span>{title}</span>{i===0&&<span className="q-complete"><QuantIcon name="check"/></span>}{i===1&&(impacts.length>0||includeShortfall)&&<span className="op-panel-count">{impacts.filter(p=>Number.isFinite(result.values[p.primaryKey])&&!result.blocked.has(p.primaryKey)).length+(includeShortfall&&Number.isFinite(result.values["step2:staff-shortfall"])&&!result.blocked.has("step2:staff-shortfall")?1:0)}/{impacts.length+(includeShortfall?1:0)}</span>}<span className={"q-arrow "+(open[i]?"q-open":"")}><QuantIcon name="chevron"/></span></button><div className="q-panel-content" hidden={!open[i]}>{i===0?<Calculator {...{selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow,classification,setClassification}}/>:i===1?<OperationalImpacts {...{problemId:selected,panels:impacts,raw,result,show,setShow,update,setRaw,shortfall,setShortfall,finalizedSlots,setFinalizedSlots,finalizedBuyers,setFinalizedBuyers,finalizedTasks,setFinalizedTasks}}/>:i===2?<FinancialImpacts {...{problemId:selected,outcomes:financialContent(c),raw,result,show,update,matchedVariableCost,setMatchedVariableCost}}/>:<div className="q-placeholder"><div>To be developed</div><p>The quantities and calculations for this section have not been approved yet.</p></div>}</div></section>)}</div></main></QuantityRegistryProvider>;
+ return <QuantityRegistryProvider problemId={selected} raw={raw} result={result}><main className="q-page"><h1>Quantification</h1><div className="q-panels">{panels.map(([title,icon,tone],i)=><section className={"q-panel q-"+tone+(i===1?" op-panel":"")} key={title}><button className="q-panel-header" aria-expanded={open[i]} onClick={()=>setOpen(old=>old.map((v,j)=>j===i?!v:v))}><QuantIcon name={icon}/><span>{title}</span>{i===0&&<span className="q-complete"><QuantIcon name="check"/></span>}{i===1&&(impacts.length>0||includeShortfall)&&<span className="op-panel-count">{impacts.filter(p=>Number.isFinite(result.values[p.primaryKey])&&!result.blocked.has(p.primaryKey)).length+(includeShortfall&&Number.isFinite(result.values["step2:staff-shortfall"])&&!result.blocked.has("step2:staff-shortfall")?1:0)}/{impacts.length+(includeShortfall?1:0)}</span>}<span className={"q-arrow "+(open[i]?"q-open":"")}><QuantIcon name="chevron"/></span></button><div className="q-panel-content" hidden={!open[i]}>{i===0?<Calculator {...{selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow,classification,setClassification}}/>:i===1?<OperationalImpacts {...{problemId:selected,panels:impacts,raw,result,show,setShow,update,setRaw,shortfall,setShortfall,finalizedSlots,setFinalizedSlots,finalizedBuyers,setFinalizedBuyers,finalizedTasks,setFinalizedTasks}}/>:i===2?<FinancialImpacts {...{problemId:selected,outcomes:financialContent(c),raw,result,show,update,matchedVariableCost,setMatchedVariableCost,newBuyerMatch,setNewBuyerMatch,matchedBuyerCosts,setMatchedBuyerCosts}}/>:<div className="q-placeholder"><div>To be developed</div><p>The quantities and calculations for this section have not been approved yet.</p></div>}</div></section>)}</div></main></QuantityRegistryProvider>;
 }

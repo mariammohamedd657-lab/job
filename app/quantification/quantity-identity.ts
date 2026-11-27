@@ -52,6 +52,7 @@ export function canonicalId(problemId:string,key:string):string{
   const [,impact,suffix]=key.split(":");const id=opKeys[impact.replace("negative-operational-","")]?.[suffix];if(id)return id;
  }
  if(key.startsWith("fin:")){
+  const newKey=key.slice(4).replace(/^(higher|estimated-higher):/,"");if(["expected-future-revenue","average-variable-buyer","buyers-per-source","incremental-staff-expenditure","incremental-staff-hours","incremental-employee-expenditure","incremental-employee-count","marketing-difference","staff-difference"].includes(newKey))return "financial_"+newKey.replaceAll("-","_");
   const suffix=key.slice(4);
   if(/^historical:(leads|qualified|reactivation|booking|attendance):(eligible|converted)$/.test(suffix))return suffix.endsWith(":eligible")?"eligible_conversion_population":"converted_population";
   if(financialKeys[suffix])return financialKeys[suffix];

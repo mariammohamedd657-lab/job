@@ -11,7 +11,7 @@ const plus=(a:Limit,b:Limit)=>limit(a.value+b.value,deps(a,b));
 const times=(a:Limit,n:number)=>limit(a.value*n,a.deps);
 const multiply=(a:Limit,b:Limit,f:number)=>limit(a.value===0||b.value===0?0:a.value*b.value*f,deps(a,b));
 const tolerance=(a:number,b:number)=>16*Number.EPSILON*Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange,positivePart?:{difference:string;result:string}){
+export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange,positiveParts:{difference:string;result:string}[]=[]){
  const ranges=new Map<string,Range>();
  const results:Consequence[]=[];
  const conflicts:{dependencies:string[];label:string}[]=[];
@@ -98,11 +98,10 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
     }
    }
   }
-  if(positivePart){
-   const {difference,result}=positivePart;
+  for(const {difference,result} of positiveParts){
    const D=ranges.get(difference),S=ranges.get(result);
    if(D&&S&&!blocked.has(difference)&&!blocked.has(result)){
-    const label="Staff hour shortfall is the positive part of required minus available hours";
+    const label="Nonnegative outcome is the positive part of the signed difference";
     narrow(result,"lo",limit(Math.max(0,D.lo.value),D.lo.deps),label);
     narrow(result,"hi",limit(Math.max(0,D.hi.value),D.hi.deps),label);
     narrow(difference,"hi",S.hi,label);
