@@ -43,18 +43,20 @@ export function canonicalId(problemId:string,key:string):string{
  if(coreRoles[key])return key==="total"&&(n===20||n===28)?"tasks.total":core.prefix+"."+coreRoles[key];
  const base:Record<string,string>={months:"problem_duration",days:"measurement_period",daily:"affected_daily_rate",recordedUnits:"recorded_units",hours:n===28?"required_staff_hours":[5,7,18].includes(n)?"recorded_duration":"affected_duration",averageMinutes:averages[n],target:n===28?"available_staff_hours":[5,18].includes(n)?"target_response_time":n===7?"target_qualification_time":"target_value",difference:"actual_target_difference",targetPct:"percentage_of_target",moneyTotal:n===22?"payments_without_reminders_amount":"affected_invoices_amount",moneyAverage:n===22?"average_payment_amount":"average_invoice_amount","step2:staff-shortfall":"staff_hour_shortfall","step2:payments-without-reminders":"affected_payments"};
  if(base[key])return base[key];
+ if(/^step3:historical:(reactivation|reviews):(eligible|converted)$/.test(key))return key.endsWith(":eligible")?"eligible_conversion_population":"converted_population";
  if(key.startsWith("op:")||key.startsWith("step2:negative-operational-")){
   const [,impact,suffix]=key.split(":");const id=opKeys[impact.replace("negative-operational-","")]?.[suffix];if(id)return id;
  }
  if(key.startsWith("fin:")){
   const suffix=key.slice(4);
+  if(/^historical:(leads|qualified|reactivation|booking|attendance):(eligible|converted)$/.test(suffix))return suffix.endsWith(":eligible")?"eligible_conversion_population":"converted_population";
   if(financialKeys[suffix])return financialKeys[suffix];
   const [prefix,part]=suffix.split(":");if((prefix==="higher"||prefix==="estimated-higher")&&higherKeys[part])return prefix==="higher"?higherKeys[part]:estimatedHigher[part]??"estimated_"+higherKeys[part];
  }
  throw Error("Unmapped existing quantity "+problemId+"/"+key);
 }
 export type QuantityScope={
- businessId?:string;populationId?:string;populationDefinition?:string;countingUnit?:string;measurementPeriod?:string;reportingCutoff?:string;currency?:string;measurementBasis?:string;scenario?:string;attribution?:string;productOrService?:string;resourceType?:string;financingArrangement?:string;interestMethod?:string;dayCountConvention?:string;futurePeriod?:string;
+ businessId?:string;populationId?:string;populationDefinition?:string;countingUnit?:string;measurementPeriod?:string;reportingCutoff?:string;currency?:string;measurementBasis?:string;evidenceClassification?:string;scenario?:string;attribution?:string;productOrService?:string;resourceType?:string;financingArrangement?:string;interestMethod?:string;dayCountConvention?:string;futurePeriod?:string;
  // The old local identity is established within one workspace, but does not establish
  // the underlying real-world population for any other problem or period.
  status:"local-reference"|"established";localReference:string;
@@ -72,16 +74,16 @@ export function fieldReference(problemId:string,field:Pick<Field,"key"|"label"|"
  if(id==="target_value")type=field.unit==="min"?"MINUTES":field.unit==="hrs"?"HOURS":"COUNT";
  const scopedUnit=field.unit==="Units"?(field.key==="recordedUnits"?unitDisplay(core.unit):unitDisplay(d.unit)):undefined;
  const unit=field.key==="daily"?"/day":id==="annual_interest_rate"?"%/year":field.unit==="Units"&&["target","difference"].includes(field.key)?unitDisplay(core.unit)??field.unit:scopedUnit??field.unit;
- const label=id==="target_value"?"Target value":d.name;
+ const label=id==="target_value"?"Target value":["eligible_conversion_population","converted_population","applicable_average_population","unclassified_quantity","overlapping_quantity","unique_combined_quantity"].includes(id)?field.label:d.name;
  return {problemId,legacyKey:field.key,canonicalId:id,instanceId,definition:d,label,unit,type,estimated,scope:{status:"local-reference",localReference:instanceId,countingUnit:unit}};
 }
 export type QuantityInstanceState={reference:FieldReference;manualAssertions:Record<string,string>;manualValue?:string;calculatedValue?:number;source:"manual"|"calculated"|"shared"|"unknown";consequence:"confirmed"|"estimated"|"unknown";amountEvidence:"directly-measured"|"calculated-from-measurements"|"estimated"|"unknown";minimum?:number;maximum?:number;dependencies:readonly string[];contradictory:boolean;undefined:boolean;applicable:boolean;relationshipRefs:readonly string[]};
-export function instanceState(reference:FieldReference,raw:Figures,result:Result,options:{consequence?:QuantityInstanceState["consequence"];relationships?:string[];applicable?:boolean}={}):QuantityInstanceState{
+export function instanceState(reference:FieldReference,raw:Figures,result:Result,options:{consequence?:QuantityInstanceState["consequence"];amountEvidence?:QuantityInstanceState["amountEvidence"];relationships?:string[];dependencies?:string[];applicable?:boolean;undefined?:boolean}={}):QuantityInstanceState{
  const key=reference.legacyKey,manual=raw[key]?.trim()?raw[key]:undefined;
  const calculated=manual===undefined&&Number.isFinite(result.values[key])&&!result.blocked.has(key)?result.values[key]:undefined;
  const estimated=reference.estimated||result.estimated.has(key),bound=result.bounds?.[key];
  const invalid=manual!==undefined&&!validNumericalValue(reference.type,Number(manual));
- return {reference,manualAssertions:manual===undefined?{}:{[reference.instanceId]:manual},manualValue:manual,calculatedValue:calculated,source:manual!==undefined?"manual":calculated!==undefined?"calculated":"unknown",consequence:options.consequence??"unknown",amountEvidence:manual===undefined&&calculated===undefined?"unknown":estimated?"estimated":manual!==undefined?"directly-measured":"calculated-from-measurements",minimum:bound?.min,maximum:bound?.max,dependencies:[],contradictory:invalid||result.blocked.has(key),undefined:manual===undefined&&calculated===undefined&&result.blocked.has(key),applicable:options.applicable??true,relationshipRefs:options.relationships??[]};
+ return {reference,manualAssertions:manual===undefined?{}:{[reference.instanceId]:manual},manualValue:manual,calculatedValue:calculated,source:manual!==undefined?"manual":calculated!==undefined?"calculated":"unknown",consequence:options.consequence??"unknown",amountEvidence:manual===undefined&&calculated===undefined?"unknown":estimated?"estimated":options.amountEvidence??"unknown",minimum:bound?.min,maximum:bound?.max,dependencies:options.dependencies??[],contradictory:invalid||result.blocked.has(key),undefined:options.undefined??false,applicable:options.applicable??true,relationshipRefs:options.relationships??[]};
 }
 // Explicit complete scope comparison only; no cross-problem propagation in Step 3.
 export function canShare(a:FieldReference,b:FieldReference):boolean{

@@ -23,8 +23,9 @@ export function registryFor(problemId:string):ProblemRegistry{
  const addRoute=(id:string,panel:RegistryRoute["panel"],keys:string[],result:string|undefined,reference:string,condition:string,active=false,outcomeId?:string)=>{
   routes.push({id,panel,fieldInstanceIds:[...new Set(keys.map(key))],resultInstanceId:result?key(result):undefined,reference,condition,active,outcomeId});
  };
- const target=(outcome:string,r:ContentRoute,primary:string):string|undefined=>{
+ const target=(outcome:string,r:ContentRoute,primary:string,path:string):string|undefined=>{
   const id=r.id;
+  if(id==="historical-rate")return "fin:conversion:"+path.split("/").at(-1);
   if(id==="affected-invoice-context"||id==="conversions"||id==="revenue")return id==="revenue"?"fin:potential-revenue":id==="conversions"?"fin:potential-buyers":undefined;
   if(outcome==="F1")return id==="purchase-average"?"fin:average-revenue-purchase":primary;
   if(outcome==="F2")return id==="margin-basis"?"fin:confirmed-margin":id==="profit-average"?"fin:average-profit-purchase":id==="avoided-purchase"?"fin:avoided-variable":primary;
@@ -51,7 +52,7 @@ export function registryFor(problemId:string):ProblemRegistry{
   for(const r of items){
    const routePath=path+"/"+r.id;
    r.fields.forEach((f,j)=>put(f,panel,routePath+"/"+j,outcomeId,routePath));
-   const result=panel==="financial"?target(outcomeId!,r,primary):primary;
+   const result=panel==="financial"?target(outcomeId!,r,primary,path):r.id==="historical-reactivation"?"op:fewer-old-leads-reactivated:reactivation-rate":r.id==="historical-reviews"?"op:fewer-customer-reviews:additional-review-rate":primary;
    let keys=r.fields.map(f=>f.key);
    if(outcomeId==="F1"&&r.id==="purchase-values")keys=["fin:purchase-revenue","fin:retained-revenue"];
    if(r.id==="overall-difference")keys=[...keys,outcomeId==="F3"?"fin:higher:actual":"fin:estimated-higher:actual",outcomeId==="F3"?"fin:higher:comparable":"fin:estimated-higher:comparable"];

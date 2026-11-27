@@ -78,7 +78,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -100,7 +101,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -122,7 +124,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -144,7 +147,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -166,7 +170,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -188,7 +193,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -210,7 +216,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -232,7 +239,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -254,7 +262,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -276,7 +285,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -298,7 +308,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -320,7 +331,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -342,7 +354,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -364,7 +377,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -386,7 +400,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -408,7 +423,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -430,7 +446,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -452,7 +469,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -474,7 +492,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -496,7 +515,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -518,7 +538,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -540,7 +561,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -562,7 +584,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -584,7 +607,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -606,7 +630,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -628,7 +653,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -650,7 +676,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -672,7 +699,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -694,7 +722,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -716,7 +745,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -738,7 +768,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -760,7 +791,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -782,7 +814,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -804,7 +837,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -826,7 +860,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -848,7 +883,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -870,7 +906,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -892,7 +929,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -914,7 +952,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -936,7 +975,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -958,7 +998,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -980,7 +1021,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1002,7 +1044,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1024,7 +1067,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1046,7 +1090,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1068,7 +1113,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1090,7 +1136,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1112,7 +1159,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1134,7 +1182,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1156,7 +1205,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1178,7 +1228,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1200,7 +1251,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1222,7 +1274,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1244,7 +1297,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1266,7 +1320,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1288,7 +1343,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1310,7 +1366,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1332,7 +1389,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1354,7 +1412,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1376,7 +1435,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1398,7 +1458,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1420,7 +1481,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1442,7 +1504,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1464,7 +1527,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1486,7 +1550,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1508,7 +1573,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1530,7 +1596,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1552,7 +1619,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1574,7 +1642,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1596,7 +1665,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1618,7 +1688,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1640,7 +1711,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1662,7 +1734,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1684,7 +1757,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1706,7 +1780,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1728,7 +1803,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1750,7 +1826,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1772,7 +1849,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1794,7 +1872,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1816,7 +1895,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1838,7 +1918,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1860,7 +1941,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1882,7 +1964,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1904,7 +1987,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1926,7 +2010,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1948,7 +2033,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1970,7 +2056,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -1992,7 +2079,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2014,7 +2102,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2036,7 +2125,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2058,7 +2148,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2080,7 +2171,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2102,7 +2194,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2124,7 +2217,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2146,7 +2240,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2168,7 +2263,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2190,7 +2286,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2212,7 +2309,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2234,7 +2332,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2256,7 +2355,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2279,7 +2379,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2302,7 +2403,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2325,7 +2427,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2348,7 +2451,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2371,7 +2475,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2393,7 +2498,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2415,7 +2521,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2437,7 +2544,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2459,7 +2567,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2481,7 +2590,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2503,7 +2613,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2525,7 +2636,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2547,7 +2659,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2569,7 +2682,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2591,7 +2705,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2613,7 +2728,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2635,7 +2751,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2657,7 +2774,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2679,7 +2797,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2701,7 +2820,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2723,7 +2843,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2745,7 +2866,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2767,7 +2889,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2789,7 +2912,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2811,7 +2935,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2833,7 +2958,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2855,7 +2981,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2877,7 +3004,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2899,7 +3027,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2921,7 +3050,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2943,7 +3073,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2965,7 +3096,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -2987,7 +3119,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3009,7 +3142,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3031,7 +3165,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3053,7 +3188,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3075,7 +3211,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3097,7 +3234,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3119,7 +3257,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3141,7 +3280,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
@@ -3163,7 +3303,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3184,7 +3325,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3205,7 +3347,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3226,7 +3369,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3247,7 +3391,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3268,7 +3413,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3289,7 +3435,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3310,7 +3457,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3331,7 +3479,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3352,7 +3501,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3373,7 +3523,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3394,7 +3545,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3415,7 +3567,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3436,7 +3589,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3457,14 +3611,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "target_value": {
     "id": "target_value",
     "name": "Applicable target value",
-    "definition": "Target for the specific compared measurement",
+    "definition": "Nonnegative target for the actual comparison measurement, using the identical counting or duration unit and scope.",
     "unit": "Context-dependent target unit",
     "types": [
       "COUNT",
@@ -3485,7 +3640,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3506,7 +3662,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3527,7 +3684,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3549,7 +3707,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3571,7 +3730,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3593,7 +3753,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3615,7 +3776,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3636,7 +3798,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3657,7 +3820,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3679,7 +3843,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3701,7 +3866,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3723,7 +3889,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3745,7 +3912,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3766,7 +3934,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3788,7 +3957,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3810,7 +3980,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3832,7 +4003,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3854,7 +4026,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3875,7 +4048,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3897,7 +4071,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3918,7 +4093,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3926,7 +4102,7 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
     "id": "potential_reactivations_lost",
     "name": "Potential reactivations lost",
     "definition": "Estimated reactivations forgone because of the problem",
-    "unit": "Context-dependent count",
+    "unit": "Leads",
     "types": [
       "EST_COUNT"
     ],
@@ -3939,7 +4115,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -3961,7 +4138,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -3983,7 +4161,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4005,7 +4184,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4027,7 +4207,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4048,7 +4229,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4070,7 +4252,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4091,7 +4274,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4113,7 +4297,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4134,7 +4319,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4155,7 +4341,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4177,7 +4364,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4200,7 +4388,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4223,7 +4412,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4246,7 +4436,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4269,7 +4460,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4291,7 +4483,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4314,7 +4507,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4337,7 +4531,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4359,7 +4554,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4381,7 +4577,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -4403,7 +4600,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -4424,7 +4622,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4445,7 +4644,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4466,7 +4666,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4488,7 +4689,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4510,7 +4712,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4532,7 +4735,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4553,7 +4757,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4575,7 +4780,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4596,7 +4802,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4618,7 +4825,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4639,7 +4847,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4660,7 +4869,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -4682,7 +4892,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4705,7 +4916,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4728,7 +4940,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4751,7 +4964,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4774,7 +4988,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4797,7 +5012,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4820,7 +5036,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4843,7 +5060,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4866,7 +5084,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4889,7 +5108,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -4913,7 +5133,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "attribution",
       "currency",
       "productOrService",
-      "futurePeriod"
+      "futurePeriod",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4921,7 +5142,7 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
     "id": "future_revenue_period",
     "name": "Relevant future measurement period",
     "definition": "Applicable period for future buyer revenue",
-    "unit": "Months",
+    "unit": "Months (or explicitly established compatible future period)",
     "types": [
       "MONTHS"
     ],
@@ -4936,7 +5157,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "productOrService",
-      "futurePeriod"
+      "futurePeriod",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4958,7 +5180,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -4980,7 +5203,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5002,7 +5226,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5024,7 +5249,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5046,7 +5272,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5068,7 +5295,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -5090,7 +5318,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5113,7 +5342,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5136,7 +5366,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -5158,7 +5389,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5180,7 +5412,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -5202,7 +5435,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5225,7 +5459,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5248,7 +5483,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5271,7 +5507,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5294,7 +5531,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5316,7 +5554,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5339,7 +5578,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5361,7 +5601,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5383,7 +5624,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5405,7 +5647,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5427,14 +5670,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "higher_marketing_costs": {
     "id": "higher_marketing_costs",
     "name": "Higher marketing costs",
-    "definition": "Higher marketing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Positive incremental paid marketing expenditure attributable to the problem, compared with comparable expenditure without it.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5449,14 +5693,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "higher_staffing_costs": {
     "id": "higher_staffing_costs",
     "name": "Higher staffing costs",
-    "definition": "Higher staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Positive incremental paid staffing expenditure attributable to the problem, excluding separately counted overlapping cost components.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5471,14 +5716,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "higher_collection_costs": {
     "id": "higher_collection_costs",
     "name": "Higher collection costs",
-    "definition": "Higher collection costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Positive incremental collection expenditure attributable to the problem, including additional collection staff costs and collection fees where not duplicated.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5493,14 +5739,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "higher_financing_costs": {
     "id": "higher_financing_costs",
     "name": "Higher financing costs",
-    "definition": "Higher financing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Positive incremental financing expense attributable to the problem, including applicable interest and financing fees, not the borrowed principal.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5518,14 +5765,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "higher_other_operating_costs": {
     "id": "higher_other_operating_costs",
     "name": "Higher other operating costs",
-    "definition": "Higher other operating costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Positive incremental operating expenditure attributable to the problem outside the separately identified marketing, staffing, collection and financing categories.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5540,14 +5788,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_paid_leads": {
     "id": "additional_paid_leads",
     "name": "Additional paid leads",
-    "definition": "Additional paid leads for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Additional leads acquired through paid marketing because of the problem; actual additional acquisitions, not all affected or lost leads.",
     "unit": "Leads",
     "types": [
       "COUNT"
@@ -5561,14 +5810,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "average_cost_per_paid_lead": {
     "id": "average_cost_per_paid_lead",
     "name": "Average cost per paid lead",
-    "definition": "Average cost per paid lead for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Applicable marketing expenditure for paid leads divided by the corresponding number of leads acquired through that expenditure.",
     "unit": "Currency/lead",
     "types": [
       "AVG_MONEY"
@@ -5583,14 +5833,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "actual_marketing_costs": {
     "id": "actual_marketing_costs",
     "name": "Actual marketing costs",
-    "definition": "Actual marketing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Actual marketing expenditure for the relevant population and period with the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5605,14 +5856,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "comparable_marketing_costs": {
     "id": "comparable_marketing_costs",
     "name": "Comparable marketing costs",
-    "definition": "Comparable marketing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Comparable marketing expenditure for the same population and period without the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5627,14 +5879,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "marketing_spend_for_paid_leads": {
     "id": "marketing_spend_for_paid_leads",
     "name": "Marketing spend for paid leads",
-    "definition": "Marketing spend for paid leads for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Marketing expenditure specifically incurred to acquire the corresponding paid leads.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5649,14 +5902,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "paid_leads_acquired": {
     "id": "paid_leads_acquired",
     "name": "Paid leads acquired",
-    "definition": "Paid leads acquired for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Distinct leads acquired through the corresponding marketing expenditure and period.",
     "unit": "Leads",
     "types": [
       "COUNT",
@@ -5671,14 +5925,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_paid_staff_hours": {
     "id": "additional_paid_staff_hours",
     "name": "Additional paid staff hours",
-    "definition": "Additional paid staff hours for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Additional paid hours incurred because of the problem, not merely hours that could have been avoided or a capacity shortfall.",
     "unit": "Hours",
     "types": [
       "HOURS"
@@ -5692,14 +5947,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "average_cost_per_additional_staff_hour": {
     "id": "average_cost_per_additional_staff_hour",
     "name": "Average cost per additional staff hour",
-    "definition": "Average cost per additional staff hour for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Incremental expenditure per additional paid staff hour for the applicable arrangement.",
     "unit": "Currency/hour",
     "types": [
       "AVG_MONEY"
@@ -5714,14 +5970,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_employees": {
     "id": "additional_employees",
     "name": "Additional employees",
-    "definition": "Additional employees for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Actual additional individual employees attributable to the problem, not a fractional staffing equivalent.",
     "unit": "Employees",
     "types": [
       "COUNT"
@@ -5735,14 +5992,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "cost_per_additional_employee": {
     "id": "cost_per_additional_employee",
     "name": "Cost per additional employee",
-    "definition": "Cost per additional employee for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Applicable incremental cost per additional employee over the explicitly defined period and employment arrangement.",
     "unit": "Currency/employee for the defined period",
     "types": [
       "AVG_MONEY"
@@ -5757,14 +6015,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "actual_staffing_costs": {
     "id": "actual_staffing_costs",
     "name": "Actual staffing costs",
-    "definition": "Actual staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Actual paid staffing expenditure for the relevant workload and period with the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5779,14 +6038,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "comparable_staffing_costs": {
     "id": "comparable_staffing_costs",
     "name": "Comparable staffing costs",
-    "definition": "Comparable staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Comparable staffing expenditure for the same workload and period without the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5801,14 +6061,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_collection_staff_hours": {
     "id": "additional_collection_staff_hours",
     "name": "Additional collection staff hours",
-    "definition": "Additional collection staff hours for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Additional paid collection staff hours attributable to the problem.",
     "unit": "Hours",
     "types": [
       "HOURS"
@@ -5822,14 +6083,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "average_cost_per_collection_staff_hour": {
     "id": "average_cost_per_collection_staff_hour",
     "name": "Average cost per collection staff hour",
-    "definition": "Average cost per collection staff hour for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Applicable collection staff expenditure per corresponding additional paid collection hour.",
     "unit": "Currency/hour",
     "types": [
       "AVG_MONEY"
@@ -5844,14 +6106,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_collection_staff_costs": {
     "id": "additional_collection_staff_costs",
     "name": "Additional collection staff costs",
-    "definition": "Additional collection staff costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Incremental collection staff expenditure attributable to the problem; may overlap general staffing costs.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5866,14 +6129,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_collection_fees": {
     "id": "additional_collection_fees",
     "name": "Additional collection fees",
-    "definition": "Additional collection fees for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Additional fees paid or payable for collection activity attributable to the problem, excluding separately counted staff costs.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5888,14 +6152,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_borrowed_amount": {
     "id": "additional_borrowed_amount",
     "name": "Additional borrowed amount",
-    "definition": "Additional borrowed amount for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Additional loan principal borrowed because of the problem, for the identified financing arrangement.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5913,7 +6178,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5937,7 +6203,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "attribution",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -5961,14 +6228,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "attribution",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_interest": {
     "id": "additional_interest",
     "name": "Additional interest",
-    "definition": "Additional interest for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Incremental interest expense on the applicable additional financing arrangement and borrowing period.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -5986,14 +6254,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_financing_fees": {
     "id": "additional_financing_fees",
     "name": "Additional financing fees",
-    "definition": "Additional financing fees for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Incremental fees for the applicable financing arrangement, excluding interest and principal.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6011,14 +6280,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "additional_resources_used": {
     "id": "additional_resources_used",
     "name": "Additional resources used",
-    "definition": "Additional resources used for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Additional amount of the specifically defined resource used because of the problem; unrelated resource types are not interchangeable.",
     "unit": "Defined resource units",
     "types": [
       "RESOURCE_COUNT"
@@ -6033,14 +6303,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "resourceType"
+      "resourceType",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "average_cost_per_additional_resource": {
     "id": "average_cost_per_additional_resource",
     "name": "Average cost per additional resource",
-    "definition": "Average cost per additional resource for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Incremental expense per additional unit of the same defined resource and period.",
     "unit": "Currency/resource unit",
     "types": [
       "AVG_MONEY"
@@ -6056,14 +6327,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "resourceType"
+      "resourceType",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "actual_other_operating_costs": {
     "id": "actual_other_operating_costs",
     "name": "Actual other operating costs",
-    "definition": "Actual other operating costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Actual expenditure for the defined other operating-cost category with the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6078,14 +6350,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "comparable_other_operating_costs": {
     "id": "comparable_other_operating_costs",
     "name": "Comparable other operating costs",
-    "definition": "Comparable other operating costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Comparable expenditure for the same other operating-cost category without the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6100,7 +6373,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6122,14 +6396,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "wasted_marketing_costs": {
     "id": "wasted_marketing_costs",
     "name": "Wasted marketing costs",
-    "definition": "Wasted marketing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Paid marketing expenditure attributable to lost leads or other established wasted acquisition expenditure in the relevant campaign.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6144,14 +6419,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "wasted_staffing_costs": {
     "id": "wasted_staffing_costs",
     "name": "Wasted staffing costs",
-    "definition": "Wasted staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Paid staffing expenditure attributable to time that was actually wasted, not all avoidable time or additional staffing expense.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6166,14 +6442,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "wasted_other_operating_costs": {
     "id": "wasted_other_operating_costs",
     "name": "Wasted other operating costs",
-    "definition": "Wasted other operating costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Paid expenditure for resources actually wasted outside the separate marketing and staffing categories.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6188,7 +6465,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6210,7 +6488,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6231,7 +6510,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6252,14 +6532,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "wasted_paid_staff_hours": {
     "id": "wasted_paid_staff_hours",
     "name": "Wasted paid staff hours",
-    "definition": "Wasted paid staff hours for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Hours that were both paid and wasted because of the problem.",
     "unit": "Hours",
     "types": [
       "HOURS"
@@ -6273,14 +6554,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "average_staffing_cost_per_hour": {
     "id": "average_staffing_cost_per_hour",
     "name": "Average staffing cost per hour",
-    "definition": "Average staffing cost per hour for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Relevant paid staffing expenditure divided by the corresponding paid staff hours; not necessarily the incremental cost of additional hours.",
     "unit": "Currency/hour",
     "types": [
       "AVG_MONEY"
@@ -6295,14 +6577,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "wasted_paid_hours_per_unused_slot": {
     "id": "wasted_paid_hours_per_unused_slot",
     "name": "Wasted paid staff hours per unused slot",
-    "definition": "Wasted paid staff hours per unused slot for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Paid staff hours actually wasted per relevant unused appointment slot, conditional on an established causal link.",
     "unit": "Hours/slot",
     "types": [
       "RATIO"
@@ -6316,14 +6599,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "relevant_staffing_costs": {
     "id": "relevant_staffing_costs",
     "name": "Relevant staffing costs",
-    "definition": "Relevant staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Paid staffing expenditure for the specific measured staffing population used to establish its average hourly cost.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6338,14 +6622,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "corresponding_paid_staff_hours": {
     "id": "corresponding_paid_staff_hours",
     "name": "Corresponding paid staff hours",
-    "definition": "Corresponding paid staff hours for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Paid staff hours covered by the same staffing expenditure and period.",
     "unit": "Hours",
     "types": [
       "HOURS"
@@ -6359,14 +6644,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "wasted_resources": {
     "id": "wasted_resources",
     "name": "Wasted resources",
-    "definition": "Wasted resources for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Units of the specified resource actually wasted because of the problem.",
     "unit": "Defined resource units",
     "types": [
       "RESOURCE_COUNT"
@@ -6381,14 +6667,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "resourceType"
+      "resourceType",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
   "average_cost_per_wasted_resource": {
     "id": "average_cost_per_wasted_resource",
     "name": "Average cost per wasted resource",
-    "definition": "Average cost per wasted resource for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Applicable expenditure per wasted unit of the same resource type and period.",
     "unit": "Currency/resource unit",
     "types": [
       "AVG_MONEY"
@@ -6404,7 +6691,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "scenario",
       "attribution",
       "currency",
-      "resourceType"
+      "resourceType",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6426,7 +6714,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6448,7 +6737,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6470,7 +6760,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6492,7 +6783,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6514,7 +6806,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6536,7 +6829,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6558,7 +6852,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6580,7 +6875,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6602,7 +6898,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6623,7 +6920,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6645,7 +6943,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -6667,7 +6966,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -6689,7 +6989,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -6711,7 +7012,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -6733,14 +7035,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_higher_marketing_costs": {
     "id": "estimated_higher_marketing_costs",
     "name": "Estimated higher marketing costs",
-    "definition": "Estimated version of Higher marketing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Positive incremental paid marketing expenditure attributable to the problem, compared with comparable expenditure without it.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6755,14 +7058,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_higher_staffing_costs": {
     "id": "estimated_higher_staffing_costs",
     "name": "Estimated higher staffing costs",
-    "definition": "Estimated version of Higher staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Positive incremental paid staffing expenditure attributable to the problem, excluding separately counted overlapping cost components.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6777,14 +7081,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_higher_collection_costs": {
     "id": "estimated_higher_collection_costs",
     "name": "Estimated higher collection costs",
-    "definition": "Estimated version of Higher collection costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Positive incremental collection expenditure attributable to the problem, including additional collection staff costs and collection fees where not duplicated.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6799,14 +7104,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_higher_financing_costs": {
     "id": "estimated_higher_financing_costs",
     "name": "Estimated higher financing costs",
-    "definition": "Estimated version of Higher financing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Positive incremental financing expense attributable to the problem, including applicable interest and financing fees, not the borrowed principal.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6824,14 +7130,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_higher_other_operating_costs": {
     "id": "estimated_higher_other_operating_costs",
     "name": "Estimated higher other operating costs",
-    "definition": "Estimated version of Higher other operating costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Positive incremental operating expenditure attributable to the problem outside the separately identified marketing, staffing, collection and financing categories.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6846,14 +7153,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_paid_leads": {
     "id": "estimated_additional_paid_leads",
     "name": "Estimated additional paid leads",
-    "definition": "Estimated version of Additional paid leads for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Additional leads acquired through paid marketing because of the problem; actual additional acquisitions, not all affected or lost leads.",
     "unit": "Leads",
     "types": [
       "EST_COUNT"
@@ -6867,14 +7175,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_paid_staff_hours": {
     "id": "estimated_additional_paid_staff_hours",
     "name": "Estimated additional paid staff hours",
-    "definition": "Estimated version of Additional paid staff hours for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Additional paid hours incurred because of the problem, not merely hours that could have been avoided or a capacity shortfall.",
     "unit": "Hours",
     "types": [
       "HOURS"
@@ -6888,14 +7197,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_employees": {
     "id": "estimated_additional_employees",
     "name": "Estimated additional employees",
-    "definition": "Estimated version of Additional employees for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Actual additional individual employees attributable to the problem, not a fractional staffing equivalent.",
     "unit": "Employees",
     "types": [
       "EST_COUNT"
@@ -6909,14 +7219,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_collection_staff_hours": {
     "id": "estimated_additional_collection_staff_hours",
     "name": "Estimated additional collection staff hours",
-    "definition": "Estimated version of Additional collection staff hours for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Additional paid collection staff hours attributable to the problem.",
     "unit": "Hours",
     "types": [
       "HOURS"
@@ -6930,14 +7241,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_collection_staff_costs": {
     "id": "estimated_additional_collection_staff_costs",
     "name": "Estimated additional collection staff costs",
-    "definition": "Estimated version of Additional collection staff costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Incremental collection staff expenditure attributable to the problem; may overlap general staffing costs.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6952,14 +7264,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_collection_fees": {
     "id": "estimated_additional_collection_fees",
     "name": "Estimated additional collection fees",
-    "definition": "Estimated version of Additional collection fees for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Additional fees paid or payable for collection activity attributable to the problem, excluding separately counted staff costs.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6974,14 +7287,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_borrowed_amount": {
     "id": "estimated_additional_borrowed_amount",
     "name": "Estimated additional borrowed amount",
-    "definition": "Estimated version of Additional borrowed amount for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Additional loan principal borrowed because of the problem, for the identified financing arrangement.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -6999,7 +7313,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -7023,14 +7338,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "attribution",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_interest": {
     "id": "estimated_additional_interest",
     "name": "Estimated additional interest",
-    "definition": "Estimated version of Additional interest for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Incremental interest expense on the applicable additional financing arrangement and borrowing period.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7048,14 +7364,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_financing_fees": {
     "id": "estimated_additional_financing_fees",
     "name": "Estimated additional financing fees",
-    "definition": "Estimated version of Additional financing fees for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Incremental fees for the applicable financing arrangement, excluding interest and principal.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7073,14 +7390,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "currency",
       "financingArrangement",
       "interestMethod",
-      "dayCountConvention"
+      "dayCountConvention",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_additional_resources_used": {
     "id": "estimated_additional_resources_used",
     "name": "Estimated additional resources used",
-    "definition": "Estimated version of Additional resources used for the explicitly defined applicable measurement population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Additional amount of the specifically defined resource used because of the problem; unrelated resource types are not interchangeable.",
     "unit": "Defined resource units",
     "types": [
       "RESOURCE_COUNT"
@@ -7095,14 +7413,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "resourceType"
+      "resourceType",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_marketing_costs_with_problem": {
     "id": "estimated_marketing_costs_with_problem",
     "name": "Estimated marketing costs with the problem",
-    "definition": "Estimated version of Actual marketing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Actual marketing expenditure for the relevant population and period with the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7117,14 +7436,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_comparable_marketing_costs": {
     "id": "estimated_comparable_marketing_costs",
     "name": "Estimated comparable marketing costs",
-    "definition": "Estimated version of Comparable marketing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Comparable marketing expenditure for the same population and period without the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7139,14 +7459,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_staffing_costs_with_problem": {
     "id": "estimated_staffing_costs_with_problem",
     "name": "Estimated staffing costs with the problem",
-    "definition": "Estimated version of Actual staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Actual paid staffing expenditure for the relevant workload and period with the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7161,14 +7482,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_comparable_staffing_costs": {
     "id": "estimated_comparable_staffing_costs",
     "name": "Estimated comparable staffing costs",
-    "definition": "Estimated version of Comparable staffing costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Comparable staffing expenditure for the same workload and period without the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7183,14 +7505,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_other_operating_costs_with_problem": {
     "id": "estimated_other_operating_costs_with_problem",
     "name": "Estimated other operating costs with the problem",
-    "definition": "Estimated version of Actual other operating costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Actual expenditure for the defined other operating-cost category with the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7205,14 +7528,15 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
   "estimated_comparable_other_operating_costs": {
     "id": "estimated_comparable_other_operating_costs",
     "name": "Estimated comparable other operating costs",
-    "definition": "Estimated version of Comparable other operating costs for the explicitly defined applicable monetary population and period; scope and evidence must match.",
+    "definition": "Estimated measurement: Comparable expenditure for the same other operating-cost category without the problem.",
     "unit": "Currency",
     "types": [
       "MONEY"
@@ -7227,7 +7551,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -7248,7 +7573,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7270,7 +7596,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "estimated"
   },
@@ -7292,7 +7619,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7313,7 +7641,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7335,7 +7664,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7357,7 +7687,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7379,7 +7710,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7401,7 +7733,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7423,7 +7756,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7445,7 +7779,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7467,7 +7802,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7489,7 +7825,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7510,7 +7847,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7531,7 +7869,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7553,7 +7892,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7575,7 +7915,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "currency"
+      "currency",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7597,7 +7938,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7618,7 +7960,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7639,7 +7982,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "reportingCutoff",
       "measurementBasis",
       "scenario",
-      "attribution"
+      "attribution",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   },
@@ -7661,7 +8005,8 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
       "measurementBasis",
       "scenario",
       "attribution",
-      "productOrService"
+      "productOrService",
+      "evidenceClassification"
     ],
     "evidence": "evidence-dependent"
   }
