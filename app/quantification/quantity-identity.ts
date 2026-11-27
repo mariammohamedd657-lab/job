@@ -28,7 +28,7 @@ const opKeys:Record<string,Record<string,string>>={
  "fewer-old-leads-reactivated":{"reactivation-rate":"reactivation_rate",result:"potential_reactivations_lost"},
  "fewer-appointments-booked":{"intended-bookings":"intended_bookings",recovered:"recovered_bookings",pending:"pending_bookings","loss-rate":"booking_loss_rate",result:"lost_bookings"},
  "fewer-appointments-attended":{"attendance-loss-rate":"attendance_loss_rate",result:"lost_attendance","unique-appointments":"affected_appointments"},
- "unused-appointment-slots":{result:"unused_appointment_slots",available:"available_affected_slots",filled:"filled_affected_slots"},
+ "unused-appointment-slots":{result:"unused_appointment_slots",available:"available_affected_slots",filled:"filled_affected_slots",pending:"pending_affected_slots"},
  "fewer-customers-served":{result:"unserved_buyers",affected:"affected_buyers",served:"subsequently_served_buyers"},
  "lost-existing-customers":{result:"lost_existing_buyers",affected:"affected_existing_buyers",rate:"existing_buyer_loss_rate"},
  "less-staff-time-available-for-other-work":{"avoidable-percentage":"avoidable_time_percentage","necessary-time":"necessary_time",result:"avoidable_time"},
@@ -44,6 +44,7 @@ export function canonicalId(problemId:string,key:string):string{
  if(coreRoles[key])return key==="total"&&(n===20||n===28)?"tasks.total":core.prefix+"."+coreRoles[key];
  const base:Record<string,string>={remainingPct:"remaining_population_percentage",remaining:"unclassified_quantity",months:"problem_duration",days:"measurement_period",daily:"affected_daily_rate",recordedUnits:"recorded_units",hours:n===28?"required_staff_hours":[5,7,18].includes(n)?"recorded_duration":"affected_duration",averageMinutes:averages[n],target:n===28?"available_staff_hours":[5,18].includes(n)?"target_response_time":n===7?"target_qualification_time":"target_value",difference:"actual_target_difference",targetPct:"percentage_of_target",moneyTotal:n===22?"payments_without_reminders_amount":"affected_invoices_amount",moneyAverage:n===22?"average_payment_amount":"average_invoice_amount","step2:staff-shortfall":"staff_hour_shortfall","step2:payments-without-reminders":"affected_payments"};
  if(base[key])return base[key];
+ if(key==="step3:historical:reactivation:rate")return "historical_reactivation_rate";
  if(/^step3:historical:(reactivation|reviews):(eligible|converted)$/.test(key))return key.endsWith(":eligible")?"eligible_conversion_population":"converted_population";
  if(/^op:(lost-leads|lost-qualified-leads|fewer-appointments-booked):not-lost$/.test(key))return "recovered_pending_population";
  if(key.startsWith("op:")||key.startsWith("step2:negative-operational-")){

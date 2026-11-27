@@ -74,7 +74,7 @@ function bounded(total:ImpactField,parts:ImpactField[]):AdditionalConstraint{
   violated:v=>{const a=v[total.key],b=keys.reduce((n,k)=>n+(v[k]??0),0);return Number.isFinite(a)&&b>a&&!close(a,b);}};
 }
 
-export function operationalPanels(config:Config,selectedIds:readonly string[]):OperationalPanel[]{
+export function operationalPanels(config:Config,selectedIds:readonly string[],options:{finalizedSlots?:boolean}={}):OperationalPanel[]{
  const problem=problems.find(p=>p.id===config.id)!;
  return problem.operationalImpacts.filter(impact=>selectedIds.includes(impact.id)).map(impact=>{
   const key=impact.id.slice(prefix.length),method=operationalMethods[config.id]?.[key];
@@ -120,10 +120,18 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
     return ratePanel(population,support("loss-rate","Loss rate","%"),primary("Lost leads","Leads"),[recovered,pending],[],false,{[population.key]:"26",[recovered.key]:"8",[pending.key]:"9"});
    }
    case "qualified":return ratePanel(support("affected-qualified-leads","Affected qualified leads","Leads",true),support("loss-rate","Qualified lead loss rate","%"),primary("Lost qualified leads","Leads"),[support("recovered","Recovered qualified leads","Leads",true),support("pending","Pending qualified leads","Leads",true)],[shared(config,"affected",true)]);
-   case "reactivation":return ratePanel(shared(config,"affected",true),support("reactivation-rate","Reactivation rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
+   case "reactivation":{
+    const p=ratePanel(shared(config,"affected",true),support("reactivation-rate","Applicable attributable reactivation rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
+    const eligible=field("step3:historical:reactivation:eligible","Eligible old leads","Leads",true),converted=field("step3:historical:reactivation:converted","Relevant reactivated leads","Leads",true),rate=field("step3:historical:reactivation:rate","Historical reactivation rate","%");
+    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reactivated leads = eligible old leads × historical reactivation rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],populationLinks:[...(p.populationLinks??[]),{population:eligible.key,member:converted.key,kind:"subset",label:"Historical reactivated leads cannot exceed eligible old leads"}],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}]};
+   }
    case "booking":return ratePanel(shared(config,"missedBookings",true),support("loss-rate","Booking loss rate","%"),primary("Lost bookings","Bookings"),[support("recovered","Recovered bookings","Bookings",true),support("pending","Pending bookings","Bookings",true)],[shared(config,"affected",true)]);
    case "attendance":return ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attendance loss rate","%"),primary("Lost attendance","Appointments"));
-   case "slots":return direct("Unused appointment slots","Slots");
+   case "slots":{
+    const available=support("available","Available affected slots","Slots",true),filled=support("filled","Filled affected slots","Slots",true),unused=primary("Unused appointment slots","Slots"),pending=support("pending","Pending or unclassified slots","Slots",true);
+    const parts=options.finalizedSlots?[filled,unused]:[filled,unused,pending];
+    return panel([available,filled,...(options.finalizedSlots?[]:[pending]),unused],[breakdown(available,parts)],{constraints:[bounded(available,parts)],example:{[available.key]:"40",[filled.key]:"25",...(options.finalizedSlots?{}:{[pending.key]:"0"})}});
+   }
    case "new-buyers":return direct("Potential new buyers lost","Buyers",true);
    case "existing-buyers":return direct("Lost existing buyers","Buyers");
    case "unserved":return direct("Unserved buyers","Buyers");

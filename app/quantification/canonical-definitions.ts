@@ -61,6 +61,8 @@ export const numericalTypes = {
 export type NumericalType = keyof typeof numericalTypes;
 export type QuantityDefinition={id:string;name:string;definition:string;unit:string;types:readonly NumericalType[];scopeRequirements:readonly string[];evidence:string;populationCondition?:string};
 export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
+ "historical_reactivation_rate":{id:"historical_reactivation_rate",name:"Historical reactivation rate",definition:"Relevant historical reactivations divided by eligible historical old leads.",unit:"%",types:["PCT"],scopeRequirements:["businessId","populationId","measurementPeriod","reportingCutoff"],evidence:"evidence-dependent"},
+ "pending_affected_slots":{id:"pending_affected_slots",name:"Pending or unclassified slots",definition:"Affected slots without a finalized filled or unused status.",unit:"Slots",types:["COUNT","EST_COUNT"],scopeRequirements:["businessId","populationId","measurementPeriod","reportingCutoff"],evidence:"evidence-dependent"},
  "recovered_pending_population": {id:"recovered_pending_population",name:"Recovered + pending",definition:"Combined recovered and pending population, excluding lost entities.",unit:"Context-dependent count",types:["COUNT","EST_COUNT"],scopeRequirements:["businessId","populationId","countingUnit","measurementPeriod","reportingCutoff","scenario"],evidence:"evidence-dependent"},
   "population.intendedBookings": {"id":"population.intendedBookings","name":"Intended individual bookings","definition":"Intended individual bookings in the same explicitly scoped measurement.","unit":"Bookings","types":["COUNT"],"scopeRequirements":["businessId","populationId","countingUnit","measurementPeriod","reportingCutoff","scenario"],"evidence":"evidence-dependent"},
   "population.missedBookings": {"id":"population.missedBookings","name":"Missed individual bookings","definition":"Missed individual bookings in the same explicitly scoped measurement.","unit":"Bookings","types":["COUNT"],"scopeRequirements":["businessId","populationId","countingUnit","measurementPeriod","reportingCutoff","scenario"],"evidence":"evidence-dependent"},
@@ -4122,7 +4124,7 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
   },
   "reactivation_rate": {
     "id": "reactivation_rate",
-    "name": "Reactivation rate",
+    "name": "Applicable attributable reactivation rate",
     "definition": "Applicable share expected or established to reactivate",
     "unit": "%",
     "types": [
