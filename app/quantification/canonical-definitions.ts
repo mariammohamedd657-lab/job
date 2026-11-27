@@ -1395,6 +1395,29 @@ export const quantityDefinitions:Readonly<Record<string,QuantityDefinition>> = {
     "evidence": "evidence-dependent",
     "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
   },
+  "remaining_population_percentage": {
+    "id": "remaining_population_percentage",
+    "name": "Remaining percentage",
+    "definition": "Percentage of the compatible total population not classified as affected or unaffected.",
+    "unit": "%",
+    "types": [
+      "PCT"
+    ],
+    "scopeRequirements": [
+      "businessId",
+      "populationId",
+      "populationDefinition",
+      "countingUnit",
+      "measurementPeriod",
+      "reportingCutoff",
+      "measurementBasis",
+      "scenario",
+      "attribution",
+      "evidenceClassification"
+    ],
+    "evidence": "evidence-dependent",
+    "populationCondition": "Match the counting unit, measurement period and reporting cutoff. A complete breakdown requires mutually exclusive and exhaustive classifications."
+  },
   "appointment_reminders.affected_rate": {
     "id": "appointment_reminders.affected_rate",
     "name": "Missed reminder rate",
