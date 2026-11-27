@@ -14,10 +14,9 @@ export function operationalPopulationLinks(problemId:string,method:string,primar
  const subset=(member:string):PopulationLink=>({population:"affected",member,kind:"subset",label:member+" is a subset of the affected population"});
  const attributable=(member:string):PopulationLink=>({population:"affected",member,kind:"attributed",label:member+" is attributable to the affected population"});
  const links:PopulationLink[]=[];
- // Calls and unique leads have distinct counting units. A call may involve
- // multiple leads; attribution establishes no count ceiling. A scoped subset
- // relation is conditional on separately established compatible populations.
- if(method==="calls")links.push(attributable("op:lost-leads:unique-leads"));
+ // Missed/unanswered call panels use the supplied one-lead-per-call model.
+ // The lead count remains a subset, not an identity.
+ if(method==="calls")links.push(subset("op:lost-leads:unique-leads"));
  if(method==="qualified")links.push(subset("op:lost-qualified-leads:affected-qualified-leads"));
  // Incomplete tasks attributable to overload are a subset of affected tasks,
  // not a synonym for all affected tasks.

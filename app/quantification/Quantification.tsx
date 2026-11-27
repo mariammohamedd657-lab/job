@@ -10,6 +10,7 @@ import FinancialImpacts,{ContentRoutes} from "./FinancialImpacts";
 import {financialContent,baseSupplementalRoutes,baseScopeNotes,routeFields} from "./step2-content";
 import NumericalInput, { resolveQuantity } from "./NumericalInput";
 import { QuantityLimits } from "./QuantityLimits";
+import {logicalRestrictions} from "./logical-restrictions";
 import {financialEquations} from "./financial-equations";
 import { operationalPanels, operationalEquations } from "./operational-data";
 import type { Config } from "./config";
@@ -47,10 +48,10 @@ export default function Quantification({confirmedProblems = {},operationalSelect
  const raw=figures[selected]??{};
  const impacts=operationalPanels(c,operationalSelections[selected]??[]);
  const includeShortfall=selected==="problem-28"&&shortfall;
- const result=solve(c,raw,financialEquations(c,operationalEquations(impacts)),{includeBounds:Object.values(raw).some(value=>value.trim()!==""),correctionKey:lastEdited[selected]});
+ const result=solve(c,raw,logicalRestrictions(c,financialEquations(c,operationalEquations(impacts)),operationalSelections[selected]??[]),{includeBounds:Object.values(raw).some(value=>value.trim()!==""),correctionKey:lastEdited[selected]});
  const statuses=Object.fromEntries(configs.map(config=>{
   const inputs=figures[config.id]??{};
-  return [config.id,confirmedProblems[config.id]?quantificationStatus(config,inputs,true,config.id===selected?result:solve(config,inputs,financialEquations(config,operationalEquations(operationalPanels(config,operationalSelections[config.id]??[]))))):"default" as const];
+  return [config.id,confirmedProblems[config.id]?quantificationStatus(config,inputs,true,config.id===selected?result:solve(config,inputs,logicalRestrictions(config,financialEquations(config,operationalEquations(operationalPanels(config,operationalSelections[config.id]??[]))),operationalSelections[config.id]??[]))):"default" as const];
  }));
  const setRaw=(next:Figures)=>{setLastEdited(old=>{const next={...old};delete next[selected];return next;});setFigures(old=>({...old,[selected]:next}));};
  const update=(key:string,value:string)=>{setLastEdited(old=>({...old,[selected]:key}));setFigures(old=>{const next={...old[selected]};if(value==="")delete next[key];else next[key]=value;return {...old,[selected]:next};});};

@@ -11,13 +11,14 @@ const plus=(a:Limit,b:Limit)=>limit(a.value+b.value,deps(a,b));
 const times=(a:Limit,n:number)=>limit(a.value*n,a.deps);
 const multiply=(a:Limit,b:Limit,f:number)=>limit(a.value===0||b.value===0?0:a.value*b.value*f,deps(a,b));
 const tolerance=(a:number,b:number)=>16*Number.EPSILON*Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange,positiveParts:{result:string;difference:string}[]=[]) {
+export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange,positiveParts:{result:string;difference:string}[]=[],sumLimits:{population:string;members:string[];label:string}[]=[]) {
  const ranges=new Map<string,Range>();
  const results:Consequence[]=[];
  const conflicts:{dependencies:string[];label:string}[]=[];
  const active=equations.filter(e=>!e.keys.some(k=>blocked.has(k)));
  const links=populationLinks.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member));
- for(const key of new Set([...active.flatMap(e=>e.keys),...links.flatMap(link=>[link.population,link.member]),...allKeys])){
+ const groups=sumLimits.filter(g=>![g.population,...g.members].some(k=>blocked.has(k)));
+ for(const key of new Set([...active.flatMap(e=>e.keys),...links.flatMap(link=>[link.population,link.member]),...groups.flatMap(g=>[g.population,...g.members]),...allKeys])){
   const [lo,hi]=domain(key);
   ranges.set(key,Number.isFinite(known[key])?{lo:limit(known[key],[key]),hi:limit(known[key],[key])}:{lo:limit(lo),hi:limit(hi)});
  }
@@ -52,6 +53,12 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
     if(parent.hi.value===0)narrow(link.member,"hi",parent.hi,link.label);
     if(child.lo.value>0&&integerKeys.has(link.population))narrow(link.population,"lo",limit(1,child.lo.deps),link.label);
    }
+  }
+  for(const group of groups){
+   const parent=ranges.get(group.population)!;
+   const lower=group.members.reduce((a,key)=>plus(a,ranges.get(key)!.lo),limit(0));
+   narrow(group.population,"lo",lower,group.label);
+   for(const member of group.members){const others=group.members.filter(k=>k!==member).reduce((a,key)=>plus(a,ranges.get(key)!.lo),limit(0));narrow(member,"hi",limit(parent.hi.value-others.value,deps(parent.hi,others)),group.label);}
   }
   // Use the original breakdown and rate together, rather than dividing
   // independent endpoints which can refer to different populations.
