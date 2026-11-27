@@ -11,7 +11,7 @@ function sum(a:string,b:string,c:string,label:string):Relation{return {keys:[a,b
 // a = b*c*factor. A zero divisor is indeterminate, never infinity.
 export function product(a:string,b:string,c:string,factor:number,label:string):Relation{return {keys:[a,b,c],label,terms:[{coefficient:1,keys:[a]},{coefficient:-factor,keys:[b,c]}],operation:(v,k)=>{const f=factor===1?"":factor===.01?" ÷ 100":factor===1/60?" ÷ 60":" × "+format(factor);const inv=factor===1?"":factor===.01?" × 100":factor===1/60?" × 60":" ÷ "+format(factor);return k===a?format(v[b])+" × "+format(v[c])+f:format(v[a])+" ÷ "+format(v[k===b?c:b])+inv;},impossible:(v,k)=>k!==a&&v[k===b?c:b]===0&&v[a]!==0,derive:(v,k)=>k===a?v[b]*v[c]*factor:k===b?div(v[a],v[c]*factor):div(v[a],v[b]*factor),valid:v=>close(v[a],v[b]*v[c]*factor)};}
 function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{return product(a,b,c,factor,label);}
-const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct","remainingPct"].includes(key)||n<=100);
+const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
 export type ZeroInference={target:string;dependencies:string[];label:string};
 export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
@@ -22,7 +22,8 @@ export type PrecisionOptions={populationClassification?:PopulationClassification
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  if(["disjoint","incomplete"].includes(precision.populationClassification??"")){labels.remaining="Remaining unclassified quantity";labels.remainingPct="Remaining percentage";}
- const integerKeys=new Set(["total","affected","unaffected","remaining","recordedUnits",...(additional?.integerKeys??[])]);
+ if(precision.populationClassification==="overlapping"){labels.overlap="Overlap";labels.combined="Unique combined population";}
+ const integerKeys=new Set(["intendedBookings","missedBookings","requiredReminders","missedReminders","sentReminders","pendingReminders","reschedulingEvents","affectedInvoices","requiredPayments","missingRecordings","missingOutcomes","missingBoth","requiredUpdates","missedUpdates","completedUpdates","pendingUpdates","overlap","combined", "step2:payments-without-reminders","total","affected","unaffected","remaining","recordedUnits",...(additional?.integerKeys??[])]);
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
  const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
  const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key));
@@ -54,18 +55,29 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  });
  if(config.moneyPopulation)relations.push(product("moneyTotal",config.moneyPopulation,"moneyAverage",1,"Total amount = quantity × average amount"));
  if(additional)relations.push(...additional.relations);
+ const localLinks:PopulationLink[]=[];
+ const subset=(population:string,member:string)=>localLinks.push({population,member,kind:"subset",label:(labels[member]??member)+" cannot exceed "+(labels[population]??population)});
+ const linear=(keys:string[],coefficients:number[],label:string):Relation=>({keys,label,terms:keys.map((key,j)=>({coefficient:coefficients[j],keys:[key]})),derive:(v,k)=>-keys.reduce((acc,key,j)=>acc+(key===k?0:coefficients[j]*v[key]),0)/coefficients[keys.indexOf(k)],valid:v=>close(keys.reduce((acc,key,j)=>acc+coefficients[j]*v[key],0),0)});
+ const union=(combined:string,a:string,b:string,overlap:string)=>{relations.push(linear([combined,a,b,overlap],[1,-1,-1,1],"Combined population = first + second − overlap"));subset(a,overlap);subset(b,overlap);subset(combined,a);subset(combined,b);};
+ if(classification==="overlapping"){union("combined","affected","unaffected","overlap");subset("total","combined");}
+ if(config.id==="problem-25"){union("affected","missingRecordings","missingOutcomes","missingBoth");if(compatible)subset("total","affected");}
+ if(config.id==="problem-3"){subset("intendedBookings","missedBookings");subset("missedBookings","affected");subset("intendedBookings","total");}
+ if(config.id==="problem-12"){relations.push(linear(["requiredReminders","missedReminders","sentReminders","pendingReminders"],[1,-1,-1,-1],"Required events = missed + sent + unclassified"),product("missedReminders","requiredReminders","missedReminderPct",.01,"Missed events = required events × missed event percentage ÷ 100"));subset("requiredReminders","total");subset("missedReminders","affected");}
+ if(config.id==="problem-15"){relations.push(product("hours","reschedulingEvents","averageEventMinutes",1/60,"Total rescheduling hours = events × average event minutes ÷ 60"));subset("reschedulingEvents","affected");}
+ if(config.id==="problem-22"){subset("total","requiredPayments");subset("requiredPayments","step2:payments-without-reminders");subset("affected","step2:payments-without-reminders");}
+ if(config.id==="problem-26"){relations.push(linear(["requiredUpdates","missedUpdates","completedUpdates","pendingUpdates"],[1,-1,-1,-1],"Required updates = missed + completed + unclassified"));subset("requiredUpdates","total");subset("missedUpdates","affected");}
  const complements:ComplementRate[]=relations.flatMap(rel=>rel.complement?[rel.complement]:[]);
  if(config.fields.Quantity.length&&complete)complements.push(
   {population:"total",components:["unaffected"],rate:"affectedPct",label:"Affected rate is the complement of unaffected quantity ÷ total"},
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
- const rateDenominators:Record<string,string>={...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
- const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct","remainingPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
+ const rateDenominators:Record<string,string>={...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
+ const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
  const intervals=(known:Record<string,number>)=>{
-    const links=[...basePopulationLinks(config),...(additional?.populationLinks??[]),...(config.fields.Quantity.length&&compatible?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])];
+    const links=[...localLinks,...basePopulationLinks(config),...(additional?.populationLinks??[]),...(config.fields.Quantity.length&&compatible?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])];
     // Relax the integer domain only for unknown counts in components with an
     // active estimate. A manual actual count is still an exact fixed value.
     // In an exact-only component retain the existing discrete bound inference.
@@ -156,6 +168,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   if(compatible&&active("total")&&values.total===0){for(const k of ["affectedPct","unaffectedPct","remainingPct"])if(active(k)){if(k in manual)contradict(["total",k],"Percentages are undefined when total quantity is zero.");else {delete values[k];delete calculated[k];}}}
   if(active("target")&&values.target===0&&active("targetPct")){if("targetPct" in manual)contradict(["target","targetPct"],"Percentage of target is undefined when target is zero.");else{delete values.targetPct;delete calculated.targetPct;}}
   if(active("days")&&values.days===0&&active("daily")){if("daily" in manual)contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");else{delete values.daily;delete calculated.daily;}}
+  if(config.id==="problem-12"&&active("requiredReminders")&&values.requiredReminders===0&&active("missedReminderPct")){if("missedReminderPct" in manual)contradict(["requiredReminders","missedReminderPct"],"Reminder-event percentage is undefined for zero required events.");else{delete values.missedReminderPct;delete calculated.missedReminderPct;}}
   // Extra checks belong only to active impact equations; the original problem rules remain unchanged.
   const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
   for(const constraint of additional?.constraints??[])if(constraint.violated(known))contradict(constraint.keys.filter(active),constraint.message);

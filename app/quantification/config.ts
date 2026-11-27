@@ -58,11 +58,18 @@ export const configs: Config[] = problemCategories.flatMap(category => category.
   const compUnit=s.compareUnit??unit;
   if(actualKey) fields.Comparison=[field(actualKey,s.actual??s.affected,compUnit,true),field("target",s.target??({"problem-5":"Target response time","problem-7":"Target qualification time","problem-18":"Target response time"} as Record<string,string>)[id]??"Target value",compUnit),field("difference","Difference",compUnit),field("targetPct","Percentage of target","%")];
   if(available.has("Money")&&s.money) fields.Money=[field("moneyTotal",s.money[0],"Currency",true),field("moneyAverage",s.money[1],"Currency/unit")];
+  if(id==="problem-3")fields.Quantity.push(field("intendedBookings","Intended individual bookings","Bookings"),field("missedBookings","Missed individual bookings","Bookings"));
+  if(id==="problem-12")fields.Quantity.push(field("requiredReminders","Required reminder events","Events"),field("missedReminders","Missed reminder events","Events"),field("sentReminders","Sent reminder events","Events"),field("pendingReminders","Unclassified reminder events","Events"),field("missedReminderPct","Missed reminder-event percentage","%"));
+  if(id==="problem-22")fields.Quantity.push(field("requiredPayments","Distinct payments requiring reminders","Payments"),field("affectedInvoices","Distinct affected invoices","Invoices"));
+  if(id==="problem-25")fields.Quantity.push(field("missingRecordings","Calls missing recordings","Calls"),field("missingOutcomes","Calls missing outcomes","Calls"),field("missingBoth","Calls missing both","Calls"));
+  if(id==="problem-26")fields.Quantity.push(field("requiredUpdates","Required CRM update events","Events"),field("missedUpdates","Missed CRM update events","Events"),field("completedUpdates","Completed CRM update events","Events"),field("pendingUpdates","Unclassified CRM update events","Events"));
+  if(id==="problem-15")fields.Time.push(field("reschedulingEvents","Rescheduling events","Events"),field("averageEventMinutes","Average time per rescheduling event","min"));
+  if(id==="problem-22")fields.Money.unshift(field("step2:payments-without-reminders","Distinct affected payments","Payments"));
   for(const section of sectionOrder) fields[section]=fields[section].map(f=>normalizeField(id,f));
   const example:Record<string,string>={total:"100",affected:"20",months:"3"};
   if(fields.Frequency.length)example.days="30";
   if(timePopulation){if(timePopulation==="recordedUnits")example.recordedUnits="10";example.averageMinutes="15";}
   if(actualKey)example.target=actualKey==="hours"?"8":actualKey==="averageMinutes"?"10":"10";
   if(fields.Money.length)example.moneyAverage="50";
-  return {id,name:problem.name,category:category.title,fields,timePopulation,actualKey,moneyPopulation:fields.Money.length?"affected":undefined,example,reference:s.reference??"reconstructed"};
+  return {id,name:problem.name,category:category.title,fields,timePopulation,actualKey,moneyPopulation:fields.Money.length?(id==="problem-22"?"step2:payments-without-reminders":"affected"):undefined,example,reference:s.reference??"reconstructed"};
 }));

@@ -136,7 +136,7 @@ export const shortfallRoute:ContentRoute=route("shortfall","Staff hour shortfall
 
 export function baseSupplementalRoutes(config:Config,section:string):ContentRoute[]{
  if(section==="Quantity")return [route("population-remaining","Remaining population",[{key:"remaining",label:"Remaining unclassified quantity",unit:config.fields.Quantity[0]?.unit??"Units"},{key:"remainingPct",label:"Remaining percentage",unit:"%"}],"Total = Affected + Unaffected + Remaining","Only for compatible, mutually exclusive classifications that may be incomplete.")];
- if(config.id==="problem-22"&&section==="Money")return [alt("payment-population",[{key:"step2:payments-without-reminders",label:"Payments without reminders",unit:"Payments"}],"Total amount of payments without reminders = Payments without reminders × Average payment amount.","The canonical payment population is distinct from reminder events. Activate the relationship only when the monetary amount and payment population match.")];
+
  return [];
 }
 
