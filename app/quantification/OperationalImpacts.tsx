@@ -1,6 +1,9 @@
 "use client";
 import {useState,type ReactNode} from "react";
 import type {OperationalPanel} from "./operational-data";
+import {configs} from "./config";
+import {ContentRoutes,ContentResult,ContentRow} from "./FinancialImpacts";
+import {operationalAlternatives,shortfallField,shortfallRoute} from "./step2-content";
 import {format,type Figures,type Result} from "./solver";
 import NumericalInput, {resolveQuantity} from "./NumericalInput";
 import { QuantityLimits } from "./QuantityLimits";
@@ -13,13 +16,17 @@ function Icon({kind}:{kind:"check"|"link"|"calculator"|"chevron"}){
 type Props={problemId:string;panels:OperationalPanel[];raw:Figures;result:Result;show:boolean;setShow:(value:boolean)=>void;update:(key:string,value:string)=>void;setRaw:(next:Figures)=>void};
 export default function OperationalImpacts({problemId,panels,raw,result,show,setShow,update,setRaw}:Props){
  const [collapsed,setCollapsed]=useState<Record<string,boolean>>({});
- if(!panels.length)return <div className="op-empty">No confirmed operational impacts.</div>;
+ const [shortfall,setShortfall]=useState(false);
+ const [shortfallOpen,setShortfallOpen]=useState(true);
+ const config=configs.find(c=>c.id===problemId)!;
+ if(!panels.length&&problemId!=="problem-28")return <div className="op-empty">No confirmed operational impacts.</div>;
  const resolved=(key:string)=>resolveQuantity(key,raw,result);
  const example=Object.assign({},...panels.map(p=>p.example??{})) as Figures;
  const reset=()=>{const next={...raw};for(const panel of panels)for(const field of panel.fields)delete next[field.key];setRaw(next);};
  return <div className="op-impact-content">
   <div className="op-confirmed-heading">Confirmed operational impacts</div>
   <div className="op-confirmed-list">{panels.map(p=><div key={p.id}><span className="op-confirmed-check"><Icon kind="check"/></span>{p.name}</div>)}</div>
+  {problemId==="problem-28"&&<label className="step2-op-option"><input type="checkbox" className="step2-check" checked={shortfall} onChange={e=>setShortfall(e.target.checked)}/>Staff hour shortfall</label>}
   <div className="op-impact-panels">{panels.map(panel=>{
     const id=problemId+":"+panel.id,open=!collapsed[id],primary=panel.fields.find(f=>f.primary)!;
     const summary=resolved(panel.primaryKey);
@@ -42,9 +49,11 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
           <div className="op-result-row"><span>{primary.label}</span><strong>{summary.valid?format(result.values[panel.primaryKey]):"—"}</strong><span>{primary.unit}</span></div>
           <div>{state}</div>
         </div></div>
+        <ContentRoutes routes={operationalAlternatives(config,panel.id)} exclude={panel.fields.map(f=>f.key)} {...{raw,result,show,update}}/>
       </div>
     </section>;
   })}</div>
+  {problemId==="problem-28"&&shortfall&&<section className="op-impact-card step2-shortfall" data-step2-impact="shortfall"><button type="button" className="op-impact-toggle" aria-expanded={shortfallOpen} onClick={()=>setShortfallOpen(!shortfallOpen)}><span className="op-result-tick"><Icon kind="check"/></span>Staff hour shortfall<span className={"q-arrow "+(shortfallOpen?"q-open":"")}><Icon kind="chevron"/></span></button>{shortfallOpen&&<div className="op-impact-body"><div className="step2-fields">{shortfallRoute.fields.map(field=><ContentRow key={field.key} field={field} primary={field.key===shortfallField.key} {...{raw,result,show,update}}/>)}</div>{show&&<div className="q-formula">{shortfallRoute.reference}<div>{shortfallRoute.condition}</div></div>}<ContentResult field={shortfallField} name="Staff hour shortfall" kind="operational" {...{raw,result}}/></div>}</section>}
   {result.errors.length>0&&<div className="q-errors" role="alert">{result.errors.map(e=><div key={e}>{e}</div>)}</div>}
   <div className="q-controls"><label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/>Show calculations</label><div><button type="button" onClick={reset}>Reset</button><button type="button" disabled={!Object.keys(example).length} onClick={()=>setRaw({...raw,...example})}>Load example</button></div></div>
  </div>;

@@ -123,3 +123,8 @@ export function operationalAlternatives(config:Config,impactId:string):ContentRo
 }
 export const shortfallField:ContentField={key:"step2:staff-shortfall",label:"Staff hour shortfall",unit:"hrs"};
 export const shortfallRoute:ContentRoute=route("shortfall","Staff hour shortfall",[{key:"hours",label:"Required staff hours",unit:"hrs",shared:"problem"},{key:"target",label:"Available staff hours",unit:"hrs",shared:"problem"},shortfallField],"Staff hour shortfall = Maximum of zero and Required staff hours − Available staff hours.","A shortfall does not establish additional paid staff hours.");
+
+export function baseSupplementalRoutes(config:Config,section:string):ContentRoute[]{
+ if(config.id==="problem-22"&&section==="Money")return [alt("payment-population",[{key:"step2:payments-without-reminders",label:"Payments without reminders",unit:"Payments"}],"Total amount of payments without reminders = Payments without reminders × Average payment amount.","Separate payment population from reminder events; canonical identity and existing monetary route reconciliation are pending Step 3.")];
+ return [];
+}

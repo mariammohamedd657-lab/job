@@ -37,6 +37,7 @@ const specs: Record<string, Spec> = {
   "problem-27": {total:"Agent activities requiring visibility",affected:"Agent activities not visible",unaffected:"Agent activities visible",rate:"Missing activity rate"},
   "problem-28": {total:"Total tasks",affected:"Tasks affected by employee overload",unaffected:"Tasks not affected by employee overload",rate:"Affected task rate",time:"staff",actual:"Required staff hours",actualKey:"hours",compareUnit:"hrs",target:"Available staff hours"},
 };
+const unaffectedRates=["Answered call rate","Answered call rate","Completed booking rate","Routed urgent call rate","Timely response rate","Called lead rate","Timely qualification rate","Contacted warm lead rate","Called old lead rate","Regular follow-up rate","Contacted warm old lead rate","Sent reminder rate","Confirmed appointment rate","Attendance rate","Prompt rescheduling rate","Filled slot rate","Other question rate","Prompt answer rate","Other question rate","Non-manual task rate","Handled request rate","Sent payment reminder rate","Regular invoice follow-up rate","Review request rate","Complete record rate","Completed update rate","Visible activity rate","Unaffected task rate"];
 const field=(key:string,label:string,unit:string,general=false):Field=>({key,label,unit,general});
 export const configs: Config[] = problemCategories.flatMap(category => category.problemIds.map(id=>{
   const problem=problems.find(p=>p.id===id)!;
@@ -45,16 +46,16 @@ export const configs: Config[] = problemCategories.flatMap(category => category.
   const available=new Set<Section>(s.sections??["Quantity","Time","Frequency","Comparison",...(s.money?["Money" as const]:[])]);
   available.add("Time");
   const fields:Record<Section,Field[]>={Quantity:[],Time:[],Frequency:[],Comparison:[],Money:[]};
-  if(available.has("Quantity")) fields.Quantity=[field("total",s.total,unit,true),field("affected",s.affected,unit),field("unaffected",s.unaffected,unit),field("affectedPct",s.rate,"%"),field("unaffectedPct","Unaffected percentage","%")];
+  if(available.has("Quantity")) fields.Quantity=[field("total",s.total,unit,true),field("affected",s.affected,unit),field("unaffected",s.unaffected,unit),field("affectedPct",s.rate,"%"),field("unaffectedPct",unaffectedRates[Number(id.split("-")[1])-1],"%")];
   fields.Time=[field("months","How long has this been happening for?","months",true)];
   const timePopulation=s.time==="recorded"?"recordedUnits":s.time?"affected":undefined;
-  if(s.time==="recorded") fields.Time.push(field("recordedUnits","Units with recorded duration",unit,true),field("hours","Total recorded duration","hrs",true),field("averageMinutes","Average time per unit","min"));
-  if(s.time==="affected") fields.Time.push(field("hours","Total time for affected quantity","hrs",true),field("averageMinutes","Average time per unit","min"));
-  if(s.time==="staff") fields.Time.push(field("hours","Staff hours required","hrs",true),field("averageMinutes","Average time per unit","min"));
+  if(s.time==="recorded") fields.Time.push(field("recordedUnits","Units with recorded duration",unit,true),field("hours","Total recorded duration","hrs",true),field("averageMinutes",s.actual??"Average time per unit","min"));
+  if(s.time==="affected") fields.Time.push(field("hours","Total time for affected quantity","hrs",true),field("averageMinutes",({"problem-15":"Average rescheduling time","problem-17":"Average time per routine question","problem-19":"Average time per repeated question","problem-20":"Average time per manual task"} as Record<string,string>)[id]??"Average time per unit","min"));
+  if(s.time==="staff") fields.Time.push(field("hours","Required staff hours","hrs",true),field("averageMinutes","Average time per unit","min"),field("target","Available staff hours","hrs"));
   if(available.has("Frequency")) fields.Frequency=[field("affected",s.affected,unit,true),field("days","Measurement period","Days"),field("daily","Affected quantity per day","/day")];
   const actualKey=available.has("Comparison")?(s.actualKey??"affected"):undefined;
   const compUnit=s.compareUnit??unit;
-  if(actualKey) fields.Comparison=[field(actualKey,s.actual??s.affected,compUnit,true),field("target",s.target??"Target value",compUnit),field("difference","Difference",compUnit),field("targetPct","Percentage of target","%")];
+  if(actualKey) fields.Comparison=[field(actualKey,s.actual??s.affected,compUnit,true),field("target",s.target??({"problem-5":"Target response time","problem-7":"Target qualification time","problem-18":"Target response time"} as Record<string,string>)[id]??"Target value",compUnit),field("difference","Difference",compUnit),field("targetPct","Percentage of target","%")];
   if(available.has("Money")&&s.money) fields.Money=[field("moneyTotal",s.money[0],"Currency",true),field("moneyAverage",s.money[1],"Currency/unit")];
   const example:Record<string,string>={total:"100",affected:"20",months:"3"};
   if(fields.Frequency.length)example.days="30";
