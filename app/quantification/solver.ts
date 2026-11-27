@@ -38,6 +38,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  const disjoint=complete||classification==="disjoint"||classification==="incomplete";
  const compatible=classification!=="incompatible";
  const relations:Relation[]=[];
+ const hasFrequency=config.fields.Frequency.length>0;
  if(config.fields.Quantity.length&&compatible){
   relations.push(ratio("affected","total","affectedPct",.01,"Affected = total × affected % ÷ 100"),ratio("unaffected","total","unaffectedPct",.01,"Unaffected = total × unaffected % ÷ 100"));
   if(complete)relations.push(sum("total","affected","unaffected","Total = affected + unaffected"),{keys:["affectedPct","unaffectedPct"],label:"Affected % + unaffected % = 100",terms:[{coefficient:1,keys:["affectedPct"]},{coefficient:1,keys:["unaffectedPct"]},{coefficient:-100,keys:[]}],operation:(v,k)=>"100 − "+format(v[k==="affectedPct"?"unaffectedPct":"affectedPct"]),derive:(v,k)=>100-v[k==="affectedPct"?"unaffectedPct":"affectedPct"],valid:v=>close(v.affectedPct+v.unaffectedPct,100)});
@@ -45,7 +46,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  }
  if((classification==="disjoint"||classification==="incomplete")&&config.fields.Quantity.length)relations.push(product("remaining","total","remainingPct",.01,"Remaining = total × remaining percentage ÷ 100"),{keys:["affectedPct","unaffectedPct","remainingPct"],label:"Population percentages sum to 100",terms:[{coefficient:1,keys:["affectedPct"]},{coefficient:1,keys:["unaffectedPct"]},{coefficient:1,keys:["remainingPct"]},{coefficient:-100,keys:[]}],derive:(v,k)=>100-["affectedPct","unaffectedPct","remainingPct"].filter(x=>x!==k).reduce((a,x)=>a+v[x],0),valid:v=>close(v.affectedPct+v.unaffectedPct+v.remainingPct,100)});
  if(config.timePopulation)relations.push(product("hours",config.timePopulation,"averageMinutes",1/60,"Hours = quantity × average minutes ÷ 60"));
- if(config.fields.Frequency.length)relations.push(product("affected","days","daily",1,"Affected quantity = days × quantity per day"));
+ if(hasFrequency)relations.push(product("affected","days","daily",1,"Affected quantity = days × quantity per day"));
  if(config.actualKey)relations.push(sum(config.actualKey,"target","difference","Actual = target + difference"),ratio(config.actualKey,"target","targetPct",.01,"Actual = target × percentage of target ÷ 100"),{
   keys:["difference","target","targetPct"],label:"Difference = target × (percentage of target ÷ 100 − 1)",
   derive:(v,k)=>k==="difference"?v.target*(v.targetPct/100-1):k==="target"?div(v.difference,v.targetPct/100-1):v.target===0?undefined:(1+v.difference/v.target)*100,
@@ -99,6 +100,13 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   const contradict=(keys:string[],message:string)=>{errors.add(message);for(const k of keys)for(const x of roots[k]??[]){if(!blocked.has(x)){blocked.add(x);changed=true;}}};
   for(let pass=0;pass<50;pass++){
    let added=false;
+   // A specified frequency requires a positive observation period, even when the frequency is zero.
+   if(hasFrequency&&active("days")&&values.days===0){
+    if(active("daily"))contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");
+    if(active("affected")&&values.affected>0)contradict(["days","affected"],"A positive affected quantity requires a positive measurement period.");
+   }
+   if(hasFrequency&&active("daily")&&values.daily===0&&active("affected")&&values.affected>0)contradict(["daily","affected"],"A positive affected quantity cannot have a zero daily frequency.");
+   if(changed)break;
    for(const rel of relations){
     if(rel.keys.some(k=>blocked.has(k)))continue;
     const missing=rel.keys.filter(k=>!active(k));
@@ -109,6 +117,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     if(rel.impossible?.(values,k)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     const denominator=rateDenominators[k];if(denominator&&active(denominator)&&values[denominator]===0)continue;
     const n=rel.derive(values,k);if(n===undefined)continue;
+    if(hasFrequency&&k==="days"&&n===0&&known.includes("daily")){contradict(known,"A defined daily frequency requires a positive measurement period.");continue;}
     const estimate=derivesEstimate(k,known);
     if(!isValid(k,n,true,estimate)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     values[k]=numericValue(k,n,estimate);
@@ -151,6 +160,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
      const denominator=rateDenominators[k];
      if(denominator&&active(denominator)&&values[denominator]===0)continue;
      const estimate=derivesEstimate(k,inferred.dependencies);
+     if(hasFrequency&&k==="days"&&inferred.value===0&&active("daily")){contradict([...inferred.dependencies,"daily"],"A defined daily frequency requires a positive measurement period.");continue;}
      if(!isValid(k,inferred.value,true,estimate)){contradict(inferred.dependencies,"Contradictory entries: "+inferred.label+".");continue;}
      if(active(k)){if(!close(values[k],inferred.value))contradict([...inferred.dependencies,k],"Contradictory entries: "+inferred.label+".");continue;}
      if(k in manual)continue;
@@ -167,7 +177,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   if(disjoint&&active("total")&&active("affected")&&active("unaffected")&&values.affected+values.unaffected>values.total&&!close(values.affected+values.unaffected,values.total))contradict(["total","affected","unaffected"],"Contradictory entries: disjoint quantities exceed total.");
   if(compatible&&active("total")&&values.total===0){for(const k of ["affectedPct","unaffectedPct","remainingPct"])if(active(k)){if(k in manual)contradict(["total",k],"Percentages are undefined when total quantity is zero.");else {delete values[k];delete calculated[k];}}}
   if(active("target")&&values.target===0&&active("targetPct")){if("targetPct" in manual)contradict(["target","targetPct"],"Percentage of target is undefined when target is zero.");else{delete values.targetPct;delete calculated.targetPct;}}
-  if(active("days")&&values.days===0&&active("daily")){if("daily" in manual)contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");else{delete values.daily;delete calculated.daily;}}
+  if(hasFrequency&&active("days")&&values.days===0&&active("daily")){if("daily" in manual)contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");else{delete values.daily;delete calculated.daily;}}
   if(config.id==="problem-12"&&active("requiredReminders")&&values.requiredReminders===0&&active("missedReminderPct")){if("missedReminderPct" in manual)contradict(["requiredReminders","missedReminderPct"],"Reminder-event percentage is undefined for zero required events.");else{delete values.missedReminderPct;delete calculated.missedReminderPct;}}
   // Extra checks belong only to active impact equations; the original problem rules remain unchanged.
   const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
