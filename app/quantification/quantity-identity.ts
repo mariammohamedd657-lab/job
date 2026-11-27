@@ -29,10 +29,10 @@ const opKeys:Record<string,Record<string,string>>={
  "fewer-appointments-booked":{"intended-bookings":"intended_bookings",recovered:"recovered_bookings",pending:"pending_bookings","loss-rate":"booking_loss_rate",result:"lost_bookings"},
  "fewer-appointments-attended":{"attendance-loss-rate":"attendance_loss_rate",result:"lost_attendance","unique-appointments":"affected_appointments"},
  "unused-appointment-slots":{result:"unused_appointment_slots",available:"available_affected_slots",filled:"filled_affected_slots",pending:"pending_affected_slots"},
- "fewer-customers-served":{result:"unserved_buyers",affected:"affected_buyers",served:"subsequently_served_buyers"},
+ "fewer-customers-served":{result:"unserved_buyers",affected:"affected_buyers",served:"subsequently_served_buyers",pending:"pending_affected_buyers"},
  "lost-existing-customers":{result:"lost_existing_buyers",affected:"affected_existing_buyers",rate:"existing_buyer_loss_rate"},
  "less-staff-time-available-for-other-work":{"avoidable-percentage":"avoidable_time_percentage","necessary-time":"necessary_time",result:"avoidable_time"},
- "fewer-tasks-completed":{result:"incomplete_tasks",affected:"affected_tasks",completed:"completed_affected_tasks"},
+ "fewer-tasks-completed":{result:"incomplete_tasks",affected:"affected_tasks",completed:"completed_affected_tasks",pending:"pending_affected_tasks"},
  "more-unpaid-invoices":{"affected-invoices":"affected_invoices","invoice-loss-rate":"invoice_loss_rate",result:"additional_unpaid_invoices"},
  "fewer-customer-reviews":{"additional-review-rate":"additional_review_rate",result:"potential_reviews_lost"},
  "fewer-new-customers":{result:"potential_new_buyers_lost",exposed:"review_exposed_potential_buyers",rate:"attributable_buyer_loss_rate"}

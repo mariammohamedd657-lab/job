@@ -74,7 +74,7 @@ function bounded(total:ImpactField,parts:ImpactField[]):AdditionalConstraint{
   violated:v=>{const a=v[total.key],b=keys.reduce((n,k)=>n+(v[k]??0),0);return Number.isFinite(a)&&b>a&&!close(a,b);}};
 }
 
-export function operationalPanels(config:Config,selectedIds:readonly string[],options:{finalizedSlots?:boolean}={}):OperationalPanel[]{
+export function operationalPanels(config:Config,selectedIds:readonly string[],options:{finalizedSlots?:boolean;finalizedBuyers?:boolean;finalizedTasks?:boolean}={}):OperationalPanel[]{
  const problem=problems.find(p=>p.id===config.id)!;
  return problem.operationalImpacts.filter(impact=>selectedIds.includes(impact.id)).map(impact=>{
   const key=impact.id.slice(prefix.length),method=operationalMethods[config.id]?.[key];
@@ -133,13 +133,18 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],op
     return panel([available,filled,...(options.finalizedSlots?[]:[pending]),unused],[breakdown(available,parts)],{constraints:[bounded(available,parts)],example:{[available.key]:"40",[filled.key]:"25",...(options.finalizedSlots?{}:{[pending.key]:"0"})}});
    }
    case "new-buyers":return direct("Potential new buyers lost","Buyers",true);
-   case "existing-buyers":return direct("Lost existing buyers","Buyers");
-   case "unserved":return direct("Unserved buyers","Buyers");
+   case "existing-buyers":return ratePanel(support("affected","Affected existing buyers","Buyers",true),support("rate","Attributable existing buyer loss rate","%"),primary("Lost existing buyers","Buyers"));
+   case "unserved":{
+    const population=support("affected","Affected buyers","Buyers",true),served=support("served","Buyers subsequently served","Buyers",true),pending=support("pending","Pending or otherwise classified affected buyers","Buyers",true),result=primary("Unserved buyers","Buyers");
+    const parts=options.finalizedBuyers?[served,result]:[served,result,pending];
+    return panel([population,...parts],[breakdown(population,parts)],{constraints:[bounded(population,parts)],example:{[population.key]:"100",[served.key]:"70",...(options.finalizedBuyers?{}:{[pending.key]:"0"})}});
+   }
    case "time":return ratePanel(shared(config,"hours"),support("avoidable-percentage","Avoidable time percentage","%"),primary("Avoidable time","hrs",false),[support("necessary-time","Necessary time","hrs")]);
-   case "tasks":
-    // Current problem-28 counts tasks affected by overload, not specifically incomplete tasks.
-    // Keep the incomplete-task result separate unless a genuinely identical field is provided.
-    return direct("Incomplete tasks","Tasks");
+   case "tasks":{
+    const population=config.id==="problem-28"?shared(config,"affected",true):support("affected","Affected tasks","Tasks",true),completed=support("completed","Completed affected tasks","Tasks",true),pending=support("pending","Pending or otherwise classified affected tasks","Tasks",true),result=primary("Incomplete tasks","Tasks");
+    const parts=options.finalizedTasks?[completed,result]:[completed,result,pending];
+    return panel([population,...parts],[breakdown(population,parts)],{constraints:[bounded(population,parts)],example:{[population.key]:"200",[completed.key]:"150",...(options.finalizedTasks?{}:{[pending.key]:"0"})}});
+   }
    case "invoices":{
     // Missed payment reminders are not necessarily unique affected invoices.
     // The invoice-follow-up problem already has an identical affected-invoice count.

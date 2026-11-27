@@ -124,9 +124,9 @@ function rawOperationalAlternatives(config:Config,impactId:string):ContentRoute[
  case "reviews":return [alt("historical-reviews",[{key:"step3:historical:reviews:eligible",label:"Eligible buyers",unit:"Buyers"},{key:"step3:historical:reviews:converted",label:"Additional attributable reviews",unit:"Reviews"}],"Additional review rate = Additional attributable reviews ÷ Eligible buyers × 100.","This is incremental attributable review behaviour. Confirm compatible counting units; use a ratio when multiple reviews per buyer are possible.")];
  case "attendance":return [];
  case "slots":return [];
- case "unserved":return [alt("buyers",[p("affected","Affected buyers","Buyers"),p("served","Buyers subsequently served","Buyers")],"Unserved buyers = Affected buyers − Buyers subsequently served.","Only when every remaining affected buyer is classified as unserved.")];
- case "existing-buyers":return [alt("rate",[p("affected","Affected existing buyers","Buyers"),p("rate","Attributable existing buyer loss rate","%",true)],"Lost existing buyers = Affected existing buyers × Attributable existing buyer loss rate ÷ 100.","Distinguish confirmed losses from estimates.")];
- case "tasks":return [alt("tasks",[n===28?{key:"affected",label:"Affected tasks",unit:"Units",shared:"problem"}:p("affected","Affected tasks","Tasks"),p("completed","Completed affected tasks","Tasks")],"Incomplete tasks = Affected tasks − Completed affected tasks.","The populations and classification must match.")];
+ case "unserved":return [];
+ case "existing-buyers":return [];
+ case "tasks":return [];
  case "new-buyers":return [alt("reviews",[p("exposed","Potential buyers exposed to the review-related problem","Buyers"),p("rate","Attributable buyer loss rate","%",true)],"Potential new buyers lost = Potential buyers exposed to the review-related problem × Attributable buyer loss rate ÷ 100.","Do not equate reviews and buyers.")];
  default:return [];
  }
