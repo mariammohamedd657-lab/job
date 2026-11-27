@@ -14,7 +14,7 @@ function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{r
 const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
 export type ZeroInference={target:string;dependencies:string[];label:string};
-export type AdditionalEquations={actualIntegerKeys?:string[];averageKeys?:string[];fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
+export type AdditionalEquations={signedKeys?:string[];actualIntegerKeys?:string[];averageKeys?:string[];fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
 export type PopulationClassification="complete"|"incomplete"|"disjoint"|"containment"|"overlapping";
@@ -36,7 +36,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  // Only correct machine-precision residue of an exact integral calculation.
  // Never round an estimated count to an integer.
  const nearInteger=(n:number)=>Number.isSafeInteger(Math.round(n))&&Math.abs(n-Math.round(n))<=Math.min(1e-8,8*Number.EPSILON*Math.max(1,Math.abs(n)));
- const isValid=(key:string,n:number,computed=false,estimate=false)=>validValue(key,n)&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100)&&(!integerKeys.has(key)||(estimate?Math.abs(n)<=Number.MAX_SAFE_INTEGER:computed?nearInteger(n):Number.isSafeInteger(n)));
+ const isValid=(key:string,n:number,computed=false,estimate=false)=>(additional?.signedKeys?.includes(key)?Number.isFinite(n):validValue(key,n))&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100)&&(!integerKeys.has(key)||(estimate?Math.abs(n)<=Number.MAX_SAFE_INTEGER:computed?nearInteger(n):Number.isSafeInteger(n)));
  const numericValue=(key:string,n:number,estimate:boolean)=>integerKeys.has(key)&&!estimate?Math.round(n):n===0?0:n;
 
  const relations:Relation[]=[];
@@ -88,7 +88,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
  const rateDenominators:Record<string,string>={...(config.timePopulation?{averageMinutes:config.timePopulation}:{}),...(config.moneyPopulation?{moneyAverage:config.moneyPopulation}:{}),...(config.id==="problem-15"?{averageEventMinutes:"reschedulingEvents"}:{}),affectedPct:"total",unaffectedPct:"total",...(classification==="incomplete"?{remainingPct:"total"}:{}),...([ "problem-12","problem-22"].includes(config.id)?{missedReminderPct:"requiredReminders"}:{}),targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
- const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
+ const domain=(key:string):[number,number]=>[key==="difference"||additional?.signedKeys?.includes(key)?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
@@ -214,7 +214,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   if(!changed)break;
  }
  const undefinedKeys=new Set(Object.entries(rateDenominators).filter(([key,count])=>!blocked.has(count)&&values[count]===0&&!(key in manual)).map(([key])=>key));
- if(labels["fin:average-revenue-purchase"]&&values["fin:total-purchases"]===0&&!Number.isFinite(values["fin:average-revenue-purchase"]))undefinedKeys.add("fin:average-revenue-purchase");
+ for(const [average,denominator] of [["fin:average-revenue-purchase","fin:total-purchases"],["fin:average-profit-purchase","fin:total-purchases"],["fin:average-variable-purchase","fin:total-purchases"],["fin:confirmed-margin","fin:purchase-total-revenue"]])if(labels[average]&&values[denominator]===0&&!Number.isFinite(values[average])&&!blocked.has(denominator))undefinedKeys.add(average);
  const result:Result={undefinedKeys,values,calculated,errors:[...errors],blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
  if(precision.includeBounds){
   // Consistent inputs give proactive limits. In a contradiction, use the

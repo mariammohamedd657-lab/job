@@ -116,7 +116,16 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
     const a=linear.keys[0],[b,c]=product.keys,f=-product.coefficient/linear.coefficient;
     if(f<=0)continue;
     const A=ranges.get(a)!,B=ranges.get(b)!,C=ranges.get(c)!;
-    if(B.lo.value<0||C.lo.value<0||A.lo.value<0)continue;
+    if(B.lo.value<0||C.lo.value<0||A.lo.value<0){
+     const corners=[multiply(B.lo,C.lo,f),multiply(B.lo,C.hi,f),multiply(B.hi,C.lo,f),multiply(B.hi,C.hi,f)];
+     narrow(a,"lo",limit(Math.min(...corners.map(x=>x.value)),deps(...corners)),equation.label);
+     narrow(a,"hi",limit(Math.max(...corners.map(x=>x.value)),deps(...corners)),equation.label);
+     for(const [key,other] of [[b,C],[c,B]] as const)if(other.lo.value>0||other.hi.value<0){
+      const values=[A.lo.value/other.lo.value/f,A.lo.value/other.hi.value/f,A.hi.value/other.lo.value/f,A.hi.value/other.hi.value/f];
+      if(values.every(v=>!Number.isNaN(v))){narrow(key,"lo",limit(Math.min(...values),deps(A.lo,A.hi,other.lo,other.hi)),equation.label);narrow(key,"hi",limit(Math.max(...values),deps(A.lo,A.hi,other.lo,other.hi)),equation.label);}
+     }
+     continue;
+    }
     narrow(a,"lo",multiply(B.lo,C.lo,f),equation.label);
     narrow(a,"hi",multiply(B.hi,C.hi,f),equation.label);
     for(const [key,other] of [[b,C],[c,B]] as const){
