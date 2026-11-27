@@ -31,6 +31,7 @@ export function solveAcrossProblems(cs:Config[],figures:Record<string,Figures>,e
  if(!active.length)return results;
  // Keep exact values as constraints, not additional user assertions.
  const conflicts=new Map<string,string[]>();
+ const correctionBounds=new Map<string,QuantityBounds>();
  for(let pass=0;pass<32;pass++){
   const next:typeof external={};
   const apply=(id:string,b:QuantityBounds)=>{const [p,k]=split(id);const old=next[p]?.[k];(next[p]??={})[k]={min:Math.max(old?.min??-Infinity,b.min??-Infinity),max:Math.min(old?.max??Infinity,b.max??Infinity),minReason:"Established cross-problem relationship",maxReason:"Established cross-problem relationship"};};
@@ -38,7 +39,8 @@ export function solveAcrossProblems(cs:Config[],figures:Record<string,Figures>,e
   for(const l of active){
    const a=bounds(l.left),b=bounds(l.right);
    const conflict=a&&b&&(l.kind==="identity"?((a.min??-Infinity)>(b.max??Infinity)||(b.min??-Infinity)>(a.max??Infinity)):(b.min??-Infinity)>(a.max??Infinity));
-   if(conflict){const msg="Conflicting shared information: "+l.left+" "+(l.kind==="identity"?"must equal":"must contain")+" "+l.right;conflicts.set(l.left,[...(conflicts.get(l.left)??[]),msg]);conflicts.set(l.right,[...(conflicts.get(l.right)??[]),msg]);}
+   if(conflict){const msg="Conflicting shared information: "+l.left+" "+(l.kind==="identity"?"must equal":"must contain")+" "+l.right;
+    if(a&&b){correctionBounds.set(l.left,l.kind==="identity"?b:{min:b.min,minExclusive:b.minExclusive});correctionBounds.set(l.right,l.kind==="identity"?a:{max:a.max,maxExclusive:a.maxExclusive});}conflicts.set(l.left,[...(conflicts.get(l.left)??[]),msg]);conflicts.set(l.right,[...(conflicts.get(l.right)??[]),msg]);}
    if(l.kind==="identity"){if(a)apply(l.right,a);if(b)apply(l.left,b);}
    else {if(a?.max!==undefined)apply(l.right,{max:a.max});if(b?.min!==undefined)apply(l.left,{min:b.min});}
   }
@@ -46,7 +48,7 @@ export function solveAcrossProblems(cs:Config[],figures:Record<string,Figures>,e
   if(signature(next)===signature(external))break;
   external=next;results=run();
  }
- for(const [id,msgs] of conflicts){const [p,k]=split(id),r=results[p];if(!r)continue;r.blocked.add(k);r.errors=[...new Set([...r.errors,...msgs])];}
+ for(const [id,msgs] of conflicts){const [p,k]=split(id),r=results[p];if(!r)continue;r.blocked.add(k);r.errors=[...new Set([...r.errors,...msgs])];const b=correctionBounds.get(id);if(b){(r.bounds??={})[k]=b;(r.corrections??={})[k]={kind:b.min!==undefined&&b.min===b.max?"exact":"range",bounds:b,message:"Independent correction required by the established cross-problem relationship; other constraints must also remain satisfied."};}}
  return results;
 }
 export function CrossProblemControls({enabled,setEnabled,links,setLinks,selected}:{enabled:boolean;setEnabled:(v:boolean)=>void;links:SharingLink[];setLinks:(v:SharingLink[])=>void;selected:string}){
