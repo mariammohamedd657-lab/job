@@ -11,7 +11,7 @@ type Spec = { total: string; affected: string; unaffected: string; rate: string;
 const specs: Record<string, Spec> = {
   "problem-1": {total:"Total incoming calls",affected:"Missed calls",unaffected:"Answered calls",rate:"Missed call rate",reference:"prior-discussion"},
   "problem-2": {total:"Calls outside working hours",affected:"Unanswered calls outside working hours",unaffected:"Answered calls outside working hours",rate:"Unanswered call rate"},
-  "problem-3": {total:"Calls requiring appointments",affected:"Missed bookings during calls",unaffected:"Bookings completed during calls",rate:"Missed booking rate"},
+  "problem-3": {total:"Calls requiring appointments",affected:"Calls containing missed bookings",unaffected:"Calls in which all intended bookings were completed",rate:"Calls containing missed bookings percentage"},
   "problem-4": {total:"Urgent calls",affected:"Urgent calls not reaching employees",unaffected:"Urgent calls reaching employees",rate:"Unrouted urgent call rate"},
   "problem-5": {total:"New leads requiring a response",affected:"New leads with slow responses",unaffected:"New leads with timely responses",rate:"Slow response rate",sections:["Quantity","Time","Comparison"],time:"recorded",actual:"Average response time",actualKey:"averageMinutes",compareUnit:"min",reference:"prior-discussion"},
   "problem-6": {total:"New leads requiring calls",affected:"New leads never called",unaffected:"New leads called",rate:"Uncalled lead rate",reference:"screenshot"},
@@ -20,7 +20,7 @@ const specs: Record<string, Spec> = {
   "problem-9": {total:"Old leads requiring calls",affected:"Old leads not called",unaffected:"Old leads called",rate:"Uncalled old lead rate"},
   "problem-10": {total:"Old leads requiring follow-up",affected:"Old leads followed up inconsistently",unaffected:"Old leads followed up regularly",rate:"Inconsistent follow-up rate"},
   "problem-11": {total:"Warm old leads requiring further contact",affected:"Warm old leads not contacted again",unaffected:"Warm old leads contacted again",rate:"Uncontacted warm old lead rate"},
-  "problem-12": {total:"Appointments requiring reminders",affected:"Missed appointment reminders",unaffected:"Appointment reminders sent",rate:"Missed reminder rate"},
+  "problem-12": {total:"Appointments requiring reminders",affected:"Appointments affected by missed reminders",unaffected:"Appointments receiving all required reminders",rate:"Affected appointment percentage"},
   "problem-13": {total:"Appointments requiring confirmation",affected:"Unconfirmed appointments",unaffected:"Confirmed appointments",rate:"Unconfirmed appointment rate"},
   "problem-14": {total:"Scheduled appointments",affected:"Appointment no-shows",unaffected:"Appointments attended",rate:"No-show rate",reference:"prior-discussion"},
   "problem-15": {total:"Appointments requiring rescheduling",affected:"Time-consuming appointment rescheduling",unaffected:"Appointments rescheduled promptly",rate:"Time-consuming rescheduling rate",time:"affected",actual:"Average time per unit",actualKey:"averageMinutes",compareUnit:"min"},
@@ -30,11 +30,11 @@ const specs: Record<string, Spec> = {
   "problem-19": {total:"Questions answered by employees",affected:"Repeated questions answered by employees",unaffected:"Other questions answered by employees",rate:"Repeated question rate",time:"affected",actual:"Total employee time",actualKey:"hours",compareUnit:"hrs"},
   "problem-20": {total:"Total tasks",affected:"Tasks completed manually",unaffected:"Tasks not completed manually",rate:"Manual task rate",time:"affected",actual:"Total staff time",actualKey:"hours",compareUnit:"hrs",reference:"screenshot"},
   "problem-21": {total:"Basic buyer requests",affected:"Basic buyer requests not handled",unaffected:"Basic buyer requests handled",rate:"Unhandled request rate"},
-  "problem-22": {total:"Payments requiring reminders",affected:"Missed payment reminders",unaffected:"Payment reminders sent",rate:"Missed payment reminder rate",money:["Total amount of payments without reminders","Average payment amount"]},
+  "problem-22": {total:"Payments requiring reminders",affected:"Distinct payments affected by missed reminders",unaffected:"Payments receiving all required reminders",rate:"Affected payment percentage",money:["Total amount of payments without reminders","Average payment amount"]},
   "problem-23": {total:"Invoices requiring follow-up",affected:"Invoices not followed up regularly",unaffected:"Invoices followed up regularly",rate:"Inconsistent invoice follow-up rate",money:["Total amount of affected invoices","Average amount per invoice"],reference:"prior-discussion"},
   "problem-24": {total:"Buyers eligible for review requests",affected:"Buyers not asked for reviews",unaffected:"Buyers asked for reviews",rate:"Missed review request rate"},
   "problem-25": {total:"Calls requiring recordings and outcomes",affected:"Calls with missing recordings or outcomes",unaffected:"Calls with recordings and outcomes",rate:"Missing record rate"},
-  "problem-26": {total:"Lead records requiring CRM updates",affected:"Lead details not updated in CRM",unaffected:"Lead details updated in CRM",rate:"Missing update rate"},
+  "problem-26": {total:"Lead records requiring CRM updates",affected:"Distinct lead records affected by missed updates",unaffected:"Lead records receiving all required updates",rate:"Affected lead-record percentage"},
   "problem-27": {total:"Agent activities requiring visibility",affected:"Agent activities not visible",unaffected:"Agent activities visible",rate:"Missing activity rate"},
   "problem-28": {total:"Total tasks",affected:"Tasks affected by employee overload",unaffected:"Tasks not affected by employee overload",rate:"Affected task rate",time:"staff",actual:"Required staff hours",actualKey:"hours",compareUnit:"hrs",target:"Available staff hours"},
 };
@@ -51,7 +51,7 @@ export const configs: Config[] = problemCategories.flatMap(category => category.
   fields.Time=[field("months","How long has this been happening for?","months",true)];
   const timePopulation=s.time==="recorded"?"recordedUnits":s.time?"affected":undefined;
   if(s.time==="recorded") fields.Time.push(field("recordedUnits","Units with recorded duration",unit,true),field("hours","Total recorded duration","hrs",true),field("averageMinutes",s.actual??"Average time per unit","min"));
-  if(s.time==="affected") fields.Time.push(field("hours","Total time for affected quantity","hrs",true),field("averageMinutes",({"problem-15":"Average rescheduling time","problem-17":"Average time per routine question","problem-19":"Average time per repeated question","problem-20":"Average time per manual task"} as Record<string,string>)[id]??"Average time per unit","min"));
+  if(s.time==="affected") fields.Time.push(field("hours","Total time for affected quantity","hrs",true),field("averageMinutes",({"problem-15":"Average total rescheduling time per affected appointment","problem-17":"Average time per routine question","problem-19":"Average time per repeated question","problem-20":"Average time per manual task"} as Record<string,string>)[id]??"Average time per unit","min"));
   if(s.time==="staff") fields.Time.push(field("hours","Required staff hours","hrs",true),field("averageMinutes","Average time per unit","min"),field("target","Available staff hours","hrs"));
   if(available.has("Frequency")) fields.Frequency=[field("affected",s.affected,unit,true),field("days","Measurement period","Days"),field("daily","Affected quantity per day","/day")];
   const actualKey=available.has("Comparison")?(s.actualKey??"affected"):undefined;
@@ -64,5 +64,6 @@ export const configs: Config[] = problemCategories.flatMap(category => category.
   if(timePopulation){if(timePopulation==="recordedUnits")example.recordedUnits="10";example.averageMinutes="15";}
   if(actualKey)example.target=actualKey==="hours"?"8":actualKey==="averageMinutes"?"10":"10";
   if(fields.Money.length)example.moneyAverage="50";
-  return {id,name:problem.name,category:category.title,fields,timePopulation,actualKey,moneyPopulation:fields.Money.length?"affected":undefined,example,reference:s.reference??"reconstructed"};
+  if(id==="problem-22")example["step2:payments-without-reminders"]="20";
+  return {id,name:problem.name,category:category.title,fields,timePopulation,actualKey,moneyPopulation:fields.Money.length?id==="problem-22"?"step2:payments-without-reminders":"affected":undefined,example,reference:s.reference??"reconstructed"};
 }));
