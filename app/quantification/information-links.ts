@@ -26,7 +26,7 @@ export function operationalPopulationLinks(problemId:string,method:string,primar
  // reminders; only the absence of any affected event excludes the attributed
  // population. Do not impose an unsupported one-to-one count limit.
  if(method==="booking")links.push(attributable("op:fewer-appointments-booked:intended-bookings"));
- if(method==="invoices"&&problemId==="problem-22")links.push(attributable("op:more-unpaid-invoices:affected-invoices"));
+ if(method==="invoices"&&problemId==="problem-22")links.push(attributable("affectedInvoices"));
  // The selected impact quantifies the effect of THIS problem, not the entire
  // business's outcome. Zero affected events means zero attributable impact.
  // A positive effect requires a nonempty cause population, but does not

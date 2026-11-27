@@ -132,7 +132,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],op
     const parts=options.finalizedSlots?[filled,unused]:[filled,unused,pending];
     return panel([available,filled,...(options.finalizedSlots?[]:[pending]),unused],[breakdown(available,parts)],{constraints:[bounded(available,parts)],example:{[available.key]:"40",[filled.key]:"25",...(options.finalizedSlots?{}:{[pending.key]:"0"})}});
    }
-   case "new-buyers":return direct("Potential new buyers lost","Buyers",true);
+   case "new-buyers":return ratePanel(support("exposed","Potential buyers exposed to the review-related problem","Buyers",true),support("rate","Attributable buyer loss rate","%"),primary("Potential new buyers lost","Buyers",false),[],[],true);
    case "existing-buyers":return ratePanel(support("affected","Affected existing buyers","Buyers",true),support("rate","Attributable existing buyer loss rate","%"),primary("Lost existing buyers","Buyers"));
    case "unserved":{
     const population=support("affected","Affected buyers","Buyers",true),served=support("served","Buyers subsequently served","Buyers",true),pending=support("pending","Pending or otherwise classified affected buyers","Buyers",true),result=primary("Unserved buyers","Buyers");
@@ -148,10 +148,14 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],op
    case "invoices":{
     // Missed payment reminders are not necessarily unique affected invoices.
     // The invoice-follow-up problem already has an identical affected-invoice count.
-    const population=config.id==="problem-23"?shared(config,"affected",true):support("affected-invoices","Affected invoices","Invoices",true);
+    const population=config.id==="problem-23"?shared(config,"affected",true):shared(config,"affectedInvoices",true);
     return ratePanel(population,support("invoice-loss-rate","Invoice loss rate","%"),primary("Additional unpaid invoices","Invoices"),[],config.id==="problem-22"?[shared(config,"affected",true)]:[]);
    }
-   case "reviews":return ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review rate","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
+   case "reviews":{
+    const p=ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review rate","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
+    const eligible=field("step3:historical:reviews:eligible","Eligible buyers in the reference population","Buyers",true),converted=field("step3:historical:reviews:converted","Additional attributable reviews","Reviews",true),rate=field("step3:historical:reviews:rate","Reference additional review rate","%");
+    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reference additional reviews = eligible buyers × reference additional review rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}]};
+   }
    case "information":return panel([{...shared(config,"affected",true),primary:true}],[],{example:{affected:"7"}});
 
    default:throw new Error("Missing approved operational configuration: "+config.id+" / "+impact.id);

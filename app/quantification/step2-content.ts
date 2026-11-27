@@ -121,13 +121,13 @@ function rawOperationalAlternatives(config:Config,impactId:string):ContentRoute[
  const n=Number(config.id.split("-")[1]);
  switch(method){
  case "reactivation":return [];
- case "reviews":return [alt("historical-reviews",[{key:"step3:historical:reviews:eligible",label:"Eligible buyers",unit:"Buyers"},{key:"step3:historical:reviews:converted",label:"Additional attributable reviews",unit:"Reviews"}],"Additional review rate = Additional attributable reviews ÷ Eligible buyers × 100.","This is incremental attributable review behaviour. Confirm compatible counting units; use a ratio when multiple reviews per buyer are possible.")];
+ case "reviews":return [];
  case "attendance":return [];
  case "slots":return [];
  case "unserved":return [];
  case "existing-buyers":return [];
  case "tasks":return [];
- case "new-buyers":return [alt("reviews",[p("exposed","Potential buyers exposed to the review-related problem","Buyers"),p("rate","Attributable buyer loss rate","%",true)],"Potential new buyers lost = Potential buyers exposed to the review-related problem × Attributable buyer loss rate ÷ 100.","Do not equate reviews and buyers.")];
+ case "new-buyers":return [];
  default:return [];
  }
 }
