@@ -28,7 +28,7 @@ export default function NumericalInput({value,onValueChange,...props}:Props){
  if(key&&!ref)throw Error("Unregistered numerical input "+registry.problemId+"/"+key);
  const state=ref?instanceState(ref,raw,result,{relationships:registry.routes.filter(route=>route.fieldInstanceIds.includes(ref.instanceId)||route.resultInstanceId===ref.instanceId).map(route=>route.id)}):undefined;
  const displayed=state?state.manualValue??(state.calculatedValue!==undefined?format(state.calculatedValue):""):value;
- return <input {...props} data-canonical-quantity={ref?.canonicalId} data-quantity-instance={ref?.instanceId} data-numerical-type={ref?.type} data-quantity-source={state?.source} type="number" value={emptyDraft?"":displayed} onInput={event=>{
+ return <input {...props} data-canonical-quantity={ref?.canonicalId} data-quantity-instance={ref?.instanceId} data-numerical-type={state?.effectiveNumericalType??ref?.type} data-quantity-source={state?.source} data-amount-evidence={state?.amountEvidence} type="number" value={emptyDraft?"":displayed} onInput={event=>{
   // Native input events also capture a deliberate replacement with the same
   // number, which must become a manual constraint even if the display agrees.
   const next=event.currentTarget.value;

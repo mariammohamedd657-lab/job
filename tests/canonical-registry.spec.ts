@@ -2,7 +2,7 @@ import {test,expect} from "@playwright/test";
 import {configs} from "../app/quantification/config";
 import {quantityDefinitions,numericalTypes,validNumericalValue,definition} from "../app/quantification/canonical-definitions";
 import {fieldReference,canShare,instanceState} from "../app/quantification/quantity-identity";
-import {registryFor} from "../app/quantification/quantity-registry";
+import {registryFor,registeredPopulationRelationships} from "../app/quantification/quantity-registry";
 import {problemPairRelationships,crossPanelIdentitySpecification,populationRelationshipSpecification} from "../app/quantification/canonical-relationships";
 import {solve} from "../app/quantification/solver";
 test("canonical registry resolves every visible and hidden field and every registered route across all 28 problems",()=>{
@@ -33,6 +33,7 @@ test("canonical registry resolves every visible and hidden field and every regis
   fields+=registry.fields.length;instances+=ids.size;routes+=registry.routes.length;conditional+=registry.conditionalIdentities.length;
  }
  expect(problemPairRelationships.length).toBe(31);expect(crossPanelIdentitySpecification.length).toBe(32);expect(populationRelationshipSpecification.length).toBe(72);
+ const population=registeredPopulationRelationships();expect(population.length).toBe(72);for(const relation of population){expect(definition(relation.reference.canonicalId)).toBeDefined();expect(definition(relation.related.canonicalId)).toBeDefined();expect(relation.active).toBe(false);expect(relation.kinds.length).toBeGreaterThan(0);}
  console.log("STEP3_REGISTRY_AUDIT "+JSON.stringify({definitions:Object.keys(quantityDefinitions).length,problems:28,fields,instances,routes,conditional,pairs:31}));
 });
 test("type restrictions distinguish actual counts, estimates, signed values, rates and ratios",()=>{
@@ -88,4 +89,14 @@ test("canonical browser references preserve shared values and enforce new financ
  await loss.fill("1200");await expect(copy).toHaveValue("1200");await expect(copy).toHaveAttribute("data-quantity-instance",(await loss.getAttribute("data-quantity-instance"))!);
  await card("F2").locator('input[data-quantity="fin:confirmed-profit"]').fill("-4500");await expect(card("F2").locator(".op-result-row strong")).toHaveText("-4500");
  await card("F7").getByRole("checkbox").check();const buyers=card("F7").locator('input[data-quantity="fin:potential-buyers"]');await buyers.fill("15.544");await expect(buyers).not.toHaveClass(/q-invalid/);
+});
+
+test("unknown scopes across all 378 problem pairs never activate sharing merely from a matching type",()=>{
+ let pairs=0,compared=0;
+ for(let i=0;i<configs.length;i++)for(let j=i+1;j<configs.length;j++){
+  pairs++;const left=Object.values(registryFor(configs[i].id).instances),right=Object.values(registryFor(configs[j].id).instances);
+  const rightByType=new Map<string,typeof right>();for(const ref of right){const same=rightByType.get(ref.canonicalId)??[];same.push(ref);rightByType.set(ref.canonicalId,same);}
+  for(const a of left)for(const b of rightByType.get(a.canonicalId)??[]){expect(canShare(a,b)).toBe(false);compared++;}
+ }
+ expect(pairs).toBe(378);console.log("STEP3_SCOPE_ISOLATION "+JSON.stringify({pairs,matchingTypeComparisons:compared}));
 });

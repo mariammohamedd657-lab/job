@@ -2,7 +2,9 @@ import {configs,sectionOrder} from "./config";
 import {problems} from "../discovery/data";
 import {operationalPanels} from "./operational-data";
 import {baseSupplementalRoutes,financialContent,operationalAlternatives,shortfallRoute,type ContentRoute} from "./step2-content";
-import {fieldReference,canShare,type FieldReference} from "./quantity-identity";
+import {fieldReference,canShare,canonicalId,type FieldReference} from "./quantity-identity";
+import {definition} from "./canonical-definitions";
+import {relationshipEndpointKeys,populationRelationshipSpecification,relationshipKinds,type RelationshipEndpoint} from "./canonical-relationships";
 export type RegistryFieldOccurrence={path:string;reference:FieldReference;panel:"problem"|"operational"|"financial";outcome?:string;route?:string};
 export type RegistryRoute={id:string;outcomeId?:string;panel:RegistryFieldOccurrence["panel"];fieldInstanceIds:string[];resultInstanceId?:string;reference:string;condition:string;active:boolean};
 export type ProblemRegistry={problemId:string;fields:RegistryFieldOccurrence[];instances:Readonly<Record<string,FieldReference>>;routes:RegistryRoute[];conditionalIdentities:readonly {left:string;right:string;condition:string;active:false}[]};
@@ -93,4 +95,15 @@ export function registryFor(problemId:string):ProblemRegistry{
  for(const route of routes)for(const id of [...route.fieldInstanceIds,...(route.resultInstanceId?[route.resultInstanceId]:[])])if(!instanceIds.has(id))throw Error("Unresolved route reference "+route.id+" -> "+id);
  const registry={problemId,fields,instances,routes,conditionalIdentities};
  cache.set(problemId,registry);return registry;
+}
+
+export function registeredPopulationRelationships(){
+ return populationRelationshipSpecification.map((row,index)=>{
+  const endpoints=relationshipEndpointKeys[index].map((value):RelationshipEndpoint=>{
+   const match=value.match(/^(\d+)\/(.+)$/);
+   if(match){const problemId="problem-"+match[1],legacyKey=match[2],ref=registryFor(problemId).instances[legacyKey];if(!ref)throw Error("Unresolved population reference "+value);return {problemId,legacyKey,canonicalId:ref.canonicalId};}
+   return {canonicalId:definition(value).id};
+  });
+  return {id:"population-"+String(index+1).padStart(3,"0"),reference:endpoints[0],related:endpoints[1],kinds:relationshipKinds(row.condition),condition:row.condition,active:false as const};
+ });
 }
