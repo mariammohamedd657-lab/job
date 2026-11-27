@@ -63,7 +63,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
  const intervals=(known:Record<string,number>)=>{
-    const links=[...basePopulationLinks(config),...(additional?.populationLinks??[])];
+    const links=[...basePopulationLinks(config),...(additional?.populationLinks??[]),...(config.fields.Quantity.length?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])];
     // Relax the integer domain only for unknown counts in components with an
     // active estimate. A manual actual count is still an exact fixed value.
     // In an exact-only component retain the existing discrete bound inference.
