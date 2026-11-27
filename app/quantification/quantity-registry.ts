@@ -68,7 +68,7 @@ export function registryFor(problemId:string):ProblemRegistry{
   if(list.length)addRoute("problem/"+s,"problem",list.map(f=>f.key),undefined,"Existing "+s+" calculation references.","Population, counting unit and measurement period must match; additive classifications must be mutually exclusive and exhaustive.",true);
   registerRoutes(baseSupplementalRoutes(c,s),"problem","problem/"+s,s==="Money"?"moneyTotal":"affected");
  }
- const operational=operationalPanels(c,p.operationalImpacts.map(i=>i.id),Object.fromEntries(p.operationalImpacts.map(i=>[i.id,false])));
+ const operational=operationalPanels(c,p.operationalImpacts.map(i=>i.id));
  for(const op of operational){
   op.fields.forEach((f,j)=>put(f,"operational","operational/"+op.id+"/"+j,op.id));
   for(const [j,rel] of op.relations.entries())addRoute("operational/"+op.id+"/equation-"+j,"operational",rel.keys,op.primaryKey,rel.label,"Existing equation; scope and applicable population must match.",true,op.id);

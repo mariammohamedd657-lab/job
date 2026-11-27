@@ -25,7 +25,7 @@ export function operationalPopulationLinks(problemId:string,method:string,primar
  // Bookings and invoices may have a many-to-many relationship with calls and
  // reminders; only the absence of any affected event excludes the attributed
  // population. Do not impose an unsupported one-to-one count limit.
- if(method==="booking")links.push(attributable("missedBookings"));
+ if(method==="booking")links.push(attributable("op:fewer-appointments-booked:intended-bookings"));
  if(method==="invoices"&&problemId==="problem-22")links.push(attributable("op:more-unpaid-invoices:affected-invoices"));
  // The selected impact quantifies the effect of THIS problem, not the entire
  // business's outcome. Zero affected events means zero attributable impact.

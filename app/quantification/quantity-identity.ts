@@ -8,7 +8,7 @@ const coreRoles:Record<string,string>={total:"total",affected:"affected",unaffec
 const averages:Record<number,string>={5:"average_response_time",7:"average_qualification_time",15:"average_rescheduling_time",17:"average_routine_question_time",18:"average_response_time",19:"average_repeated_question_time",20:"average_manual_task_time",28:"average_overloaded_task_time"};
 const financialKeys:Record<string,string>={
  "confirmed-purchases":"confirmed_purchases_lost","average-revenue-purchase":"average_revenue_per_purchase","purchase-revenue":"confirmed_purchase_revenue_before_loss","retained-revenue":"retained_purchase_revenue","confirmed-revenue":"confirmed_revenue_loss","avoided-variable":"avoided_variable_costs","confirmed-profit":"confirmed_contribution_profit_loss",
- "purchase-total-revenue":"total_revenue","buyer-scope-revenue":"total_revenue","total-purchases":"total_purchases","total-buyers":"total_buyers","confirmed-margin":"contribution_profit_margin","potential-margin":"contribution_profit_margin","average-profit-purchase":"average_contribution_profit_per_purchase","average-variable-purchase":"average_historical_variable_cost_per_purchase","average-avoided-purchase":"average_avoided_variable_cost_per_purchase",
+ "purchase-total-revenue":"total_revenue","buyer-scope-revenue":"total_revenue","total-purchases":"total_purchases","total-buyers":"total_buyers","confirmed-margin":"contribution_profit_margin","potential-margin":"contribution_profit_margin","average-profit-purchase":"average_contribution_profit_per_purchase","average-avoided-purchase":"average_avoided_variable_cost_per_purchase",
  "purchase-variable-costs":"total_variable_costs","buyer-variable-costs":"total_variable_costs","purchase-total-profit":"total_contribution_profit","buyer-total-profit":"total_contribution_profit",
  "average-paid-lead":"average_cost_per_paid_lead","average-additional-hour":"average_cost_per_additional_staff_hour","average-additional-resource":"average_cost_per_additional_resource","average-collection-hour":"average_cost_per_collection_staff_hour",
  "wasted":"wasted_costs","wasted-marketing":"wasted_marketing_costs","wasted-staff":"wasted_staffing_costs","wasted-other":"wasted_other_operating_costs","paid-lost":"paid_lost_leads","paid-share":"paid_lost_lead_percentage","marketing-spend":"marketing_spend_for_paid_leads","paid-acquired":"paid_leads_acquired","wasted-hours":"wasted_paid_staff_hours","average-staff-hour":"average_staffing_cost_per_hour","avoidable-paid-share":"paid_wasted_time_percentage","wasted-hours-slot":"wasted_paid_hours_per_unused_slot","relevant-staff-costs":"relevant_staffing_costs","corresponding-hours":"corresponding_paid_staff_hours","wasted-resources":"wasted_resources","average-wasted-resource":"average_cost_per_wasted_resource",
@@ -40,16 +40,12 @@ const opKeys:Record<string,Record<string,string>>={
 export function canonicalId(problemId:string,key:string):string{
  const n=Number(problemId.split("-")[1]),core=problemQuantityDefinitions.find(p=>p.problemId===problemId);
  if(!core)throw Error("Unknown problem "+problemId);
- if(["remaining","remainingPct","overlap","combined","intendedBookings","missedBookings","requiredReminders","missedReminders","sentReminders","pendingReminders","missedReminderPct","reschedulingEvents","averageEventMinutes","affectedInvoices","requiredUpdates","missedUpdates","completedUpdates","pendingUpdates","missingRecordings","missingOutcomes","missingBoth"].includes(key))return "problem_"+key;
  if(coreRoles[key])return key==="total"&&(n===20||n===28)?"tasks.total":core.prefix+"."+coreRoles[key];
  const base:Record<string,string>={months:"problem_duration",days:"measurement_period",daily:"affected_daily_rate",recordedUnits:"recorded_units",hours:n===28?"required_staff_hours":[5,7,18].includes(n)?"recorded_duration":"affected_duration",averageMinutes:averages[n],target:n===28?"available_staff_hours":[5,18].includes(n)?"target_response_time":n===7?"target_qualification_time":"target_value",difference:"actual_target_difference",targetPct:"percentage_of_target",moneyTotal:n===22?"payments_without_reminders_amount":"affected_invoices_amount",moneyAverage:n===22?"average_payment_amount":"average_invoice_amount","step2:staff-shortfall":"staff_hour_shortfall","step2:payments-without-reminders":"affected_payments"};
  if(base[key])return base[key];
- if(key==="step3:historical:reactivation:rate")return "reactivation_rate";
- if(key==="step3:historical:reviews:rate")return "additional_review_rate";
  if(/^step3:historical:(reactivation|reviews):(eligible|converted)$/.test(key))return key.endsWith(":eligible")?"eligible_conversion_population":"converted_population";
  if(key.startsWith("op:")||key.startsWith("step2:negative-operational-")){
   const [,impact,suffix]=key.split(":");const id=opKeys[impact.replace("negative-operational-","")]?.[suffix];if(id)return id;
-  if(suffix==="not-lost"||suffix==="pending")return "unclassified_quantity";
  }
  if(key.startsWith("fin:")){
   const suffix=key.slice(4);
@@ -78,7 +74,7 @@ export function fieldReference(problemId:string,field:Pick<Field,"key"|"label"|"
  if(id==="target_value")type=field.unit==="min"?"MINUTES":field.unit==="hrs"?"HOURS":"COUNT";
  const scopedUnit=field.unit==="Units"?(field.key==="recordedUnits"?unitDisplay(core.unit):unitDisplay(d.unit)):undefined;
  const unit=field.key==="moneyAverage"&&field.unit==="Currency/unit"?d.unit:field.key==="daily"?"/day":id==="annual_interest_rate"?"%/year":field.unit==="Units"&&["target","difference"].includes(field.key)?unitDisplay(core.unit)??field.unit:scopedUnit??field.unit;
- const label=field.key==="affected"||field.key==="unaffected"||field.key==="affectedPct"||field.key==="unaffectedPct"||field.key==="averageMinutes"?field.label:id==="target_value"?"Target value":["eligible_conversion_population","converted_population","applicable_average_population","unclassified_quantity","overlapping_quantity","unique_combined_quantity"].includes(id)?field.label:d.name;
+ const label=id==="target_value"?"Target value":["eligible_conversion_population","converted_population","applicable_average_population","unclassified_quantity","overlapping_quantity","unique_combined_quantity"].includes(id)?field.label:d.name;
  return {problemId,legacyKey:field.key,canonicalId:id,instanceId,definition:d,label,unit,type,estimated,scope:{status:"local-reference",localReference:instanceId,countingUnit:unit}};
 }
 export type QuantityInstanceState={reference:FieldReference;effectiveNumericalType:NumericalType;manualAssertions:Record<string,string>;manualValue?:string;calculatedValue?:number;source:"manual"|"calculated"|"shared"|"unknown";consequence:"confirmed"|"estimated"|"unknown";amountEvidence:"directly-measured"|"calculated-from-measurements"|"estimated"|"unknown";minimum?:number;maximum?:number;dependencies:readonly string[];contradictory:boolean;undefined:boolean;applicable:boolean;relationshipRefs:readonly string[]};

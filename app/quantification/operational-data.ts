@@ -62,7 +62,6 @@ function combined(total:ImpactField,others:ImpactField[],rate:ImpactField):Relat
  const sum=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).reduce((n,k)=>n+v[k],0);
  const sumText=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).map(k=>format(v[k])).join(" + ");
  return {keys:[a,...keys,b],label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)",
-  terms:[...keys.map(key=>({coefficient:1,keys:[key]})),{coefficient:-1,keys:[a]},{coefficient:.01,keys:[a,b]}],
   complement:{population:a,components:keys,rate:b,label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)"},
   derive:(v,k)=>{if(k===a){const d=1-v[b]/100;return d===0?undefined:sum(v)/d;}if(k===b)return v[a]===0?undefined:(1-sum(v)/v[a])*100;return v[a]*(1-v[b]/100)-sum(v,k);},
   impossible:(v,k)=>k===a&&v[b]===100&&sum(v)!==0||k===b&&v[a]===0&&sum(v)!==0,
@@ -75,27 +74,20 @@ function bounded(total:ImpactField,parts:ImpactField[]):AdditionalConstraint{
   violated:v=>{const a=v[total.key],b=keys.reduce((n,k)=>n+(v[k]??0),0);return Number.isFinite(a)&&b>a&&!close(a,b);}};
 }
 
-export function operationalPanels(config:Config,selectedIds:readonly string[],complete:Record<string,boolean>={}):OperationalPanel[]{
+export function operationalPanels(config:Config,selectedIds:readonly string[]):OperationalPanel[]{
  const problem=problems.find(p=>p.id===config.id)!;
  return problem.operationalImpacts.filter(impact=>selectedIds.includes(impact.id)).map(impact=>{
   const key=impact.id.slice(prefix.length),method=operationalMethods[config.id]?.[key];
   const primaryKey="op:"+key+":result";
-  const finalized=complete[impact.id]??true;
   const support=(suffix:string,label:string,unit:string,integer=false)=>normalizeField(config.id,field("op:"+key+":"+suffix,label,unit,integer));
   const primary=(label:string,unit:string,integer=true):ImpactField=>({...normalizeField(config.id,field(primaryKey,label,unit,integer)),primary:true});
   const panel=(fields:ImpactField[],relations:Relation[]=[],extra:Partial<OperationalPanel>={}):OperationalPanel=>({id:impact.id,name:impact.label,fields,primaryKey:fields.find(f=>f.primary)!.key,relations,verified:true,populationLinks:operationalPopulationLinks(config.id,method,fields.find(f=>f.primary)!.key),...extra});
   const direct=(label:string,unit:string,estimated=false)=>{const result=primary(label,unit,!estimated);return panel([result],[],{estimated,example:{[result.key]:"7"}});};
   const ratePanel=(population:ImpactField,rate:ImpactField,result:ImpactField,others:ImpactField[]=[],context:ImpactField[]=[],estimated=false,example?:Record<string,string>)=>{
    const relations=[product(result.key,population.key,rate.key,.01,result.label+" = "+population.label+" × "+rate.label+" ÷ 100")];
-   const lossBreakdown=others.length===2;
-   const remainder=lossBreakdown?support("not-lost","Recovered + pending",population.unit):undefined;
-   if(finalized){
-    if(others.length)relations.unshift(breakdown(population,[...others,result]));
-    if(others.length)relations.push(combined(population,others,rate));
-    if(remainder)relations.push(breakdown(population,[remainder,result]));
-   }
-   if(remainder)relations.push(breakdown(remainder,others));
-   return panel([...context,population,...others,...(remainder?[remainder]:[]),rate,result],relations,{
+   if(others.length)relations.unshift(breakdown(population,[...others,result]));
+   if(others.length)relations.push(combined(population,others,rate));
+   return panel([...context,population,...others,rate,result],relations,{
     estimated,constraints:[bounded(population,[...others,result])],
     inferZeros:v=>{
      const zeros:ZeroInference[]=[];
@@ -118,59 +110,37 @@ export function operationalPanels(config:Config,selectedIds:readonly string[],co
   };
   switch(method){
    case "calls":
-   case "direct-leads":
    case "leads":{
-    const population=method!=="leads"?support("unique-leads","Unique affected leads","Leads",true):shared(config,"affected",true);
+    const population=method==="calls"?support("unique-leads","Unique affected leads","Leads",true):shared(config,"affected",true);
     const recovered=support("recovered","Recovered leads","Leads",true),pending=support("pending","Pending leads","Leads",true);
     return ratePanel(population,support("loss-rate","Loss rate","%"),primary("Lost leads","Leads"),[recovered,pending],[],false,{[population.key]:"26",[recovered.key]:"8",[pending.key]:"9"});
    }
    case "qualified":return ratePanel(support("affected-qualified-leads","Affected qualified leads","Leads",true),support("loss-rate","Qualified lead loss rate","%"),primary("Lost qualified leads","Leads"),[support("recovered","Recovered qualified leads","Leads",true),support("pending","Pending qualified leads","Leads",true)],[shared(config,"affected",true)]);
-   case "reactivation":{
-    const p=ratePanel(shared(config,"affected",true),support("reactivation-rate","Attributable reactivation loss rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
-    const eligible=field("step3:historical:reactivation:eligible","Eligible old leads in reference population","Leads",true),converted=field("step3:historical:reactivation:converted","Reactivated leads in reference population","Leads",true),rate=field("step3:historical:reactivation:rate","Historical reactivation rate","%");
-    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reference reactivated leads = eligible leads × reference rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}],example:{...p.example,[eligible.key]:"200",[converted.key]:"30"}};
-   }
+   case "reactivation":return ratePanel(shared(config,"affected",true),support("reactivation-rate","Reactivation rate","%"),primary("Potential reactivations lost","Leads",false),[],[],true);
    case "booking":return ratePanel(support("intended-bookings","Intended bookings","Bookings",true),support("loss-rate","Booking loss rate","%"),primary("Lost bookings","Bookings"),[support("recovered","Recovered bookings","Bookings",true),support("pending","Pending bookings","Bookings",true)],[shared(config,"affected",true)]);
-   case "attendance":{
-    // Base populations for reminders and rescheduling are now distinct appointments.
-    const p=ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attributable attendance loss rate","%"),primary("Lost attendance","Appointments"));
-    return ["problem-12","problem-15"].includes(config.id)?{...p,fields:[...p.fields,support("unique-appointments","Affected appointments","Appointments",true)]}:p;
-   }
-   case "slots":{
-    const available=support("available","Relevant available appointment slots","Slots",true),filled=support("filled","Filled appointment slots","Slots",true),unused=primary("Unused appointment slots","Slots"),pending=support("pending","Pending or unclassified slots","Slots",true);
-    const parts=finalized?[filled,unused]:[filled,pending,unused];
-    return panel([available,...parts],[breakdown(available,parts)],{constraints:[bounded(available,parts)],example:{[available.key]:"120",[filled.key]:"95",...(finalized?{}:{[pending.key]:"0"})}});
-   }
-   case "new-buyers":return ratePanel(support("exposed","Potential buyers exposed to the review-related problem","Buyers",true),support("rate","Attributable buyer loss rate","%"),primary("Potential new buyers lost","Buyers",false),[],[],true);
-   case "existing-buyers":return ratePanel(support("affected","Affected existing buyers","Buyers",true),support("rate","Attributable existing buyer loss rate","%"),primary("Lost existing buyers","Buyers"));
-   case "unserved":{
-    const population=support("affected","Affected buyers","Buyers",true),served=support("served","Buyers subsequently served","Buyers",true),result=primary("Unserved buyers","Buyers"),pending=support("pending","Pending or otherwise classified buyers","Buyers",true);
-    const parts=finalized?[served,result]:[served,pending,result];
-    return panel([population,...parts],[breakdown(population,parts)],{constraints:[bounded(population,parts)],example:{[population.key]:"100",[served.key]:"70",...(finalized?{}:{[pending.key]:"0"})}});
-   }
+   case "attendance":return ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attendance loss rate","%"),primary("Lost attendance","Appointments"));
+   case "slots":return direct("Unused appointment slots","Slots");
+   case "new-buyers":return direct("Potential new buyers lost","Buyers",true);
+   case "existing-buyers":return direct("Lost existing buyers","Buyers");
+   case "unserved":return direct("Unserved buyers","Buyers");
    case "time":return ratePanel(shared(config,"hours"),support("avoidable-percentage","Avoidable time percentage","%"),primary("Avoidable time","hrs",false),[support("necessary-time","Necessary time","hrs")]);
-   case "tasks":{
-    const population=config.id==="problem-28"?shared(config,"affected",true):support("affected","Affected tasks","Tasks",true),completed=support("completed","Completed affected tasks","Tasks",true),result=primary("Incomplete tasks","Tasks"),pending=support("pending","Pending or otherwise classified tasks","Tasks",true);
-    const parts=finalized?[completed,result]:[completed,pending,result];
-    return panel([population,...parts],[breakdown(population,parts)],{constraints:[bounded(population,parts)],example:{[population.key]:"200",[completed.key]:"150",...(finalized?{}:{[pending.key]:"0"})}});
-   }
+   case "tasks":
+    // Current problem-28 counts tasks affected by overload, not specifically incomplete tasks.
+    // Keep the incomplete-task result separate unless a genuinely identical field is provided.
+    return direct("Incomplete tasks","Tasks");
    case "invoices":{
     // Missed payment reminders are not necessarily unique affected invoices.
     // The invoice-follow-up problem already has an identical affected-invoice count.
     const population=config.id==="problem-23"?shared(config,"affected",true):support("affected-invoices","Affected invoices","Invoices",true);
     return ratePanel(population,support("invoice-loss-rate","Invoice loss rate","%"),primary("Additional unpaid invoices","Invoices"),[],config.id==="problem-22"?[shared(config,"affected",true)]:[]);
    }
-   case "reviews":{
-    const p=ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review probability","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
-    const eligible=field("step3:historical:reviews:eligible","Eligible buyers in reference population","Buyers",true),converted=field("step3:historical:reviews:converted","Additional attributable reviews","Reviews",true),rate=field("step3:historical:reviews:rate","Reference additional review rate","%");
-    return {...p,fields:[...p.fields,eligible,converted,rate],relations:[...p.relations,product(converted.key,eligible.key,rate.key,.01,"Reference additional reviews = eligible buyers × reference rate ÷ 100")],constraints:[...(p.constraints??[]),bounded(eligible,[converted])],undefinedRates:[...(p.undefinedRates??[]),{denominator:eligible.key,rate:rate.key}],example:{...p.example,[eligible.key]:"200",[converted.key]:"60"}};
-   }
+   case "reviews":return ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review rate","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
    case "information":return panel([{...shared(config,"affected",true),primary:true}],[],{example:{affected:"7"}});
-
+   case "direct-leads":return direct("Lost leads","Leads");
    default:throw new Error("Missing approved operational configuration: "+config.id+" / "+impact.id);
   }
  });
 }
 export function operationalEquations(panels:OperationalPanel[]):AdditionalEquations{
- return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],actualIntegerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer&&f.key.startsWith("step3:historical:")).map(f=>f.key)))],estimatedKeys:panels.filter(panel=>panel.estimated).map(panel=>panel.primaryKey),inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
+ return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],estimatedKeys:panels.filter(panel=>panel.estimated).map(panel=>panel.primaryKey),inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
 }

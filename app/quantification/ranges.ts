@@ -11,7 +11,7 @@ const plus=(a:Limit,b:Limit)=>limit(a.value+b.value,deps(a,b));
 const times=(a:Limit,n:number)=>limit(a.value*n,a.deps);
 const multiply=(a:Limit,b:Limit,f:number)=>limit(a.value===0||b.value===0?0:a.value*b.value*f,deps(a,b));
 const tolerance=(a:number,b:number)=>16*Number.EPSILON*Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange,capacity?:{difference:string;shortfall:string}){
+export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange){
  const ranges=new Map<string,Range>();
  const results:Consequence[]=[];
  const conflicts:{dependencies:string[];label:string}[]=[];
@@ -95,16 +95,6 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
     }
    }
   }
-  if(capacity&&!blocked.has(capacity.difference)&&!blocked.has(capacity.shortfall)){
-   const D=ranges.get(capacity.difference),S=ranges.get(capacity.shortfall);
-   if(D&&S){
-    const label="Staff hour shortfall is the positive part of required minus available hours";
-    narrow(capacity.shortfall,"lo",limit(Math.max(0,D.lo.value),D.lo.deps),label);
-    narrow(capacity.shortfall,"hi",limit(Math.max(0,D.hi.value),D.hi.deps),label);
-    narrow(capacity.difference,"hi",S.hi,label);
-    if(S.lo.value>0)narrow(capacity.difference,"lo",S.lo,label);
-   }
-  }
   for(const equation of active){
    // Fully known equations have already been checked by the original
    // validation pass with display-precision tolerance. Do not reinterpret them.
@@ -116,16 +106,7 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
     const a=linear.keys[0],[b,c]=product.keys,f=-product.coefficient/linear.coefficient;
     if(f<=0)continue;
     const A=ranges.get(a)!,B=ranges.get(b)!,C=ranges.get(c)!;
-    if(B.lo.value<0||C.lo.value<0||A.lo.value<0){
-     const corners=[multiply(B.lo,C.lo,f),multiply(B.lo,C.hi,f),multiply(B.hi,C.lo,f),multiply(B.hi,C.hi,f)];
-     narrow(a,"lo",limit(Math.min(...corners.map(x=>x.value)),deps(...corners)),equation.label);
-     narrow(a,"hi",limit(Math.max(...corners.map(x=>x.value)),deps(...corners)),equation.label);
-     for(const [key,other] of [[b,C],[c,B]] as const)if(other.lo.value>0||other.hi.value<0){
-      const values=[A.lo.value/other.lo.value/f,A.lo.value/other.hi.value/f,A.hi.value/other.lo.value/f,A.hi.value/other.hi.value/f];
-      if(values.every(v=>!Number.isNaN(v))){narrow(key,"lo",limit(Math.min(...values),deps(A.lo,A.hi,other.lo,other.hi)),equation.label);narrow(key,"hi",limit(Math.max(...values),deps(A.lo,A.hi,other.lo,other.hi)),equation.label);}
-     }
-     continue;
-    }
+    if(B.lo.value<0||C.lo.value<0||A.lo.value<0)continue;
     narrow(a,"lo",multiply(B.lo,C.lo,f),equation.label);
     narrow(a,"hi",multiply(B.hi,C.hi,f),equation.label);
     for(const [key,other] of [[b,C],[c,B]] as const){
