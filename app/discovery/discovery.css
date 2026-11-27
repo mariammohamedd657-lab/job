@@ -23,8 +23,8 @@ body { background: #181818; color: #f4f4f4; }
 .two-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
 .two-columns > div { min-width: 0; }
 .impact-heading, .outcome-heading { font-size: 15px; font-weight: 500; margin: 0 0 10px; line-height: 1.4; }
-.impact-tone-operational { color: #F5E6A3; background-color: rgba(245, 230, 163, 0.08); }
-.impact-tone-financial { color: #AECBF4; background-color: rgba(174, 203, 244, 0.08); }
+.impact-tone-operational { color: #E7C975; background-color: rgba(231, 201, 117, 0.08); }
+.impact-tone-financial { color: #AACBF2; background-color: rgba(170, 203, 242, 0.08); }
 .impact-list { display: flex; flex-direction: column; gap: 11px; }
 .impact-list .circle-input { width: 20px; height: 20px; margin-top: 1px; }
 .impact-list .circle-input:checked { border-color: #04B84C; background-color: #04B84C; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7.5 12.5 10.5 15.5 16 7.5' stroke='%23181818' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-origin: border-box; background-size: 100%; }
@@ -42,8 +42,8 @@ body { background: #181818; color: #f4f4f4; }
 .agent-header p { color: #aaa7a7; font-size: 14px; margin: 0; }
 .sample-note { color: #999; font-size: 12px; }
 .solution-card hr { margin: 20px 0; }
-.outcome-tone-operational { color: #F5E6A3; }
-.outcome-tone-financial { color: #AECBF4; }
+.outcome-tone-operational { color: #E7C975; }
+.outcome-tone-financial { color: #AACBF2; }
 .outcome-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; }
 .outcome-list li { display: flex; gap: 6px; align-items: flex-start; }
 .green-check { width: 15px; height: 15px; margin-top: 4px; flex-shrink: 0; }

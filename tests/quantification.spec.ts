@@ -199,7 +199,7 @@ test("custom problem menu renders all three status colors simultaneously and sup
  await expect(menu).not.toBeVisible();
  await expect(trigger).toHaveAttribute("data-value","problem-2");
  await trigger.click();
- await page.getByRole("heading",{name:"Business problem quantification"}).click();
+ await page.locator(".q-meta").first().click();
  await expect(menu).not.toBeVisible();
  await trigger.press("Enter");
  await trigger.press("Home");

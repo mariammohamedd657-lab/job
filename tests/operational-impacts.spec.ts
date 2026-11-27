@@ -70,7 +70,7 @@ test("all approved operational impact panels follow Discovery selections and pre
    const primary=card.locator('input[data-quantity="'+panel.primaryKey+'"]');
    await primary.fill("7");
    await expect(card.locator(".op-result-row strong")).toHaveText("7");
-   await expect(card.locator(".op-result")).toContainText("Directly entered");
+   await expect(card.locator(".op-result")).not.toContainText("Directly entered");
    if(panel.estimated)await expect(card.locator(".op-result")).toContainText("Estimated");
    await card.locator(".op-impact-toggle").click();
    await expect(primary).toHaveValue("7");

@@ -94,11 +94,11 @@ export default function ProblemSelector({ selected, statuses, onChange }: Props)
   }
 
   return <div className="q-select-wrap" ref={root}>
-    <button type="button" id="q-problem" ref={trigger} className="q-problem-trigger" role="combobox" aria-labelledby="q-problem-label" aria-haspopup="listbox" aria-controls="q-problem-options" aria-expanded={open} aria-activedescendant={open ? optionId(active) : undefined} data-value={selected} data-status={statuses[selected]} onClick={() => open ? setOpen(false) : show()} onKeyDown={keyboard} onBlur={event => { if (event.relatedTarget && !root.current?.contains(event.relatedTarget as Node)) setOpen(false); }}>
+    <button type="button" id="q-problem" ref={trigger} className="q-problem-trigger" role="combobox" aria-label="Select a business problem" aria-haspopup="listbox" aria-controls="q-problem-options" aria-expanded={open} aria-activedescendant={open ? optionId(active) : undefined} data-value={selected} data-status={statuses[selected]} onClick={() => open ? setOpen(false) : show()} onKeyDown={keyboard} onBlur={event => { if (event.relatedTarget && !root.current?.contains(event.relatedTarget as Node)) setOpen(false); }}>
       {current.name}
     </button>
     <svg className="q-icon" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-    <div id="q-problem-options" className="q-problem-menu" role="listbox" aria-labelledby="q-problem-label" ref={menu} hidden={!open}>
+    <div id="q-problem-options" className="q-problem-menu" role="listbox" aria-label="Select a business problem" ref={menu} hidden={!open}>
       {categories.map(category => <div role="group" aria-label={category} key={category}>
         <div className="q-problem-group" aria-hidden="true">{category}</div>
         {configs.filter(config => config.category === category).map(config => <div key={config.id} id={optionId(config.id)} role="option" aria-selected={config.id === selected} data-value={config.id} data-status={statuses[config.id]} data-active={config.id === active} className="q-problem-option" onMouseDown={event => event.preventDefault()} onClick={() => choose(config.id)}>{config.name}</div>)}

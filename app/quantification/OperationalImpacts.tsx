@@ -23,13 +23,10 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
  const example=Object.assign({},...panels.map(p=>p.example??{})) as Figures;
  const reset=()=>{const next={...raw};for(const panel of panels)for(const field of [...panel.fields,...routeFields(operationalAlternatives(config,panel.id))])if(!("shared" in field)||!field.shared||panel.fields.some(f=>f.key===field.key))delete next[field.key];if(problemId==="problem-28")delete next[shortfallField.key];setRaw(next);};
  return <div className="op-impact-content">
-  <div className="op-confirmed-heading">Confirmed operational impacts</div>
-  <div className="op-confirmed-list">{panels.map(p=><div key={p.id}><span className="op-confirmed-check"><Icon kind="check"/></span>{p.name}</div>)}</div>
   {problemId==="problem-28"&&<label className="step2-op-option"><input type="checkbox" className="step2-check" checked={shortfall} onChange={e=>setShortfall(e.target.checked)}/>Staff hour shortfall</label>}
   <div className="op-impact-panels">{panels.map(panel=>{
     const id=problemId+":"+panel.id,open=!collapsed[id],primary=panel.fields.find(f=>f.primary)!;
     const summary=resolved(panel.primaryKey);
-    const state=summary.valid?((panel.estimated||result.estimated.has(panel.primaryKey))?(summary.computed?"Estimated · Automatically calculated":"Estimated · Directly entered"):(summary.computed?"Automatically calculated":"Directly entered")):"Awaiting information";
     return <section className="op-impact-card" key={id} data-impact={panel.id}>
       <button type="button" className="op-impact-toggle" aria-expanded={open} onClick={()=>setCollapsed(old=>({...old,[id]:open}))}><span className="op-result-tick"><Icon kind="check"/></span><span>{panel.name}</span><span className={"q-arrow "+(open?"q-open":"")}><Icon kind="chevron"/></span></button>
       <div className="op-impact-body" hidden={!open}>
@@ -38,15 +35,12 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
           return <div className="q-field" key={field.key}>
             <label className={field.primary?"op-primary":field.shared?"q-general":""}><span>{field.shared&&<span className="op-linked-icon"><Icon kind="link"/></span>}{field.label}</span><NumericalInput step="any" min={0} max={field.unit==="%"?100:undefined} aria-label={field.label} data-quantity={field.key} value={v.value} placeholder="—" className={result.blocked.has(field.key)?"q-invalid":""} onValueChange={value=>update(field.key,value)}/><span className="q-unit">{field.unit}</span></label>
             <QuantityLimits quantity={field.key} unit={field.unit} result={result} value={v.value} show={show}/>
-            {v.computed&&<div className="op-auto"><Icon kind="calculator"/>Automatically calculated</div>}
             {show&&v.computed&&<div className="q-formula">{result.calculated[field.key]}</div>}
           </div>;
         })}</div>
         {!panel.verified&&<p className="op-pending">Supporting quantities and calculations pending approved configuration.</p>}
         <div className="op-result-wrap"><div className="op-result">
-          <div>Quantified negative operational impact</div>
           <div className="op-result-row"><span>{primary.label}</span><strong>{summary.valid?format(result.values[panel.primaryKey]):"—"}</strong><span>{primary.unit}</span></div>
-          <div>{state}</div>
         </div></div>
         <ContentRoutes routes={operationalAlternatives(config,panel.id)} exclude={panel.fields.map(f=>f.key)} {...{raw,result,show,update}}/>
       </div>
