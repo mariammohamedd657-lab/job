@@ -23,8 +23,8 @@ export function QuantIcon({name}:{name:string}){
  return <svg className="q-icon" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 const panels=[["Problem quantification","calculator","purple"],["Negative operational impacts","down","yellow"],["Negative financial impacts","down","blue"],["Positive operational outcomes","up","yellow"],["Positive financial outcomes","up","blue"],["Investment and financial requirements","wallet","green"]];
-type CalculatorProps={selected:string;setSelected:(id:string)=>void;c:Config;raw:Figures;result:Result;statuses:Record<string,ReturnType<typeof quantificationStatus>>;setRaw:(next:Figures)=>void;update:(key:string,value:string)=>void;show:boolean;setShow:(value:boolean)=>void;classification:PopulationClassification;setClassification:(value:PopulationClassification)=>void};
-function Calculator({selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow,classification,setClassification}:CalculatorProps){
+type CalculatorProps={loadExample:(values:Figures)=>void;selected:string;setSelected:(id:string)=>void;c:Config;raw:Figures;result:Result;statuses:Record<string,ReturnType<typeof quantificationStatus>>;setRaw:(next:Figures)=>void;update:(key:string,value:string)=>void;show:boolean;setShow:(value:boolean)=>void;classification:PopulationClassification;setClassification:(value:PopulationClassification)=>void};
+function Calculator({selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow,classification,setClassification,loadExample}:CalculatorProps){
  const [sectionStates,setSectionStates]=useState<Record<string,Partial<Record<Section,boolean>>>>({});
  // Resolve each quantity once per problem. Every occurrence uses the same actual
  // input value, whether entered directly or calculated in another section.
@@ -36,17 +36,22 @@ function Calculator({selected,setSelected,c,raw,result,statuses,setRaw,update,sh
  <div className="q-indicators">{sectionOrder.map(s=><span key={s} className={c.fields[s].length?"q-available":"q-locked"}><QuantIcon name={c.fields[s].length?"unlock":"lock"}/>{s}</span>)}</div>
  <div className="q-sections">{sectionOrder.map(s=>{const fields=c.fields[s];const open=sectionStates[selected]?.[s]??true;return <section key={s} className={"q-section "+(!fields.length?"q-disabled":"")} data-section={s}><button type="button" className="q-section-header" disabled={!fields.length} aria-expanded={!!fields.length&&open} onClick={()=>setSectionStates(old=>({...old,[selected]:{...old[selected],[s]:!open}}))}><QuantIcon name={fields.length?"unlock":"lock"}/><span>{s}</span>{fields.length?<span className={"q-arrow "+(open?"q-open":"")}><QuantIcon name="chevron"/></span>:<span className="q-na">Not applicable</span>}</button>{fields.length>0&&<div className="q-fields" hidden={!open}>{fields.map(row)}{s==="Quantity"&&<details className="step2-alternative"><summary className="step2-alt-toggle">Population classification</summary><div className="step2-alt-body"><label>Classification of the same measured population<select aria-label="Population classification" value={classification} onChange={e=>setClassification(e.target.value as PopulationClassification)}><option value="unknown">Individual containment only</option><option value="complete">Complete and mutually exclusive</option><option value="disjoint">Mutually exclusive, completeness unknown</option><option value="incomplete">Incomplete, mutually exclusive (remaining category)</option><option value="incompatible">Different populations or counting units</option><option value="overlapping">May overlap</option></select></label></div></details>}<ContentRoutes key={selected+":"+s} routes={s==="Quantity"?classification==="incomplete"?baseSupplementalRoutes(c,s):classification==="overlapping"?[{id:"overlap",title:"Overlapping populations",fields:[{key:"overlap",label:"Overlap",unit:c.fields.Quantity[0].unit},{key:"combined",label:"Unique combined population",unit:c.fields.Quantity[0].unit}],reference:"Combined = affected + unaffected − overlap",condition:"Same containing population"}]:[]:baseSupplementalRoutes(c,s)} {...{raw,result,show,update}}/>{s==="Quantity"&&show&&baseScopeNotes[c.id]&&<div className="q-formula">{baseScopeNotes[c.id]}</div>}{s==="Quantity"&&bar&&<div className="q-percentage" aria-label="Affected and unaffected percentages"><div className="q-percentage-bar"><span style={{width:p+"%"}}/><span style={{width:u+"%"}}/></div><div className="q-meta"><span>{format(p)}% affected</span><span>{format(u)}% unaffected</span></div></div>}</div>}</section>})}</div>
  {result.errors.length>0&&<div className="q-errors" role="alert">{result.errors.map(e=><div key={e}>{e}</div>)}</div>}
- <div className="q-controls"><label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/>Show calculations</label><div><button type="button" onClick={()=>{const next={...raw};for(const field of Object.values(c.fields).flat())delete next[field.key];for(const field of sectionOrder.flatMap(s=>routeFields(baseSupplementalRoutes(c,s))))delete next[field.key];delete next.overlap;delete next.combined;setRaw(next);}}>Reset</button><button type="button" onClick={()=>{const next={...raw};for(const field of Object.values(c.fields).flat())delete next[field.key];delete next.overlap;delete next.combined;setClassification("complete");setRaw({...next,...c.example});}}>Load example</button></div></div>
+ <div className="q-controls"><label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/>Show calculations</label><div><button type="button" onClick={()=>{const next={...raw};for(const field of Object.values(c.fields).flat())delete next[field.key];for(const field of sectionOrder.flatMap(s=>routeFields(baseSupplementalRoutes(c,s))))delete next[field.key];delete next.overlap;delete next.combined;setRaw(next);}}>Reset</button><button type="button" onClick={()=>{loadExample(c.example);}}>Load example</button></div></div>
  <p className="q-note">Green values are calculated automatically. Figures entered manually are preserved when switching problems. Example figures are hypothetical.</p></div>;
 }
 export default function Quantification({confirmedProblems = {},operationalSelections = {}}:{confirmedProblems?:Record<string,boolean>;operationalSelections?:Record<string,string[]>} = {}){
  const [open,setOpen]=useState<boolean[]>([true,false,false,false,false,false]);
  const [selected,setSelected]=useState(configs[0].id);
  const [figures,setFigures]=useState<Record<string,Figures>>({});
+ const [examples,setExamples]=useState<Record<string,Figures>>({});
+ const exampleActive=Object.prototype.hasOwnProperty.call(examples,selected);
+ const effectiveFigures=useMemo(()=>({...figures,...examples}),[figures,examples]);
  const [show,setShow]=useState(false);
  const [sharing,setSharing]=useState(false);
  const [sharingLinks,setSharingLinks]=useState<SharingLink[]>([]);
- const [shortfall,setShortfall]=useState(false);
+ const [shortfalls,setShortfalls]=useState<Record<string,boolean>>({});
+ const shortfall=shortfalls[selected]??false;
+ const setShortfall=(value:boolean)=>setShortfalls(old=>({...old,[selected]:value}));
  const [newBuyerMatches,setNewBuyerMatches]=useState<Record<string,boolean>>({});
  const [buyerCostMatches,setBuyerCostMatches]=useState<Record<string,boolean>>({});
  const newBuyerMatch=newBuyerMatches[selected]??false,matchedBuyerCosts=buyerCostMatches[selected]??false;
@@ -67,11 +72,11 @@ export default function Quantification({confirmedProblems = {},operationalSelect
  const finalizedSlots=slotFinalized[selected]??false;
  const setFinalizedSlots=(value:boolean)=>setSlotFinalized(old=>({...old,[selected]:value}));
  const [classifications,setClassifications]=useState<Record<string,PopulationClassification>>({});
- const classification=classifications[selected]??"unknown";
+ const classification=exampleActive?"complete":classifications[selected]??"unknown";
  const setClassification=(value:PopulationClassification)=>setClassifications(old=>({...old,[selected]:value}));
  const [lastEdited,setLastEdited]=useState<Record<string,string>>({});
  const c=configs.find(x=>x.id===selected)!;
- const raw=figures[selected]??{};
+ const raw=effectiveFigures[selected]??{};
  const impactIds=selected==="problem-1"?[...new Set([...(operationalSelections[selected]??[]),"negative-operational-lost-leads"])]:operationalSelections[selected]??[];
  const impacts=operationalPanels(c,impactIds,{finalizedSlots,finalizedBuyers,finalizedTasks});
  const includeShortfall=selected==="problem-28"&&shortfall;
@@ -82,14 +87,30 @@ export default function Quantification({confirmedProblems = {},operationalSelect
    const displayed=config.id==="problem-1"?[...new Set([...(operationalSelections[config.id]??[]),"negative-operational-lost-leads"])]:operationalSelections[config.id]??[];
    const financialSources=new Set(financialContent(config).flatMap(o=>routeFields(o.routes)).filter(f=>f.shared==="operational").map(f=>f.key));
    const all=operationalPanels(config, Object.keys(operationalMethods[config.id]).map(id=>"negative-operational-"+id),{finalizedSlots:slotFinalized[config.id]??false,finalizedBuyers:buyerFinalized[config.id]??false,finalizedTasks:taskFinalized[config.id]??false});
-   const active=all.filter(panel=>displayed.includes(panel.id)||panel.fields.some(field=>financialSources.has(field.key))||panel.fields.some(field=>Object.prototype.hasOwnProperty.call(figures[config.id]??{},field.key)));
+   const active=all.filter(panel=>displayed.includes(panel.id)||panel.fields.some(field=>financialSources.has(field.key))||panel.fields.some(field=>Object.prototype.hasOwnProperty.call(effectiveFigures[config.id]??{},field.key)));
    return [config.id,potentialAndCostEquations(config,confirmedFinancialEquations(config,operationalEquations(active),matchedCost[config.id]??false),{newBuyerMatch:newBuyerMatches[config.id]??false,matchedBuyerCosts:buyerCostMatches[config.id]??false,...costOptions[config.id]})];
   }));
-  return solveAcrossProblems(configs,figures,equations,classifications,lastEdited,sharing?sharingLinks:[],evidence);
- },[figures,operationalSelections,slotFinalized,buyerFinalized,taskFinalized,matchedCost,newBuyerMatches,buyerCostMatches,costOptions,classifications,lastEdited,sharing,sharingLinks,evidence]);
+  const exampleIds=new Set(Object.keys(examples));
+  const effectiveClassifications={...classifications,...Object.fromEntries([...exampleIds].map(id=>[id,"complete" as const]))};
+  const effectiveEvidence=Object.fromEntries(Object.entries(evidence).filter(([id])=>!exampleIds.has(id)));
+  const realLinks=sharing?sharingLinks.filter(link=>!exampleIds.has(link.left.split("/")[0])&&!exampleIds.has(link.right.split("/")[0])):[];
+  return solveAcrossProblems(configs,effectiveFigures,equations,effectiveClassifications,lastEdited,realLinks,effectiveEvidence);
+ },[effectiveFigures,examples,operationalSelections,slotFinalized,buyerFinalized,taskFinalized,matchedCost,newBuyerMatches,buyerCostMatches,costOptions,classifications,lastEdited,sharing,sharingLinks,evidence]);
  const result=results[selected];
  const statuses=Object.fromEntries(configs.map(config=>[config.id,confirmedProblems[config.id]?quantificationStatus(config,figures[config.id]??{},true,results[config.id]):"default" as const]));
- const setRaw=(next:Figures)=>{setLastEdited(old=>{const next={...old};delete next[selected];return next;});setFigures(old=>({...old,[selected]:next}));};
- const update=(key:string,value:string)=>{setLastEdited(old=>({...old,[selected]:key}));setFigures(old=>{const next={...old[selected]};if(value==="")delete next[key];else next[key]=value;return {...old,[selected]:next};});};
- return <QuantityRegistryProvider problemId={selected} raw={raw} result={result} show={show} setEvidence={setEvidence}><main className="q-page"><h1>Quantification</h1><CrossProblemControls enabled={sharing} setEnabled={setSharing} links={sharingLinks} setLinks={setSharingLinks} selected={selected}/><div className="q-panels">{panels.map(([title,icon,tone],i)=><section className={"q-panel q-"+tone+(i===1?" op-panel":"")} key={title}><button className="q-panel-header" aria-expanded={open[i]} onClick={()=>setOpen(old=>old.map((v,j)=>j===i?!v:v))}><QuantIcon name={icon}/><span>{title}</span>{i===0&&<span className="q-complete"><QuantIcon name="check"/></span>}{i===1&&(impacts.length>0||includeShortfall)&&<span className="op-panel-count">{impacts.filter(p=>Number.isFinite(result.values[p.primaryKey])&&!result.blocked.has(p.primaryKey)).length+(includeShortfall&&Number.isFinite(result.values["step2:staff-shortfall"])&&!result.blocked.has("step2:staff-shortfall")?1:0)}/{impacts.length+(includeShortfall?1:0)}</span>}<span className={"q-arrow "+(open[i]?"q-open":"")}><QuantIcon name="chevron"/></span></button><div className="q-panel-content" hidden={!open[i]}>{i===0?<Calculator {...{selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow,classification,setClassification}}/>:i===1?<OperationalImpacts {...{problemId:selected,panels:impacts,raw,result,show,setShow,update,setRaw,shortfall,setShortfall,finalizedSlots,setFinalizedSlots,finalizedBuyers,setFinalizedBuyers,finalizedTasks,setFinalizedTasks}}/>:i===2?<FinancialImpacts {...{problemId:selected,outcomes:financialContent(c),raw,result,show,update,matchedVariableCost,setMatchedVariableCost,newBuyerMatch,setNewBuyerMatch,matchedBuyerCosts,setMatchedBuyerCosts,costFlags,setCostFlag}}/>:<div className="q-placeholder"><div>To be developed</div><p>The quantities and calculations for this section have not been approved yet.</p></div>}</div></section>)}</div></main></QuantityRegistryProvider>;
+ const clearEvidence=(keys:string[])=>setAllEvidence(old=>{const current={...old[selected]};for(const key of keys)delete current[key];return {...old,[selected]:current};});
+ const loadExample=(values:Figures)=>{setExamples(old=>({...old,[selected]:{...values}}));};
+ const setRaw=(next:Figures)=>{
+  setLastEdited(old=>{const next={...old};delete next[selected];return next;});
+  if(exampleActive){setExamples(old=>{const next={...old};delete next[selected];return next;});return;}
+  clearEvidence(Object.keys(raw).filter(key=>raw[key]!==next[key]));
+  setFigures(old=>({...old,[selected]:next}));
+ };
+ const update=(key:string,value:string)=>{
+  setLastEdited(old=>({...old,[selected]:key}));
+  if(!value&&!exampleActive)clearEvidence([key]);
+  const setter=exampleActive?setExamples:setFigures;
+  setter(old=>{const next={...old[selected]};if(value==="")delete next[key];else next[key]=value;return {...old,[selected]:next};});
+ };
+ return <QuantityRegistryProvider problemId={selected} raw={raw} result={result} show={show} setEvidence={exampleActive?undefined:setEvidence}><main className="q-page"><h1>Quantification</h1>{exampleActive&&<p className="q-note" role="status">Hypothetical example — separate from prospect figures. Reset returns to your saved figures.</p>}<CrossProblemControls enabled={sharing} setEnabled={setSharing} links={sharingLinks} setLinks={setSharingLinks} selected={selected}/><div className="q-panels">{panels.map(([title,icon,tone],i)=><section className={"q-panel q-"+tone+(i===1?" op-panel":"")} key={title}><button className="q-panel-header" aria-expanded={open[i]} onClick={()=>setOpen(old=>old.map((v,j)=>j===i?!v:v))}><QuantIcon name={icon}/><span>{title}</span>{i===0&&<span className="q-complete"><QuantIcon name="check"/></span>}{i===1&&(impacts.length>0||includeShortfall)&&<span className="op-panel-count">{impacts.filter(p=>Number.isFinite(result.values[p.primaryKey])&&!result.blocked.has(p.primaryKey)).length+(includeShortfall&&Number.isFinite(result.values["step2:staff-shortfall"])&&!result.blocked.has("step2:staff-shortfall")?1:0)}/{impacts.length+(includeShortfall?1:0)}</span>}<span className={"q-arrow "+(open[i]?"q-open":"")}><QuantIcon name="chevron"/></span></button><div className="q-panel-content" hidden={!open[i]}>{i===0?<Calculator {...{selected,setSelected,c,raw,result,statuses,setRaw,update,show,setShow,classification,setClassification,loadExample}}/>:i===1?<OperationalImpacts {...{problemId:selected,panels:impacts,raw,result,show,setShow,update,setRaw,loadExample,shortfall,setShortfall,finalizedSlots,setFinalizedSlots,finalizedBuyers,setFinalizedBuyers,finalizedTasks,setFinalizedTasks}}/>:i===2?<FinancialImpacts {...{problemId:selected,outcomes:financialContent(c),raw,result,show,update,matchedVariableCost,setMatchedVariableCost,newBuyerMatch,setNewBuyerMatch,matchedBuyerCosts,setMatchedBuyerCosts,costFlags,setCostFlag}}/>:<div className="q-placeholder"><div>To be developed</div><p>The quantities and calculations for this section have not been approved yet.</p></div>}</div></section>)}</div></main></QuantityRegistryProvider>;
 }
