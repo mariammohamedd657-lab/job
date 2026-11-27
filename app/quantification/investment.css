@@ -2,3 +2,5 @@
 .inv-scenario{margin:12px 0 16px}.inv-dropdown{display:block;width:100%;border:1px solid #4a4a4a;border-radius:999px;background:#181818;color:#f4f4f4;font:inherit;padding:9px 14px;cursor:pointer;color-scheme:dark}.inv-scenario .inv-dropdown{margin-bottom:10px}.inv-investment .q-controls>div{flex-wrap:wrap}
 
 .q-priority>span:first-child{color:#A5A6E8!important}.q-universal .q-priority input,.inv-target .q-priority input{border-color:#A5A6E8}.q-universal{padding:4px 2px}.q-universal-results{border-top:1px solid #333;padding-top:14px;margin-top:14px}.q-universal .q-note{margin:4px 0 12px}.q-universal details summary{cursor:pointer}.q-panel-content>.q-select-wrap{margin-bottom:12px}
+
+.inv-investment .q-priority input{border-color:#A5A6E8}.inv-investment .q-priority>span:first-child{color:#A5A6E8!important}
