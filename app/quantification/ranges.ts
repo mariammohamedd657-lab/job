@@ -1,20 +1,22 @@
 import type { AlgebraEquation, Consequence } from "./algebra";
 import type { PopulationLink } from "./information-links";
-type Limit={value:number;deps:Set<string>};
+export type Limit={value:number;deps:Set<string>;reason?:string};
 type Range={lo:Limit;hi:Limit};
+export type QuantityBounds={min?:number;max?:number;minExclusive?:boolean;maxExclusive?:boolean;minReason?:string;maxReason?:string};
+export type ComplementRate={population:string;components:string[];rate:string;label:string};
 const limit=(value:number,deps:Iterable<string>=[]):Limit=>({value,deps:new Set(deps)});
 const deps=(...limits:Limit[])=>new Set(limits.flatMap(x=>[...x.deps]));
 const plus=(a:Limit,b:Limit)=>limit(a.value+b.value,deps(a,b));
 const times=(a:Limit,n:number)=>limit(a.value*n,a.deps);
 const multiply=(a:Limit,b:Limit,f:number)=>limit(a.value===0||b.value===0?0:a.value*b.value*f,deps(a,b));
 const tolerance=(a:number,b:number)=>16*Number.EPSILON*Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[]){
+export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[]){
  const ranges=new Map<string,Range>();
  const results:Consequence[]=[];
  const conflicts:{dependencies:string[];label:string}[]=[];
  const active=equations.filter(e=>!e.keys.some(k=>blocked.has(k)));
  const links=populationLinks.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member));
- for(const key of new Set([...active.flatMap(e=>e.keys),...links.flatMap(link=>[link.population,link.member])])){
+ for(const key of new Set([...active.flatMap(e=>e.keys),...links.flatMap(link=>[link.population,link.member]),...allKeys])){
   const [lo,hi]=domain(key);
   ranges.set(key,Number.isFinite(known[key])?{lo:limit(known[key],[key]),hi:limit(known[key],[key])}:{lo:limit(lo),hi:limit(hi)});
  }
@@ -33,7 +35,7 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
    // Small floating-point discrepancies are not proof of inconsistency.
    return;
   }
-  range[edge]=limit(n,candidate.deps);changed=true;
+  range[edge]={...limit(n,candidate.deps),reason:label};changed=true;
  }
  // Positive denominators are necessary for specified rates. Integer
  // populations must be at least one; continuous denominators stay open-ended.
@@ -49,6 +51,20 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
     if(parent.hi.value===0)narrow(link.member,"hi",parent.hi,link.label);
     if(child.lo.value>0&&integerKeys.has(link.population))narrow(link.population,"lo",limit(1,child.lo.deps),link.label);
    }
+  }
+  // Use the original breakdown and rate together, rather than dividing
+  // independent endpoints which can refer to different populations.
+  for(const item of complements){
+   const {population,components,rate,label}=item;
+   if([population,...components,rate].some(k=>blocked.has(k)||!ranges.has(k)))continue;
+   if([population,...components,rate].every(k=>Number.isFinite(known[k])))continue;
+   const p=ranges.get(population)!,r=ranges.get(rate)!;
+   const low=components.reduce((a,k)=>plus(a,ranges.get(k)!.lo),limit(0));
+   const high=components.reduce((a,k)=>plus(a,ranges.get(k)!.hi),limit(0));
+   if(p.hi.value>0&&Number.isFinite(p.hi.value))narrow(rate,"hi",limit(100*(1-low.value/p.hi.value),deps(low,p.hi)),label);
+   if(p.lo.value>0&&Number.isFinite(high.value))narrow(rate,"lo",limit(100*(1-high.value/p.lo.value),deps(high,p.lo)),label);
+   if(r.hi.value<100)narrow(population,"hi",limit(high.value/(1-r.hi.value/100),deps(high,r.hi)),label);
+   if(r.lo.value<100)narrow(population,"lo",limit(low.value/(1-r.lo.value/100),deps(low,r.lo)),label);
   }
   for(const equation of active){
    // Fully known equations have already been checked by the original
@@ -86,5 +102,20 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
   // Never equate two merely close floating point endpoints.
   if(!Number.isFinite(known[key])&&Number.isFinite(lo.value)&&lo.value===hi.value)results.push({key,value:lo.value,dependencies:[...deps(lo,hi)],label:"bounds of connected equations"});
  }
- return {results,conflicts};
+ const positive=new Set<string>();
+ for(const [rate,key] of Object.entries(denominators))if(Number.isFinite(known[rate]))positive.add(key);
+ for(const equation of active){
+  const product=equation.terms.find(t=>t.keys.length===2),linear=equation.terms.find(t=>t.keys.length===1);
+  if(product&&linear&&equation.terms.length===2&&(ranges.get(linear.keys[0])?.lo.value??0)>0)for(const key of product.keys)positive.add(key);
+ }
+ const bounds:Record<string,QuantityBounds>={};
+ for(const [key,{lo,hi}] of ranges){
+  if(blocked.has(key))continue;
+  const denominator=denominators[key];
+  if(denominator&&ranges.get(denominator)?.hi.value===0)continue;
+  const min=Number.isFinite(lo.value)?lo.value:undefined,max=Number.isFinite(hi.value)?hi.value:undefined;
+  if(min!==undefined&&max!==undefined&&min>max)continue;
+  bounds[key]={min,max,minExclusive:min===0&&positive.has(key),minReason:lo.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain"),maxReason:hi.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain")};
+ }
+ return {results,conflicts,bounds};
 }

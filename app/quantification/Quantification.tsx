@@ -6,6 +6,7 @@ import { quantificationStatus } from "./status";
 import ProblemSelector from "./ProblemSelector";
 import OperationalImpacts from "./OperationalImpacts";
 import NumericalInput, { resolveQuantity } from "./NumericalInput";
+import { QuantityLimits } from "./QuantityLimits";
 import { operationalPanels, operationalEquations } from "./operational-data";
 import type { Config } from "./config";
 import type { Result } from "./solver";
@@ -21,7 +22,7 @@ function Calculator({selected,setSelected,c,raw,result,statuses,setRaw,update,sh
  // Resolve each quantity once per problem. Every occurrence uses the same actual
  // input value, whether entered directly or calculated in another section.
  const displayedValues=Object.fromEntries([...new Set(Object.values(c.fields).flat().map(f=>f.key))].map(key=>[key,resolveQuantity(key,raw,result)]));
- const row=(f:Field)=>{const {value,computed}=displayedValues[f.key];return <div className="q-field" key={f.key}><label className={f.general?"q-general":""}><span>{f.label}</span><NumericalInput key={selected+":"+f.key} step="any" min={f.key==="difference"?undefined:0} max={f.key==="affectedPct"||f.key==="unaffectedPct"?100:undefined} aria-label={f.label} data-quantity={f.key} className={computed?"q-calculated":result.blocked.has(f.key)?"q-invalid":""} value={value} placeholder="—" onValueChange={value=>update(f.key,value)}/><span className="q-unit">{f.unit}</span></label>{show&&computed&&<div className="q-formula">{result.calculated[f.key]}</div>}</div>};
+ const row=(f:Field)=>{const {value,computed}=displayedValues[f.key];return <div className="q-field" key={f.key}><label className={f.general?"q-general":""}><span>{f.label}</span><NumericalInput key={selected+":"+f.key} step="any" min={f.key==="difference"?undefined:0} max={f.key==="affectedPct"||f.key==="unaffectedPct"?100:undefined} aria-label={f.label} data-quantity={f.key} className={computed?"q-calculated":result.blocked.has(f.key)?"q-invalid":""} value={value} placeholder="—" onValueChange={value=>update(f.key,value)}/><span className="q-unit">{f.unit}</span></label><QuantityLimits quantity={f.key} unit={f.unit} result={result} value={value} show={show}/>{show&&computed&&<div className="q-formula">{result.calculated[f.key]}</div>}</div>};
  const p=result.values.affectedPct,u=result.values.unaffectedPct;
  const bar=p!==undefined&&u!==undefined&&!result.blocked.has("affectedPct")&&!result.blocked.has("unaffectedPct")&&Math.abs(p+u-100)<.001;
  return <div className="q-calculator"><h2>Business problem quantification</h2><label className="q-select-label" id="q-problem-label" htmlFor="q-problem">Select a business problem</label><ProblemSelector selected={selected} statuses={statuses} onChange={setSelected}/><div className="q-meta"><span>{c.category}</span><span>{sectionOrder.filter(s=>c.fields[s].length).length} of 5 sections available</span></div>
@@ -39,7 +40,7 @@ export default function Quantification({confirmedProblems = {},operationalSelect
  const c=configs.find(x=>x.id===selected)!;
  const raw=figures[selected]??{};
  const impacts=operationalPanels(c,operationalSelections[selected]??[]);
- const result=solve(c,raw,operationalEquations(impacts));
+ const result=solve(c,raw,operationalEquations(impacts),{includeBounds:true});
  const statuses=Object.fromEntries(configs.map(config=>{
   const inputs=figures[config.id]??{};
   return [config.id,confirmedProblems[config.id]?quantificationStatus(config,inputs,true,config.id===selected?result:solve(config,inputs,operationalEquations(operationalPanels(config,operationalSelections[config.id]??[])))):"default" as const];

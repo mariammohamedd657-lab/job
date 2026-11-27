@@ -1,10 +1,10 @@
 import type { Config } from "./config";
 import { algebraicConsequences, type Term } from "./algebra";
-import { rangeConsequences } from "./ranges";
+import { rangeConsequences, type QuantityBounds, type ComplementRate } from "./ranges";
 import { basePopulationLinks, type PopulationLink } from "./information-links";
 export type Figures=Record<string,string>;
-export type Result={values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>; estimated:Set<string>};
-export type Relation={keys:string[]; label:string; terms?:Term[]; operation?:(v:Record<string,number>,key:string)=>string; impossible?:(v:Record<string,number>,key:string)=>boolean; derive:(v:Record<string,number>, key:string)=>number|undefined; valid:(v:Record<string,number>)=>boolean};
+export type Result={values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>; estimated:Set<string>; bounds?:Record<string,QuantityBounds>};
+export type Relation={keys:string[]; label:string; terms?:Term[]; complement?:ComplementRate; operation?:(v:Record<string,number>,key:string)=>string; impossible?:(v:Record<string,number>,key:string)=>boolean; derive:(v:Record<string,number>, key:string)=>number|undefined; valid:(v:Record<string,number>)=>boolean};
 const close=(a:number,b:number)=>Math.abs(a-b)<=1e-8*Math.max(1,Math.abs(a),Math.abs(b));
 const div=(a:number,b:number)=>b===0?undefined:a/b;
 function sum(a:string,b:string,c:string,label:string):Relation{return {keys:[a,b,c],label,terms:[{coefficient:1,keys:[a]},{coefficient:-1,keys:[b]},{coefficient:-1,keys:[c]}],operation:(v,k)=>k===a?format(v[b])+" + "+format(v[c]):k===b?format(v[a])+" − "+format(v[c]):format(v[a])+" − "+format(v[b]),derive:(v,k)=>k===a?v[b]+v[c]:k===b?v[a]-v[c]:v[a]-v[b],valid:v=>close(v[a],v[b]+v[c])};}
@@ -17,7 +17,7 @@ export type ZeroInference={target:string;dependencies:string[];label:string};
 export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
-export type PrecisionOptions={exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>};
+export type PrecisionOptions={exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  const integerKeys=new Set(["total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
@@ -43,12 +43,28 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  });
  if(config.moneyPopulation)relations.push(product("moneyTotal",config.moneyPopulation,"moneyAverage",1,"Total amount = quantity × average amount"));
  if(additional)relations.push(...additional.relations);
+ const complements:ComplementRate[]=relations.flatMap(rel=>rel.complement?[rel.complement]:[]);
+ if(config.fields.Quantity.length)complements.push(
+  {population:"total",components:["unaffected"],rate:"affectedPct",label:"Affected rate is the complement of unaffected quantity ÷ total"},
+  {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
  const rateDenominators:Record<string,string>={affectedPct:"total",unaffectedPct:"total",targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
  const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
+ const intervals=(known:Record<string,number>)=>{
+    const links=[...basePopulationLinks(config),...(additional?.populationLinks??[])];
+    // Relax the integer domain only for unknown counts in components with an
+    // active estimate. A manual actual count is still an exact fixed value.
+    // In an exact-only component retain the existing discrete bound inference.
+    const estimateReach=new Set(Object.keys(known).filter(k=>estimated.has(k)));
+    const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
+    let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
+    const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
+    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels));
+
+ };
  // Rebuild from manual figures after blocking contradictory dependencies.
  for(let round=0;round<50;round++){
   values={...manual};calculated={};estimated=new Set(Object.keys(manual).filter(inputEstimated));
@@ -102,15 +118,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    if(!changed&&!added){
     const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
     const linear=algebraicConsequences(algebra,known,blocked,domain);
-    const links=[...basePopulationLinks(config),...(additional?.populationLinks??[])];
-    // Relax the integer domain only for unknown counts in components with an
-    // active estimate. A manual actual count is still an exact fixed value.
-    // In an exact-only component retain the existing discrete bound inference.
-    const estimateReach=new Set(Object.keys(known).filter(k=>estimated.has(k)));
-    const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
-    let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
-    const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
-    const ranges=rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links);
+    const ranges=intervals(known);
     const deductions={results:[...linear.results,...ranges.results],conflicts:[...linear.conflicts,...ranges.conflicts]};
     for(const conflict of deductions.conflicts)if(conflict.dependencies.every(active))contradict(conflict.dependencies,"Contradictory entries: "+conflict.label+".");
     for(const inferred of deductions.results){
@@ -144,6 +152,29 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   }
   if(!changed)break;
  }
- return {values,calculated,errors:[...errors],blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
+ const result:Result={values,calculated,errors:[...errors],blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
+ if(precision.includeBounds){
+  // Consistent inputs give proactive limits. In a contradiction, use the
+  // other constraints to find the range for each conflicting manual entry.
+  const known=Object.fromEntries(Object.entries(values).filter(([k])=>!blocked.has(k)));
+  const deduction=intervals(known);
+  const bounds=deduction.conflicts.length?{}:deduction.bounds;
+  if(errors.size)for(const key of Object.keys(raw)){
+   if(!labels[key]||raw[key].trim()===""||!blocked.has(key))continue;
+   const remaining={...raw};delete remaining[key];
+   const alternative=solve(config,remaining,additional,{...precision,includeBounds:false});
+   if(alternative.errors.length)continue;
+   if(Number.isFinite(alternative.values[key])&&!alternative.blocked.has(key)){
+    bounds[key]={min:alternative.values[key],max:alternative.values[key],minReason:"Other entered figures determine this value",maxReason:"Other entered figures determine this value"};
+    continue;
+   }
+   // Recompute the range from the remaining data, with that run's actual
+   // estimate provenance, not the conflicting run's blocked inputs.
+   const allowed=solve(config,remaining,additional,{...precision,includeBounds:true});
+   if(allowed.bounds?.[key])bounds[key]=allowed.bounds[key];
+  }
+  result.bounds=bounds;
+ }
+ return result;
 }
 export function format(n:number){return String(Number(n.toPrecision(10)));}

@@ -3,6 +3,7 @@ import {useState,type ReactNode} from "react";
 import type {OperationalPanel} from "./operational-data";
 import {format,type Figures,type Result} from "./solver";
 import NumericalInput, {resolveQuantity} from "./NumericalInput";
+import { QuantityLimits } from "./QuantityLimits";
 import "./operational.css";
 
 function Icon({kind}:{kind:"check"|"link"|"calculator"|"chevron"}){
@@ -30,6 +31,7 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
           const v=resolved(field.key);
           return <div className="q-field" key={field.key}>
             <label className={field.primary?"op-primary":field.shared?"q-general":""}><span>{field.shared&&<span className="op-linked-icon"><Icon kind="link"/></span>}{field.label}</span><NumericalInput step="any" min={0} max={field.unit==="%"?100:undefined} aria-label={field.label} data-quantity={field.key} value={v.value} placeholder="—" className={result.blocked.has(field.key)?"q-invalid":""} onValueChange={value=>update(field.key,value)}/><span className="q-unit">{field.unit}</span></label>
+            <QuantityLimits quantity={field.key} unit={field.unit} result={result} value={v.value} show={show}/>
             {v.computed&&<div className="op-auto"><Icon kind="calculator"/>Automatically calculated</div>}
             {show&&v.computed&&<div className="q-formula">{result.calculated[field.key]}</div>}
           </div>;

@@ -61,3 +61,7 @@
 .q-select-wrap .q-problem-option{padding:8px 16px;cursor:pointer;overflow-wrap:anywhere;}
 .q-select-wrap .q-problem-option[data-active="true"],.q-select-wrap .q-problem-option:hover{background:#282828;}
 .q-select-wrap .q-problem-trigger:focus-visible{outline:2px solid #1685ef;outline-offset:3px;}
+
+/* Compact proactive guidance beneath the existing numerical rows. */
+.q-page .q-limits{font-size:12px;color:#aaa;margin-top:3px;line-height:1.3;}
+.q-page .q-limits-conflict{color:#F2ADAD;}

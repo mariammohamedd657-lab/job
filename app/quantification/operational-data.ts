@@ -61,6 +61,7 @@ function combined(total:ImpactField,others:ImpactField[],rate:ImpactField):Relat
  const sum=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).reduce((n,k)=>n+v[k],0);
  const sumText=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).map(k=>format(v[k])).join(" + ");
  return {keys:[a,...keys,b],label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)",
+  complement:{population:a,components:keys,rate:b,label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)"},
   derive:(v,k)=>{if(k===a){const d=1-v[b]/100;return d===0?undefined:sum(v)/d;}if(k===b)return v[a]===0?undefined:(1-sum(v)/v[a])*100;return v[a]*(1-v[b]/100)-sum(v,k);},
   impossible:(v,k)=>k===a&&v[b]===100&&sum(v)!==0||k===b&&v[a]===0&&sum(v)!==0,
   operation:(v,k)=>k===a?"("+sumText(v)+") ÷ (1 − "+format(v[b])+" ÷ 100)":k===b?"(1 − ("+sumText(v)+") ÷ "+format(v[a])+") × 100":format(v[a])+" × (1 − "+format(v[b])+" ÷ 100)"+(keys.length>1?" − ("+sumText(v,k)+")":""),
