@@ -18,7 +18,7 @@ export type AdditionalEquations={positiveParts?:{difference:string;result:string
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
 export type PopulationClassification="complete"|"disjoint"|"overlapping"|"unknown"|"incomplete"|"incompatible";
-export type PrecisionOptions={populationClassification?:PopulationClassification;exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string};
+export type PrecisionOptions={externalBounds?:Readonly<Record<string,QuantityBounds>>;populationClassification?:PopulationClassification;exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  if(["disjoint","incomplete"].includes(precision.populationClassification??"")){labels.remaining="Remaining unclassified quantity";labels.remainingPct="Remaining percentage";}
@@ -79,7 +79,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  }
  const timeDenominators:Record<string,string>=config.timePopulation?{averageMinutes:config.timePopulation,...(config.id==="problem-15"?{averageEventMinutes:"reschedulingEvents"}:{})}:{};
  const rateDenominators:Record<string,string>={...timeDenominators,...(config.moneyPopulation?{moneyAverage:config.moneyPopulation}:{}),...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
- const domain=(key:string):[number,number]=>[key==="difference"||additional?.signedKeys?.includes(key)?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
+ const baseDomain=(key:string):[number,number]=>[key==="difference"||additional?.signedKeys?.includes(key)?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
+ const domain=(key:string):[number,number]=>{const [lo,hi]=baseDomain(key),b=precision.externalBounds?.[key];return [Math.max(lo,b?.min??-Infinity),Math.min(hi,b?.max??Infinity)];};
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
@@ -106,6 +107,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   const contradict=(keys:string[],message:string)=>{errors.add(message);for(const k of keys)for(const x of roots[k]??[]){if(!blocked.has(x)){blocked.add(x);changed=true;}}};
   for(let pass=0;pass<50;pass++){
    let added=false;
+   for(const [key,b] of Object.entries(precision.externalBounds??{}))if(active(key)&&((b.min!==undefined&&values[key]<b.min&&!close(values[key],b.min))||(b.max!==undefined&&values[key]>b.max&&!close(values[key],b.max))))contradict([key],"Cross-problem restriction conflicts with "+(labels[key]??key)+".");
    for(const [average,count] of Object.entries(timeDenominators)){
     if(active(count)&&values[count]===0&&active(average))contradict([count,average],(labels[average]??average)+" is undefined when the corresponding count is zero.");
     if(active(average)&&values[average]===0&&active("hours")&&values.hours>0)contradict([average,"hours"],"Positive total duration cannot have a zero average duration.");
@@ -249,6 +251,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    const allowed=solve(config,remaining,additional,{...precision,exactInputs:correctionExact,includeBounds:true,correctionKey:undefined});
    if(allowed.bounds?.[key])bounds[key]=allowed.bounds[key];
   }
+  for(const [key,b] of Object.entries(precision.externalBounds??{})){const local=bounds[key];bounds[key]={...local,min:Math.max(local?.min??-Infinity,b.min??-Infinity),max:Math.min(local?.max??Infinity,b.max??Infinity),minReason:b.minReason??local?.minReason,maxReason:b.maxReason??local?.maxReason};}
   result.bounds=bounds;
  }
  return result;

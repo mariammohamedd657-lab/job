@@ -45,7 +45,7 @@ export function registryFor(problemId:string):ProblemRegistry{
    if(id==="profit-average")return "fin:average-profit-buyer";
    if(id==="avoided-buyer")return "fin:estimated-avoided";
    if(id==="average-buyer")return "fin:average-revenue-buyer";
-   if(id==="existing")return "fin:potential-revenue";
+   if(id==="existing")return "fin:expected-future-revenue";
    if(["leads","qualified","reactivation","booking","attendance","unserved","slots","new-buyers"].includes(id))return "fin:potential-buyers";
   }
   return primary;

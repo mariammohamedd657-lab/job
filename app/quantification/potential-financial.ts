@@ -5,6 +5,7 @@ export function potentialAndCostEquations(config:Config,base:AdditionalEquations
  const outcomes=financialContent(config).filter(o=>["F7","F8","F3","F9","F4","F5"].includes(o.id));
  if(!outcomes.length)return base;
  const fields=[...new Map(outcomes.flatMap(o=>[...o.fields,...routeFields(o.routes)]).map(f=>[f.key,f])).values()];
+ // Financial references to an unselected operational card are still the same scoped measurement.
  const keys=new Set(fields.map(f=>f.key));
  const relations:Relation[]=[],signedKeys:string[]=[],averageKeys:string[]=[],integerKeys:string[]=[],estimatedKeys:string[]=[],positiveParts:{difference:string;result:string}[]=[],undefinedRates:{denominator:string;rate:string}[]=[];
  const k=(s:string)=>"fin:"+s;
