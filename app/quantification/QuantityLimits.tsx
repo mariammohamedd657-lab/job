@@ -14,6 +14,6 @@ export function QuantityLimits({quantity,unit,result,value,show}:{quantity:strin
  const {min,max}=range;
  if(min===undefined&&max===undefined)return null;
  const parts=[min!==undefined?"Min: "+formatLimit(min,unit,range.minExclusive,"min"):"",max!==undefined?"Max: "+formatLimit(max,unit,range.maxExclusive,"max"):""].filter(Boolean);
- const reasons=[min!==undefined?range.minReason:undefined,max!==undefined?range.maxReason:undefined].filter(Boolean);
- return <><div className={"q-limits"+(result.blocked.has(quantity)?" q-limits-conflict":"")} data-quantity-limit={quantity}>{parts.join(" · ")}</div>{show&&<div className="q-formula">{[...new Set(reasons)].join(" · ")}</div>}</>;
+ const reasons=[min!==undefined?"Min "+(range.minExclusive?"> ":"= ")+String(min)+(unit==="%"?"%":"")+(range.minReason?" — "+range.minReason:""):undefined,max!==undefined?"Max "+(range.maxExclusive?"< ":"= ")+String(max)+(unit==="%"?"%":"")+(range.maxReason?" — "+range.maxReason:""):undefined].filter(Boolean);
+ return <><div className={"q-limits"+(result.blocked.has(quantity)?" q-limits-conflict":"")} data-quantity-limit={quantity}>{parts.join(" · ")}</div>{show&&<div className="q-formula">{reasons.join(" · ")}</div>}</>;
 }

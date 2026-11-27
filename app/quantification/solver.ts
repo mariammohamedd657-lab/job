@@ -17,7 +17,7 @@ export type ZeroInference={target:string;dependencies:string[];label:string};
 export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
-export type PrecisionOptions={exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean};
+export type PrecisionOptions={exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  const integerKeys=new Set(["total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
@@ -62,7 +62,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
     const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
-    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels));
+    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined);
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
@@ -158,7 +158,18 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   // other constraints to find the range for each conflicting manual entry.
   const known=Object.fromEntries(Object.entries(values).filter(([k])=>!blocked.has(k)));
   const deduction=intervals(known);
-  const bounds=deduction.conflicts.length?{}:deduction.bounds;
+  let bounds=deduction.conflicts.length?{}:deduction.bounds;
+  if(errors.size&&precision.correctionKey&&blocked.has(precision.correctionKey)){
+   // Preserve guidance based on the other figures while the most recently
+   // edited entry is invalid. Do not turn these conditional bounds into
+   // calculated values while the inconsistent constraint is still present.
+   const remaining={...raw};delete remaining[precision.correctionKey];
+   const trial=solve(config,remaining,additional,{...precision,includeBounds:false,correctionKey:undefined});
+   if(!trial.errors.length){
+    const allowed=solve(config,remaining,additional,{...precision,includeBounds:true,correctionKey:undefined});
+    bounds={...bounds,...allowed.bounds};
+   }
+  }
   if(errors.size)for(const key of Object.keys(raw)){
    if(!labels[key]||raw[key].trim()===""||!blocked.has(key))continue;
    const remaining={...raw};delete remaining[key];

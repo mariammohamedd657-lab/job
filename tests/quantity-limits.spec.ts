@@ -68,6 +68,8 @@ test("limits are visible before the next entry and remain after invalid input",a
  await input(pending).fill("46");await expect(input(pending)).toHaveValue("46");
  await expect(hint(pending)).toHaveText("Min: 0 · Max: 45");
  await expect(hint(pending)).toHaveClass(/q-limits-conflict/);
+ await expect(hint(lost)).toHaveText("Min: 0 · Max: 45");
+ await expect(hint(rate)).toHaveText("Min: 0% · Max: ≈ 36.59%");
  await input(pending).fill("");await input(pending).blur();
  await input(rate).fill("30");await expect(input(lost)).toHaveValue("36.9");await expect(input(pending)).toHaveValue("8.1");
  await expect(input(pending)).toBeEditable();
@@ -75,4 +77,55 @@ test("limits are visible before the next entry and remain after invalid input",a
  await expect(input(pending)).toHaveValue("");await expect(hint(pending)).toHaveText("Min: 0 · Max: 45");
  await page.locator(".q-calculator").getByRole("checkbox",{name:"Show calculations"}).check();
  await expect(hint(pending).locator("xpath=following-sibling::div[contains(@class,'q-formula')]")).toBeVisible();
+});
+
+
+test("comparison bounds combine difference, population and percentage relationships",()=>{
+ const c=cfg("problem-1"),e=all(c.id);
+ const higher=solve(c,{total:"100",difference:"20"},e,{includeBounds:true});
+ expect(higher.errors).toEqual([]);
+ expect(higher.bounds?.targetPct.min).toBeCloseTo(125,10);
+ expect(higher.bounds?.targetPct.max).toBeUndefined();
+ const lower=solve(c,{total:"100",difference:"-20"},e,{includeBounds:true});
+ expect(lower.errors).toEqual([]);
+ expect(lower.bounds?.targetPct.max).toBeCloseTo(100/120*100,10);
+ const only=solve(c,{difference:"20"},e,{includeBounds:true});
+ expect(only.bounds?.targetPct.min).toBe(100);
+ expect(only.bounds?.targetPct.minExclusive).toBe(true);
+ const below=solve(c,{difference:"-20"},e,{includeBounds:true});
+ expect(below.bounds?.targetPct.max).toBe(100);
+ expect(below.bounds?.targetPct.maxExclusive).toBe(true);
+});
+
+test("independent small-population enumeration checks all exact count limits",()=>{
+ test.setTimeout(120000);
+ let cases=0,checks=0;
+ for(const id of ["problem-1","problem-2","problem-7"]){
+  const c=cfg(id),e=all(id);
+  const pre=id==="problem-7"?"op:lost-qualified-leads:":"op:lost-leads:";
+  const keys=["affected","unaffected",id==="problem-7"?pre+"affected-qualified-leads":unique,pre+"recovered",pre+"pending",pre+"result"];
+  for(let total=0;total<=4;total++){
+   const models:number[][]=[];
+   for(let a=0;a<=total;a++)for(let n=0;n<=a;n++)for(let rec=0;rec<=n;rec++)for(let pen=0;pen<=n-rec;pen++)models.push([a,total-a,n,rec,pen,n-rec-pen]);
+   for(let mask=0;mask<1<<keys.length;mask++){
+    const groups=new Map<string,number[][]>();
+    for(const model of models){const key=model.filter((_,i)=>mask&(1<<i)).join(",");const rows=groups.get(key)??[];rows.push(model);groups.set(key,rows);}
+    for(const rows of groups.values()){
+     const raw:Record<string,string>={total:String(total)};
+     keys.forEach((k,i)=>{if(mask&(1<<i))raw[k]=String(rows[0][i]);});
+     const result=solve(c,raw,e,{includeBounds:true});
+     const label=id+" "+JSON.stringify(raw);
+     if(result.errors.length)throw Error(label+" "+result.errors.join("; "));
+     for(const [i,key] of keys.entries()){
+      const lo=Math.min(...rows.map(row=>row[i])),hi=Math.max(...rows.map(row=>row[i]));
+      const range=result.bounds?.[key];
+      if(range?.min!==lo||range?.max!==hi)throw Error(label+" "+key+" expected "+lo+".."+hi+" got "+JSON.stringify(range));
+      checks++;
+     }
+     cases++;
+    }
+   }
+  }
+ }
+ console.log("LIMIT_AUDIT "+JSON.stringify({problems:3,cases,checks}));
 });

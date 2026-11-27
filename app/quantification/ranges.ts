@@ -3,6 +3,7 @@ import type { PopulationLink } from "./information-links";
 export type Limit={value:number;deps:Set<string>;reason?:string};
 type Range={lo:Limit;hi:Limit};
 export type QuantityBounds={min?:number;max?:number;minExclusive?:boolean;maxExclusive?:boolean;minReason?:string;maxReason?:string};
+export type ComparisonRange={actual:string;target:string;difference:string;rate:string};
 export type ComplementRate={population:string;components:string[];rate:string;label:string};
 const limit=(value:number,deps:Iterable<string>=[]):Limit=>({value,deps:new Set(deps)});
 const deps=(...limits:Limit[])=>new Set(limits.flatMap(x=>[...x.deps]));
@@ -10,7 +11,7 @@ const plus=(a:Limit,b:Limit)=>limit(a.value+b.value,deps(a,b));
 const times=(a:Limit,n:number)=>limit(a.value*n,a.deps);
 const multiply=(a:Limit,b:Limit,f:number)=>limit(a.value===0||b.value===0?0:a.value*b.value*f,deps(a,b));
 const tolerance=(a:number,b:number)=>16*Number.EPSILON*Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[]){
+export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange){
  const ranges=new Map<string,Range>();
  const results:Consequence[]=[];
  const conflicts:{dependencies:string[];label:string}[]=[];
@@ -66,6 +67,34 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
    if(r.hi.value<100)narrow(population,"hi",limit(high.value/(1-r.hi.value/100),deps(high,r.hi)),label);
    if(r.lo.value<100)narrow(population,"lo",limit(low.value/(1-r.lo.value/100),deps(low,r.lo)),label);
   }
+  // Difference and percentage of target describe the same comparison.
+  // Their combined relation is signed; it is not an ordinary nonnegative
+  // product. These monotone endpoint formulas are valid even with missing
+  // actual and target figures.
+  if(comparison){
+   const {actual,target,difference,rate}=comparison;
+   const keys=[actual,target,difference,rate];
+   if(keys.every(k=>ranges.has(k)&&!blocked.has(k))&&!keys.every(k=>Number.isFinite(known[k]))){
+    const A=ranges.get(actual)!,T=ranges.get(target)!,D=ranges.get(difference)!,R=ranges.get(rate)!;
+    const label="Difference = target × (percentage of target ÷ 100 − 1)";
+    if(T.hi.value>0){
+     if(D.lo.value>=0)narrow(rate,"lo",limit(100*(1+D.lo.value/T.hi.value),deps(D.lo,T.hi)),label);
+     else if(T.lo.value>0)narrow(rate,"lo",limit(100*(1+D.lo.value/T.lo.value),deps(D.lo,T.lo)),label);
+     if(D.hi.value<=0)narrow(rate,"hi",limit(100*(1+D.hi.value/T.hi.value),deps(D.hi,T.hi)),label);
+     else if(T.lo.value>0)narrow(rate,"hi",limit(100*(1+D.hi.value/T.lo.value),deps(D.hi,T.lo)),label);
+     const factorLo=R.lo.value/100-1,factorHi=R.hi.value/100-1;
+     const product=(v:number,w:number)=>v===0||w===0?0:v*w;
+     const lowT=factorLo<0?T.hi:T.lo,highT=factorHi<0?T.lo:T.hi;
+     narrow(difference,"lo",limit(product(factorLo,lowT.value),deps(R.lo,lowT)),label);
+     narrow(difference,"hi",limit(product(factorHi,highT.value),deps(R.hi,highT)),label);
+     // Eliminate target: for a positive actual and rate, D/A=1−100/R.
+     if(A.hi.value>0&&R.hi.value>0){
+      if(D.lo.value>0&&Number.isFinite(A.hi.value)&&D.lo.value<A.hi.value)narrow(rate,"lo",limit(100/(1-D.lo.value/A.hi.value),deps(D.lo,A.hi)),label);
+      if(D.hi.value<0&&Number.isFinite(A.hi.value))narrow(rate,"hi",limit(100/(1-D.hi.value/A.hi.value),deps(D.hi,A.hi)),label);
+     }
+    }
+   }
+  }
   for(const equation of active){
    // Fully known equations have already been checked by the original
    // validation pass with display-precision tolerance. Do not reinterpret them.
@@ -115,7 +144,8 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
   if(denominator&&ranges.get(denominator)?.hi.value===0)continue;
   const min=Number.isFinite(lo.value)?lo.value:undefined,max=Number.isFinite(hi.value)?hi.value:undefined;
   if(min!==undefined&&max!==undefined&&min>max)continue;
-  bounds[key]={min,max,minExclusive:min===0&&positive.has(key),minReason:lo.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain"),maxReason:hi.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain")};
+  const diff=comparison&&key===comparison.rate?ranges.get(comparison.difference):undefined;
+  bounds[key]={min,max,minExclusive:min===0&&positive.has(key)||min===100&&!!diff&&diff.lo.value>0,maxExclusive:max===100&&!!diff&&diff.hi.value<0,minReason:lo.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain"),maxReason:hi.reason??(Number.isFinite(known[key])?"Entered or calculated quantity":"Valid numerical domain")};
  }
  return {results,conflicts,bounds};
 }
