@@ -189,7 +189,11 @@ test("confirmed counts reject fractions; potential outcomes allow decimals; dire
   return {c,p:operationalPanels(c,["negative-operational-"+key])[0]};
  };
  const lostPanel=panelFor("problem-6","lost-leads");
- expect(solve(lostPanel.c,{affected:"10",[rate]:"15"},operationalEquations([lostPanel.p])).errors.length).toBeGreaterThan(0);
+ const estimate=solve(lostPanel.c,{affected:"10",[rate]:"15"},operationalEquations([lostPanel.p]));
+ expect(estimate.errors).toEqual([]);
+ expect(estimate.values[lost]).toBeCloseTo(1.5);
+ expect(estimate.estimated.has(lost)).toBe(true);
+ expect(solve(lostPanel.c,{affected:"10",[rate]:"15"},operationalEquations([lostPanel.p]),{exactInputs:new Set([rate])}).errors.length).toBeGreaterThan(0);
  expect(solve(lostPanel.c,{[lost]:"1.5"},operationalEquations([lostPanel.p])).errors.length).toBeGreaterThan(0);
  const react=panelFor("problem-9","fewer-old-leads-reactivated");
  const rr=react.p.fields.find(f=>f.unit==="%")!;

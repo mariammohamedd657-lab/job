@@ -22,7 +22,7 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
   <div className="op-impact-panels">{panels.map(panel=>{
     const id=problemId+":"+panel.id,open=!collapsed[id],primary=panel.fields.find(f=>f.primary)!;
     const summary=resolved(panel.primaryKey);
-    const state=summary.valid?(panel.estimated?(summary.computed?"Estimated · Automatically calculated":"Estimated · Directly entered"):(summary.computed?"Automatically calculated":"Directly entered")):"Awaiting information";
+    const state=summary.valid?((panel.estimated||result.estimated.has(panel.primaryKey))?(summary.computed?"Estimated · Automatically calculated":"Estimated · Directly entered"):(summary.computed?"Automatically calculated":"Directly entered")):"Awaiting information";
     return <section className="op-impact-card" key={id} data-impact={panel.id}>
       <button type="button" className="op-impact-toggle" aria-expanded={open} onClick={()=>setCollapsed(old=>({...old,[id]:open}))}><span className="op-result-tick"><Icon kind="check"/></span><span>{panel.name}</span><span className={"q-arrow "+(open?"q-open":"")}><Icon kind="chevron"/></span></button>
       <div className="op-impact-body" hidden={!open}>

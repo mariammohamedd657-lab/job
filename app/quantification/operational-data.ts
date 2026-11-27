@@ -140,5 +140,5 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
  });
 }
 export function operationalEquations(panels:OperationalPanel[]):AdditionalEquations{
- return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
+ return {fields:panels.flatMap(panel=>panel.fields.filter(field=>!field.shared)),relations:panels.flatMap(panel=>panel.relations),populationLinks:panels.flatMap(panel=>panel.populationLinks??[]),constraints:panels.flatMap(panel=>panel.constraints??[]),undefinedRates:panels.flatMap(panel=>panel.undefinedRates??[]),integerKeys:[...new Set(panels.flatMap(panel=>panel.fields.filter(f=>f.integer).map(f=>f.key)))],estimatedKeys:panels.filter(panel=>panel.estimated).map(panel=>panel.primaryKey),inferZeros:values=>panels.flatMap(panel=>panel.inferZeros?.(values)??[])};
 }

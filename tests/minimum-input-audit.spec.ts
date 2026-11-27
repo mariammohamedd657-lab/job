@@ -179,7 +179,9 @@ test("algebraic boundary routes, ambiguity, contradiction isolation and exact co
  const partial=solve(c,{total:"10",affected:"20",months:"3",target:"8",difference:"2"},equations);
  check(partial.errors.length&&partial.values.months===3&&partial.values.hours===10,"Contradiction must not block independent comparison and duration");
  check(partial.values.unaffected===undefined,"Contradictory population cannot calculate remaining count");
- const fraction=solve(c,{total:"10",affectedPct:"15"},equations);
+ const estimate=solve(c,{total:"10",affectedPct:"15"},equations);
+ check(!estimate.errors.length&&eq(estimate.values.affected,1.5)&&estimate.estimated.has("affected"),"Fractional estimated counts must be preserved");
+ const fraction=solve(c,{total:"10",affectedPct:"15"},equations,{exactInputs:new Set(["affectedPct"])});
  check(fraction.errors.length&&fraction.values.affected===undefined,"Fractional confirmed counts must not be silently rounded");
  const tiny=solve(c,{averageMinutes:"0.000000000001",affected:"1"},equations);
  check(tiny.values.hours>0,"Small positive hours must not become zero");
@@ -204,7 +206,7 @@ test("bounded rates and counts can determine a result without entering an interm
  check(impossible.errors.length&&impossible.values.months===3,"Impossible bounds must not disable unrelated duration");
  const lostC=configs.find(x=>x.id==="problem-6")!;
  const lostPanels=operationalPanels(lostC,["negative-operational-lost-leads"]),lostEq=operationalEquations(lostPanels);
- const unique=solve(lostC,{total:"10","op:lost-leads:recovered":"5","op:lost-leads:loss-rate":"30"},lostEq);
+ const unique=solve(lostC,{total:"10","op:lost-leads:recovered":"5","op:lost-leads:loss-rate":"30"},lostEq,{exactInputs:new Set(["op:lost-leads:loss-rate"])});
  check(!unique.errors.length&&unique.values.affected===10&&unique.values["op:lost-leads:result"]===3&&unique.values["op:lost-leads:pending"]===2,"Integer count and rate ranges identify the only feasible count");
 });
 
