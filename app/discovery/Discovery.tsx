@@ -5,6 +5,7 @@ import { agents, problems, problemCategories, type Agent, type AgentIcon, type I
 import { initialState, matchedSolutions, problemReducer, relevantFunctions, visibleOutcomes, visibleOutcomeExplanations, type Mode, type ProblemState } from "./model";
 import { functionLibrary } from "./functions";
 import "./discovery.css";
+import CaseStudyButton from "./CaseStudyButton";
 
 function Chevron({ open = false }: { open?: boolean }) {
   return <svg className={`chevron ${open ? "is-open" : ""}`} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
@@ -73,6 +74,7 @@ export function ProblemCard({ problem, onProblemConfirmation, onOperationalSelec
   return <section className="problem-card" data-problem={problem.id}>
     <div className="problem-header">
       <CircleInput className="problem-confirm" checked={state.confirmed} onChange={() => { dispatch({type:"confirm"}); onProblemConfirmation?.(problem.id,!state.confirmed); }} label={problem.name}/>
+      <CaseStudyButton problemId={problem.id}/>
       <button type="button" className="problem-toggle" aria-expanded={state.expanded} aria-controls={`${problem.id}-content`} aria-label={`${state.expanded ? "Collapse" : "Expand"} ${problem.name}`} onClick={() => dispatch({type:"expand"})}><Chevron open={state.expanded}/></button>
     </div>
     <div className="problem-content" id={`${problem.id}-content`} hidden={!state.expanded}>
@@ -94,5 +96,5 @@ export function ProblemCard({ problem, onProblemConfirmation, onOperationalSelec
 const problemsById: Record<string, Problem> = Object.fromEntries(problems.map(problem => [problem.id, problem]));
 
 export default function Discovery({ onProblemConfirmation, onOperationalSelection, onFinancialSelection }: { onProblemConfirmation?: (id:string,confirmed:boolean)=>void; onOperationalSelection?: (problemId:string,impactId:string,checked:boolean)=>void; onFinancialSelection?: (problemId:string,impactId:string,checked:boolean)=>void } = {}) {
-  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problemCategories.map(category => <section className="problem-category" key={category.title}><h2 className="problem-category-title">{category.title}</h2><div className="problem-list">{category.problemIds.map(id => <ProblemCard key={id} problem={problemsById[id]} onProblemConfirmation={onProblemConfirmation} onOperationalSelection={onOperationalSelection} onFinancialSelection={onFinancialSelection}/>)}</div></section>)}</div></section></main>;
+  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problemCategories.map(category => <section className="problem-category" key={category.title}><h2 className="problem-category-title">{category.title}</h2><div className="problem-list">{category.problemIds.map(id => <ProblemCard key={id} problem={problemsById[id]} onProblemConfirmation={onProblemConfirmation} onOperationalSelection={onOperationalSelection} onFinancialSelection={onFinancialSelection}/>)}</div></section>)}</div><div className="cs-reference"><span>Email and SMS — WorldStar</span><CaseStudyButton problemId="" referenceOnly/></div></section></main>;
 }
