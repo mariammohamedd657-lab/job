@@ -11,7 +11,7 @@ const plus=(a:Limit,b:Limit)=>limit(a.value+b.value,deps(a,b));
 const times=(a:Limit,n:number)=>limit(a.value*n,a.deps);
 const multiply=(a:Limit,b:Limit,f:number)=>limit(a.value===0||b.value===0?0:a.value*b.value*f,deps(a,b));
 const tolerance=(a:number,b:number)=>16*Number.EPSILON*Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange){
+export function rangeConsequences(equations:AlgebraEquation[],known:Record<string,number>,blocked:Set<string>,domain:(key:string)=>[number,number],integerKeys:Set<string>,denominators:Record<string,string>,populationLinks:PopulationLink[]=[],complements:ComplementRate[]=[],allKeys:string[]=[],comparison?:ComparisonRange,positivePart?:{difference:string;result:string}){
  const ranges=new Map<string,Range>();
  const results:Consequence[]=[];
  const conflicts:{dependencies:string[];label:string}[]=[];
@@ -93,6 +93,17 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
       if(D.hi.value<0&&Number.isFinite(A.hi.value))narrow(rate,"hi",limit(100/(1-D.hi.value/A.hi.value),deps(D.hi,A.hi)),label);
      }
     }
+   }
+  }
+  if(positivePart){
+   const {difference,result}=positivePart;
+   const D=ranges.get(difference),S=ranges.get(result);
+   if(D&&S&&!blocked.has(difference)&&!blocked.has(result)){
+    const label="Staff hour shortfall is the positive part of required minus available hours";
+    narrow(result,"lo",limit(Math.max(0,D.lo.value),D.lo.deps),label);
+    narrow(result,"hi",limit(Math.max(0,D.hi.value),D.hi.deps),label);
+    narrow(difference,"hi",S.hi,label);
+    if(S.lo.value>0)narrow(difference,"lo",S.lo,label);
    }
   }
   for(const equation of active){

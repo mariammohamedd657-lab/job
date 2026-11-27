@@ -73,8 +73,12 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   {population:"total",components:["unaffected"],rate:"affectedPct",label:"Affected rate is the complement of unaffected quantity ÷ total"},
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
+ if(config.id==="problem-28"){
+  const key="step2:staff-shortfall";
+  relations.push({keys:[key,"difference"],label:"Staff hour shortfall = max(0, required − available)",derive:(v,k)=>k===key?Math.max(0,v.difference):v[key]>0?v[key]:undefined,valid:v=>close(v[key],Math.max(0,v.difference))});
+ }
  const timeDenominators:Record<string,string>=config.timePopulation?{averageMinutes:config.timePopulation,...(config.id==="problem-15"?{averageEventMinutes:"reschedulingEvents"}:{})}:{};
- const rateDenominators:Record<string,string>={...timeDenominators,...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
+ const rateDenominators:Record<string,string>={...timeDenominators,...(config.moneyPopulation?{moneyAverage:config.moneyPopulation}:{}),...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
  const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
@@ -88,7 +92,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
     const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
-    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined);
+    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,config.id==="problem-28"?{difference:"difference",result:"step2:staff-shortfall"}:undefined);
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
@@ -114,6 +118,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     }
     if(active(config.actualKey)&&((values.targetPct===0&&values[config.actualKey]>0)||(values.targetPct>0&&values[config.actualKey]===0)))contradict([config.actualKey,"targetPct"],"A defined percentage of target requires compatible actual value and a positive target.");
    }
+   if(config.moneyPopulation&&active(config.moneyPopulation)&&values[config.moneyPopulation]===0&&active("moneyAverage"))contradict([config.moneyPopulation,"moneyAverage"],"Average amount is undefined for a zero corresponding count.");
+   if(config.moneyPopulation&&active("moneyAverage")&&values.moneyAverage===0&&active("moneyTotal")&&values.moneyTotal>0)contradict(["moneyAverage","moneyTotal"],"A positive total amount cannot have a zero average amount.");
    // A specified frequency requires a positive observation period, even when the frequency is zero.
    if(hasFrequency&&active("days")&&values.days===0){
     if(active("daily"))contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");
@@ -134,6 +140,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     if(config.actualKey&&k==="target"&&n===0&&active("targetPct")){contradict(known,"A defined percentage of target requires a positive target.");continue;}
     if(hasFrequency&&k==="days"&&n===0&&known.includes("daily")){contradict(known,"A defined daily frequency requires a positive measurement period.");continue;}
     if(Object.entries(timeDenominators).some(([average,count])=>count===k&&n===0&&active(average))){contradict(known,"A defined average duration requires a positive corresponding count.");continue;}
+    if(config.moneyPopulation===k&&n===0&&active("moneyAverage")){contradict(known,"A defined average amount requires a positive corresponding count.");continue;}
     const estimate=derivesEstimate(k,known);
     if(!isValid(k,n,true,estimate)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     values[k]=numericValue(k,n,estimate);
@@ -179,6 +186,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
      if(config.actualKey&&k==="target"&&inferred.value===0&&active("targetPct")){contradict([...inferred.dependencies,"targetPct"],"A defined percentage of target requires a positive target.");continue;}
      if(hasFrequency&&k==="days"&&inferred.value===0&&active("daily")){contradict([...inferred.dependencies,"daily"],"A defined daily frequency requires a positive measurement period.");continue;}
      if(Object.entries(timeDenominators).some(([average,count])=>count===k&&inferred.value===0&&active(average))){contradict([...inferred.dependencies,...Object.keys(timeDenominators).filter(average=>timeDenominators[average]===k&&active(average))],"A defined average duration requires a positive corresponding count.");continue;}
+     if(config.moneyPopulation===k&&inferred.value===0&&active("moneyAverage")){contradict([...inferred.dependencies,"moneyAverage"],"A defined average amount requires a positive corresponding count.");continue;}
      if(!isValid(k,inferred.value,true,estimate)){contradict(inferred.dependencies,"Contradictory entries: "+inferred.label+".");continue;}
      if(active(k)){if(!close(values[k],inferred.value))contradict([...inferred.dependencies,k],"Contradictory entries: "+inferred.label+".");continue;}
      if(k in manual)continue;

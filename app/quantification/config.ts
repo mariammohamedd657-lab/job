@@ -52,7 +52,7 @@ export const configs: Config[] = problemCategories.flatMap(category => category.
   const timePopulation=s.time==="recorded"?"recordedUnits":s.time?"affected":undefined;
   if(s.time==="recorded") fields.Time.push(field("recordedUnits","Units with recorded duration",unit,true),field("hours","Total recorded duration","hrs",true),field("averageMinutes",s.actual??"Average time per unit","min"));
   if(s.time==="affected") fields.Time.push(field("hours","Total time for affected quantity","hrs",true),field("averageMinutes",({"problem-15":"Average rescheduling time","problem-17":"Average time per routine question","problem-19":"Average time per repeated question","problem-20":"Average time per manual task"} as Record<string,string>)[id]??"Average time per unit","min"));
-  if(s.time==="staff") fields.Time.push(field("hours","Required staff hours","hrs",true),field("averageMinutes","Average time per unit","min"),field("target","Available staff hours","hrs"));
+  if(s.time==="staff") fields.Time.push(field("hours","Required staff hours","hrs",true),field("averageMinutes","Average time per unit","min"),field("target","Available staff hours","hrs"),field("step2:staff-shortfall","Staff hour shortfall","hrs"));
   if(available.has("Frequency")) fields.Frequency=[field("affected",s.affected,unit,true),field("days","Measurement period","Days"),field("daily","Affected quantity per day","/day")];
   const actualKey=available.has("Comparison")?(s.actualKey??"affected"):undefined;
   const compUnit=s.compareUnit??unit;
