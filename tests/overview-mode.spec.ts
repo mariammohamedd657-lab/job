@@ -1,0 +1,14 @@
+import {test,expect} from "@playwright/test";
+test("Overview and Detailed share inputs, results, warnings and package state",async({page})=>{
+ await page.goto("/quantification");const view=page.getByRole("group",{name:"Quantification view"});await view.getByRole("button",{name:"Overview",exact:true}).click();
+ const pool=page.locator(".q-universal");for(const [key,value] of Object.entries({total:"1000",lost:"200",rate:"25",ticket:"10000",profit:"4000"}))await pool.locator('[data-pool-quantity="'+key+'"]').fill(value);
+ const target=page.locator(".q-overview-target"),inv=page.locator(".q-overview-investment");await target.getByRole("combobox",{name:"Business target"}).selectOption("Revenue");await expect(target.getByRole("spinbutton",{name:"Current monthly revenue",exact:true})).toHaveValue("2000000");await target.getByRole("spinbutton",{name:"Target monthly revenue",exact:true}).fill("2200000");await target.getByRole("spinbutton",{name:"Target deadline",exact:true}).fill("12");
+ await inv.getByRole("spinbutton",{name:"Estimated monthly running costs"}).fill("16650");await inv.getByRole("combobox",{name:"Required scenario calculation"}).selectOption("Achieve both targets");
+ await expect(inv).toContainText("273,300 AED");await expect(inv).toContainText("80,000 AED");await expect(inv).toContainText("63,350 AED");await expect(inv).toContainText("606,700 AED");await expect(inv).toContainText("40 %");
+ await view.getByRole("button",{name:"Detailed",exact:true}).click();await expect(page.locator(".inv-target:visible").getByRole("spinbutton",{name:"Target monthly revenue",exact:true})).toHaveValue("2200000");await expect(page.locator('[data-investment-quantity="running"]')).toHaveValue("16650");await expect(page.locator(".inv-result")).toHaveCount(10);
+ await view.getByRole("button",{name:"Overview",exact:true}).click();await expect(inv.getByRole("spinbutton",{name:"Estimated monthly running costs"})).toHaveValue("16650");await expect(inv).toContainText("606,700 AED");
+ await target.getByRole("spinbutton",{name:"Target monthly revenue",exact:true}).fill("3000000");await expect(inv).toContainText("Recovering every lost opportunity");
+});
+test("Overview accepts a direct running estimate and leaves unknown cash unassessed",async({page})=>{
+ await page.goto("/quantification");await page.getByRole("button",{name:"Overview",exact:true}).click();const inv=page.locator(".q-overview-investment");await expect(inv.getByRole("spinbutton",{name:"Estimated monthly running costs"})).toBeVisible();await inv.getByRole("spinbutton",{name:"Estimated monthly running costs"}).fill("2000");await expect(inv).toContainText("2,000 AED");await inv.getByText("Cash requirements",{exact:true}).click();await expect(inv).toContainText("Cash shortage has not been assessed");await expect(inv.getByRole("spinbutton",{name:"Available cash"})).toHaveValue("");
+});
