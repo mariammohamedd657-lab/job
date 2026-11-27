@@ -11,7 +11,7 @@ function sum(a:string,b:string,c:string,label:string):Relation{return {keys:[a,b
 // a = b*c*factor. A zero divisor is indeterminate, never infinity.
 export function product(a:string,b:string,c:string,factor:number,label:string):Relation{return {keys:[a,b,c],label,terms:[{coefficient:1,keys:[a]},{coefficient:-factor,keys:[b,c]}],operation:(v,k)=>{const f=factor===1?"":factor===.01?" ÷ 100":factor===1/60?" ÷ 60":" × "+format(factor);const inv=factor===1?"":factor===.01?" × 100":factor===1/60?" × 60":" ÷ "+format(factor);return k===a?format(v[b])+" × "+format(v[c])+f:format(v[a])+" ÷ "+format(v[k===b?c:b])+inv;},impossible:(v,k)=>k!==a&&v[k===b?c:b]===0&&v[a]!==0,derive:(v,k)=>k===a?v[b]*v[c]*factor:k===b?div(v[a],v[c]*factor):div(v[a],v[b]*factor),valid:v=>close(v[a],v[b]*v[c]*factor)};}
 function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{return product(a,b,c,factor,label);}
-const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct"].includes(key)||n<=100);
+const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct","remainingPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
 export type ZeroInference={target:string;dependencies:string[];label:string};
 export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
@@ -21,7 +21,7 @@ export type PopulationClassification="complete"|"disjoint"|"overlapping"|"unknow
 export type PrecisionOptions={populationClassification?:PopulationClassification;exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
- if(precision.populationClassification==="disjoint")labels.remaining="Remaining unclassified quantity";
+ if(precision.populationClassification==="disjoint"){labels.remaining="Remaining unclassified quantity";labels.remainingPct="Remaining percentage";}
  const integerKeys=new Set(["total","affected","unaffected","remaining","recordedUnits",...(additional?.integerKeys??[])]);
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
  const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
@@ -41,6 +41,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   if(complete)relations.push(sum("total","affected","unaffected","Total = affected + unaffected"),{keys:["affectedPct","unaffectedPct"],label:"Affected % + unaffected % = 100",terms:[{coefficient:1,keys:["affectedPct"]},{coefficient:1,keys:["unaffectedPct"]},{coefficient:-100,keys:[]}],operation:(v,k)=>"100 − "+format(v[k==="affectedPct"?"unaffectedPct":"affectedPct"]),derive:(v,k)=>100-v[k==="affectedPct"?"unaffectedPct":"affectedPct"],valid:v=>close(v.affectedPct+v.unaffectedPct,100)});
   if(classification==="disjoint")relations.push({keys:["total","affected","unaffected","remaining"],label:"Total = affected + unaffected + remaining",terms:[{coefficient:1,keys:["total"]},{coefficient:-1,keys:["affected"]},{coefficient:-1,keys:["unaffected"]},{coefficient:-1,keys:["remaining"]}],derive:(v,k)=>k==="total"?v.affected+v.unaffected+v.remaining:v.total-["affected","unaffected","remaining"].filter(x=>x!==k).reduce((a,x)=>a+v[x],0),valid:v=>close(v.total,v.affected+v.unaffected+v.remaining)});
  }
+ if(classification==="disjoint"&&config.fields.Quantity.length)relations.push(product("remaining","total","remainingPct",.01,"Remaining = total × remaining percentage ÷ 100"),{keys:["affectedPct","unaffectedPct","remainingPct"],label:"Population percentages sum to 100",terms:[{coefficient:1,keys:["affectedPct"]},{coefficient:1,keys:["unaffectedPct"]},{coefficient:1,keys:["remainingPct"]},{coefficient:-100,keys:[]}],derive:(v,k)=>100-["affectedPct","unaffectedPct","remainingPct"].filter(x=>x!==k).reduce((a,x)=>a+v[x],0),valid:v=>close(v.affectedPct+v.unaffectedPct+v.remainingPct,100)});
  if(config.timePopulation)relations.push(product("hours",config.timePopulation,"averageMinutes",1/60,"Hours = quantity × average minutes ÷ 60"));
  if(config.fields.Frequency.length)relations.push(product("affected","days","daily",1,"Affected quantity = days × quantity per day"));
  if(config.actualKey)relations.push(sum(config.actualKey,"target","difference","Actual = target + difference"),ratio(config.actualKey,"target","targetPct",.01,"Actual = target × percentage of target ÷ 100"),{
@@ -57,8 +58,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   {population:"total",components:["unaffected"],rate:"affectedPct",label:"Affected rate is the complement of unaffected quantity ÷ total"},
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
- const rateDenominators:Record<string,string>={affectedPct:"total",unaffectedPct:"total",targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
- const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
+ const rateDenominators:Record<string,string>={affectedPct:"total",unaffectedPct:"total",remainingPct:"total",targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
+ const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct","remainingPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
@@ -93,6 +94,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const k=missing[0];if(k in manual||blocked.has(k))continue;
     const known=rel.keys.filter(x=>x!==k);if(!known.every(active))continue;
     if(rel.impossible?.(values,k)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
+    const denominator=rateDenominators[k];if(denominator&&active(denominator)&&values[denominator]===0)continue;
     const n=rel.derive(values,k);if(n===undefined)continue;
     const estimate=derivesEstimate(k,known);
     if(!isValid(k,n,true,estimate)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
@@ -150,7 +152,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   }
   if(active("total"))for(const k of ["affected","unaffected"])if(active(k)&&values[k]>values.total&&!close(values[k],values.total))contradict(["total",k],"Contradictory entries: affected or unaffected quantity exceeds total.");
   if(disjoint&&active("total")&&active("affected")&&active("unaffected")&&values.affected+values.unaffected>values.total&&!close(values.affected+values.unaffected,values.total))contradict(["total","affected","unaffected"],"Contradictory entries: disjoint quantities exceed total.");
-  if(active("total")&&values.total===0){for(const k of ["affectedPct","unaffectedPct"])if(active(k)){if(k in manual)contradict(["total",k],"Percentages are undefined when total quantity is zero.");else {delete values[k];delete calculated[k];}}}
+  if(active("total")&&values.total===0){for(const k of ["affectedPct","unaffectedPct","remainingPct"])if(active(k)){if(k in manual)contradict(["total",k],"Percentages are undefined when total quantity is zero.");else {delete values[k];delete calculated[k];}}}
   if(active("target")&&values.target===0&&active("targetPct")){if("targetPct" in manual)contradict(["target","targetPct"],"Percentage of target is undefined when target is zero.");else{delete values.targetPct;delete calculated.targetPct;}}
   if(active("days")&&values.days===0&&active("daily")){if("daily" in manual)contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");else{delete values.daily;delete calculated.daily;}}
   // Extra checks belong only to active impact equations; the original problem rules remain unchanged.
