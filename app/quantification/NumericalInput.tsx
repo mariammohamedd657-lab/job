@@ -23,16 +23,16 @@ type Props=Omit<ComponentPropsWithoutRef<"input">,"type"|"value"|"defaultValue"|
 // display only in this focused occurrence so the next digit can be entered.
 export default function NumericalInput({value,onValueChange,...props}:Props){
  const [emptyDraft,setEmptyDraft]=useState(false);
- const {registry,raw,result}=useQuantityRegistry();
+ const {registry,raw,result,show,setEvidence}=useQuantityRegistry();
  const key=props["data-quantity"],ref=key?registry.instances[key]:undefined;
  if(key&&!ref)throw Error("Unregistered numerical input "+registry.problemId+"/"+key);
  const state=ref?instanceState(ref,raw,result,{relationships:registry.routes.filter(route=>route.fieldInstanceIds.includes(ref.instanceId)||route.resultInstanceId===ref.instanceId).map(route=>route.id)}):undefined;
  const displayed=state?state.manualValue??(state.calculatedValue!==undefined?format(state.calculatedValue):""):value;
- return <input {...props} data-canonical-quantity={ref?.canonicalId} data-quantity-instance={ref?.instanceId} data-numerical-type={state?.effectiveNumericalType??ref?.type} data-quantity-source={state?.source} data-amount-evidence={state?.amountEvidence} type="number" value={emptyDraft?"":displayed} onInput={event=>{
+ return <><input {...props} data-canonical-quantity={ref?.canonicalId} data-quantity-instance={ref?.instanceId} data-numerical-type={state?.effectiveNumericalType??ref?.type} data-quantity-source={state?.source} data-amount-evidence={state?.amountEvidence} data-numerical-state={state?.numericalState} data-precision={state?.precision} data-consequence={state?.consequence} type="number" title={state?.numericalState==="undefined"?"Undefined: corresponding denominator is zero":props.title} value={emptyDraft?"":displayed} onInput={event=>{
   // Native input events also capture a deliberate replacement with the same
   // number, which must become a manual constraint even if the display agrees.
   const next=event.currentTarget.value;
   setEmptyDraft(next==="");
   onValueChange(next);
- }} onBlur={()=>setEmptyDraft(false)}/>;
+ }} onBlur={()=>setEmptyDraft(false)}/>{show&&key&&setEvidence&&raw[key]?.trim()&&<span className="q-formula" style={{display:"inline-flex",gap:4,flexWrap:"wrap"}}><select aria-label={"Evidence for "+(ref?.label??key)} value={result.evidence?.[key]?.kind??(result.estimated.has(key)?"estimated":"exact")} onChange={e=>{const kind=e.target.value as "exact"|"estimated"|"rounded"|"interval";setEvidence(key,{kind,digits:1,min:Number(raw[key]),max:Number(raw[key])});}}><option value="exact">Exact</option><option value="estimated">Estimated point</option><option value="rounded">Rounded</option><option value="interval">Interval</option></select>{result.evidence?.[key]?.kind==="rounded"&&<label>Decimal places <input aria-label="Rounding decimal places" type="number" min="0" max="12" value={result.evidence[key].digits??1} onChange={e=>setEvidence(key,{kind:"rounded",digits:Number(e.target.value)})}/></label>}{result.evidence?.[key]?.kind==="interval"&&(["min","max"] as const).map(edge=><label key={edge}>{edge} <input type="number" step="any" value={result.evidence?.[key]?.[edge]??""} onChange={e=>setEvidence(key,{...result.evidence![key],[edge]:Number(e.target.value)})}/></label>)}</span>}{state?.numericalState==="undefined"&&<span className="q-formula">Undefined (zero denominator)</span>}</>;
 }

@@ -17,13 +17,13 @@ export function confirmedFinancialEquations(config:Config,operational:Additional
  if(has("F1")||has("F2")){
   prod(R,P,A,1,"Confirmed revenue loss = confirmed purchases lost × average revenue per purchase");
   relations.push(sum(B,R,V,"Purchase revenue before loss = confirmed revenue loss + retained revenue"));
-  prod(T,N,A,1,"Total relevant revenue = relevant purchases × average revenue per purchase",N);
+  prod(T,N,A,1,"Total relevant revenue = relevant purchases × average revenue per purchase");
  }
  if(has("F2")){
   relations.push(sum(R,L,C,"Confirmed revenue loss = confirmed contribution profit loss + avoided variable costs"));
   prod(L,R,M,.01,"Confirmed contribution profit loss = confirmed revenue loss × contribution profit margin ÷ 100");
   relations.push(sum(T,H,W,"Total revenue = total contribution profit + total variable costs"));
-  prod(H,T,M,.01,"Total contribution profit = total revenue × contribution profit margin ÷ 100",T);
+  prod(H,T,M,.01,"Total contribution profit = total revenue × contribution profit margin ÷ 100");
   prod(L,P,G,1,"Confirmed contribution profit loss = confirmed purchases lost × average contribution profit per purchase");
   prod(H,N,G,1,"Total contribution profit = total applicable purchases × average contribution profit per purchase",N);
   prod(C,P,J,1,"Avoided variable costs = confirmed purchases lost × average avoided variable cost per purchase");

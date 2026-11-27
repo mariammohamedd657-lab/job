@@ -3,7 +3,7 @@ import {useState} from "react";
 import {configs,type Config} from "./config";
 import {registryFor} from "./quantity-registry";
 import {relationshipEndpointKeys,populationRelationshipSpecification} from "./canonical-relationships";
-import {solve,type AdditionalEquations,type Figures,type Result,type PopulationClassification} from "./solver";
+import {solve,type AdditionalEquations,type Figures,type Result,type PopulationClassification,type EvidenceMap} from "./solver";
 import type {QuantityBounds} from "./ranges";
 export type SharingLink={left:string;right:string;kind:"identity"|"subset";scopeConfirmed:true};
 const split=(id:string)=>{const i=id.indexOf("/");return [id.slice(0,i),id.slice(i+1)] as const;};
@@ -23,10 +23,10 @@ export function allowedSharing(left:string,right:string,kind:SharingLink["kind"]
  const semanticPairs=[["unique_affected_leads","affected_qualified_leads"],["lost_leads","lost_qualified_leads"],["affected_invoices","additional_unpaid_invoices"]];
  return semanticPairs.some(([x,y])=>a.canonicalId===x&&b.canonicalId===y)||left==="problem-20/total"&&right==="problem-28/affected"||left==="problem-28/total"&&right==="problem-20/affected";
 }
-export function solveAcrossProblems(cs:Config[],figures:Record<string,Figures>,equations:Record<string,AdditionalEquations>,classifications:Record<string,PopulationClassification>,edited:Record<string,string>,links:SharingLink[]):Record<string,Result>{
+export function solveAcrossProblems(cs:Config[],figures:Record<string,Figures>,equations:Record<string,AdditionalEquations>,classifications:Record<string,PopulationClassification>,edited:Record<string,string>,links:SharingLink[],evidence:Record<string,EvidenceMap>={}):Record<string,Result>{
  const active=links.filter(l=>l.scopeConfirmed&&allowedSharing(l.left,l.right,l.kind));
  let external:Record<string,Record<string,QuantityBounds>>={};
- const run=()=>Object.fromEntries(cs.map(c=>[c.id,solve(c,figures[c.id]??{},equations[c.id],{populationClassification:classifications[c.id]??"unknown",includeBounds:true,correctionKey:edited[c.id],externalBounds:external[c.id]})]));
+ const run=()=>Object.fromEntries(cs.map(c=>[c.id,solve(c,figures[c.id]??{},equations[c.id],{populationClassification:classifications[c.id]??"unknown",includeBounds:true,correctionKey:edited[c.id],externalBounds:external[c.id],evidence:evidence[c.id]})]));
  let results=run();
  if(!active.length)return results;
  // Keep exact values as constraints, not additional user assertions.

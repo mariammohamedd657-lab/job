@@ -3,11 +3,13 @@ import { algebraicConsequences, type Term } from "./algebra";
 import { rangeConsequences, type QuantityBounds, type ComplementRate } from "./ranges";
 import { basePopulationLinks, type PopulationLink } from "./information-links";
 export type Figures=Record<string,string>;
+export type MeasurementEvidence={kind:"exact"|"estimated"|"rounded"|"interval";digits?:number;min?:number;max?:number};
+export type EvidenceMap=Record<string,MeasurementEvidence>;
 export type Correction={kind:"exact"|"range"|"requires-other-changes"|"unresolved";bounds?:QuantityBounds;message:string};
 export type Conflict={keys:string[];message:string};
-export type Result={corrections?:Record<string,Correction>;conflicts?:Conflict[];values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>; estimated:Set<string>; bounds?:Record<string,QuantityBounds>};
+export type Result={undefinedKeys?:Set<string>;evidence?:EvidenceMap;corrections?:Record<string,Correction>;conflicts?:Conflict[];values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>; estimated:Set<string>; bounds?:Record<string,QuantityBounds>};
 export type Relation={keys:string[]; label:string; terms?:Term[]; complement?:ComplementRate; operation?:(v:Record<string,number>,key:string)=>string; impossible?:(v:Record<string,number>,key:string)=>boolean; derive:(v:Record<string,number>, key:string)=>number|undefined; valid:(v:Record<string,number>)=>boolean};
-const close=(a:number,b:number)=>Math.abs(a-b)<=1e-8*Math.max(1,Math.abs(a),Math.abs(b));
+const close=(a:number,b:number)=>Math.abs(a-b)<=64*Number.EPSILON*Math.max(1,Math.abs(a),Math.abs(b));
 const div=(a:number,b:number)=>b===0?undefined:a/b;
 export function sum(a:string,b:string,c:string,label:string):Relation{return {keys:[a,b,c],label,terms:[{coefficient:1,keys:[a]},{coefficient:-1,keys:[b]},{coefficient:-1,keys:[c]}],operation:(v,k)=>k===a?format(v[b])+" + "+format(v[c]):k===b?format(v[a])+" − "+format(v[c]):format(v[a])+" − "+format(v[b]),derive:(v,k)=>k===a?v[b]+v[c]:k===b?v[a]-v[c]:v[a]-v[b],valid:v=>close(v[a],v[b]+v[c])};}
 // a = b*c*factor. A zero divisor is indeterminate, never infinity.
@@ -20,8 +22,18 @@ export type AdditionalEquations={positiveParts?:{difference:string;result:string
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
 export type PopulationClassification="complete"|"disjoint"|"overlapping"|"unknown"|"incomplete"|"incompatible";
-export type PrecisionOptions={externalBounds?:Readonly<Record<string,QuantityBounds>>;populationClassification?:PopulationClassification;exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string;skipCorrections?:boolean};
+export type PrecisionOptions={evidence?:EvidenceMap;externalBounds?:Readonly<Record<string,QuantityBounds>>;populationClassification?:PopulationClassification;exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string;skipCorrections?:boolean};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
+ const evidence=precision.evidence??{};
+ const externalBounds={...precision.externalBounds};
+ for(const [key,entry] of Object.entries(evidence)){
+  const value=Number(raw[key]);if(!raw[key]?.trim()||!Number.isFinite(value))continue;
+  if(entry.kind!=="rounded"&&entry.kind!=="interval")continue;
+  const half=0.5*10**(-Math.max(0,Math.min(12,entry.digits??0)));
+  const lo=entry.kind==="rounded"?value-half:entry.min,hi=entry.kind==="rounded"?value+half:entry.max;
+  if(lo===undefined||hi===undefined||!Number.isFinite(lo)||!Number.isFinite(hi))continue;
+  const prior=externalBounds[key];externalBounds[key]={min:Math.max(prior?.min??-Infinity,lo),max:Math.min(prior?.max??Infinity,hi),minExclusive:prior?.min===lo&&prior.minExclusive,maxExclusive:entry.kind==="rounded"||prior?.max===hi&&prior.maxExclusive};
+ }
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  if(["disjoint","incomplete"].includes(precision.populationClassification??"")){labels.remaining="Remaining unclassified quantity";labels.remainingPct="Remaining percentage";}
  if(precision.populationClassification==="overlapping"){labels.overlap="Overlap";labels.combined="Unique combined population";}
@@ -29,7 +41,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  if(config.actualKey&&integerKeys.has(config.actualKey)){integerKeys.add("target");integerKeys.add("difference");}
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
  const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="averageEventMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
- const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||additional?.averageKeys?.includes(key)||estimateInputs.has(key)&&key!=="targetPct"||inherentEstimates.has(key));
+ const inputEstimated=(key:string)=>evidence[key]?.kind==="exact"?false:evidence[key]?.kind==="estimated"?true:!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||additional?.averageKeys?.includes(key)||estimateInputs.has(key)&&key!=="targetPct"||inherentEstimates.has(key));
  // Only correct machine-precision residue of an exact integral calculation.
  // Never round an estimated count to an integer.
  const nearInteger=(n:number)=>Number.isSafeInteger(Math.round(n))&&Math.abs(n-Math.round(n))<=Math.min(1e-8,8*Number.EPSILON*Math.max(1,Math.abs(n)));
@@ -82,10 +94,10 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  const timeDenominators:Record<string,string>=config.timePopulation?{averageMinutes:config.timePopulation,...(config.id==="problem-15"?{averageEventMinutes:"reschedulingEvents"}:{})}:{};
  const rateDenominators:Record<string,string>={...timeDenominators,...(config.moneyPopulation?{moneyAverage:config.moneyPopulation}:{}),...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
  const baseDomain=(key:string):[number,number]=>[key==="difference"||additional?.signedKeys?.includes(key)?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
- const domain=(key:string):[number,number]=>{const [lo,hi]=baseDomain(key),b=precision.externalBounds?.[key];return [Math.max(lo,b?.min??-Infinity),Math.min(hi,b?.max??Infinity)];};
+ const domain=(key:string):[number,number]=>{const [lo,hi]=baseDomain(key),b=externalBounds[key];return [Math.max(lo,b?.min??-Infinity),Math.min(hi,b?.max??Infinity)];};
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>(),conflicts:Conflict[]=[];
  const report=(keys:string[],message:string)=>{errors.add(message);const sorted=[...new Set(keys)].sort();if(!conflicts.some(c=>c.message===message&&c.keys.join("\\0")===sorted.join("\\0")))conflicts.push({keys:sorted,message});};
- for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);report([k],(labels[k]??k)+": invalid value.");}else manual[k]=n;}
+ for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;if(evidence[k]?.kind==="rounded"||evidence[k]?.kind==="interval")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);report([k],(labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
  const intervals=(known:Record<string,number>)=>{
     const links=[...localLinks,...(compatible?basePopulationLinks(config):[]),...(additional?.populationLinks??[]),...(config.fields.Quantity.length&&compatible?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])];
@@ -96,7 +108,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
     const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
-    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,[...(config.id==="problem-28"?[{difference:"difference",result:"step2:staff-shortfall"}]:[]),...(additional?.positiveParts??[])],precision.externalBounds??{});
+    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,[...(config.id==="problem-28"?[{difference:"difference",result:"step2:staff-shortfall"}]:[]),...(additional?.positiveParts??[])],externalBounds);
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
@@ -110,7 +122,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   const contradict=(keys:string[],message:string)=>{const sources=[...new Set(keys.flatMap(k=>[...(roots[k]??[])]))];report(sources,message);for(const x of sources){if(!blocked.has(x)){blocked.add(x);changed=true;}}};
   for(let pass=0;pass<50;pass++){
    let added=false;
-   for(const [key,b] of Object.entries(precision.externalBounds??{}))if(active(key)&&((b.min!==undefined&&(values[key]<b.min&&!close(values[key],b.min)||b.minExclusive&&values[key]<=b.min))||(b.max!==undefined&&(values[key]>b.max&&!close(values[key],b.max)||b.maxExclusive&&values[key]>=b.max))))contradict([key],"Cross-problem restriction conflicts with "+(labels[key]??key)+".");
+   for(const [key,b] of Object.entries(externalBounds))if(active(key)&&((b.min!==undefined&&(values[key]<b.min&&!close(values[key],b.min)||b.minExclusive&&values[key]<=b.min))||(b.max!==undefined&&(values[key]>b.max&&!close(values[key],b.max)||b.maxExclusive&&values[key]>=b.max))))contradict([key],"Cross-problem restriction conflicts with "+(labels[key]??key)+".");
    for(const [average,count] of Object.entries(timeDenominators)){
     if(active(count)&&values[count]===0&&active(average))contradict([count,average],(labels[average]??average)+" is undefined when the corresponding count is zero.");
     if(active(average)&&values[average]===0&&active("hours")&&values.hours>0)contradict([average,"hours"],"Positive total duration cannot have a zero average duration.");
@@ -136,6 +148,15 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    for(const rel of relations){
     if(changed)break;
     if(rel.keys.some(k=>blocked.has(k)))continue;
+    const productTerm=rel.terms?.length===2?rel.terms.find(t=>t.keys.length>1):undefined;
+    const outputTerm=productTerm?rel.terms?.find(t=>t.keys.length===1):undefined;
+    if(productTerm&&outputTerm){
+     const out=outputTerm.keys[0],zero=productTerm.keys.find(k=>active(k)&&values[k]===0);
+     if(zero&&out!==zero){
+      if(active(out)&&values[out]!==0){contradict([out,zero],"Contradictory entries: "+rel.label+". A zero factor requires a zero product.");continue;}
+      if(!active(out)&&!(out in manual)&&!blocked.has(out)){values[out]=0;markEstimate(out,derivesEstimate(out,[zero]));roots[out]=new Set(roots[zero]);calculated[out]=(labels[out]??out)+" = 0 (zero factor)";added=true;}
+     }
+    }
     const missing=rel.keys.filter(k=>!active(k));
     if(missing.length===0){if(!rel.valid(values))contradict(rel.keys,"Contradictory entries: "+rel.label+". Entered or derived values: "+rel.keys.map(k=>(labels[k]??k)+" = "+format(values[k])).join("; ")+".");continue;}
     if(missing.length!==1)continue;
@@ -222,7 +243,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   }
   if(!changed)break;
  }
- const result:Result={values,calculated,errors:[...errors],conflicts,blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
+ const undefinedKeys=new Set(Object.entries(rateDenominators).filter(([key,denominator])=>!blocked.has(denominator)&&values[denominator]===0).map(([key])=>key));
+ const result:Result={undefinedKeys,evidence,values,calculated,errors:[...errors],conflicts,blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
  if(precision.includeBounds){
   // Consistent inputs give proactive limits. In a contradiction, use the
   // other constraints to find the range for each conflicting manual entry.
@@ -237,7 +259,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    const remaining={...raw};delete remaining[key];
    const correctionExact=new Set(precision.exactInputs??[]);
    if(integerKeys.has(key)&&!inputEstimated(key))correctionExact.add(key);
-   const trialOptions={...precision,exactInputs:correctionExact,includeBounds:false,correctionKey:undefined,skipCorrections:true};
+   const trialEvidence={...evidence};delete trialEvidence[key];
+   const trialOptions={...precision,evidence:trialEvidence,exactInputs:correctionExact,includeBounds:false,correctionKey:undefined,skipCorrections:true};
    const alternative=solve(config,remaining,additional,trialOptions);
    if(alternative.errors.length){
     // Distinguish a still-inconsistent connected system from a separate conflict.
@@ -266,9 +289,9 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    }
   }
   result.corrections=corrections;
-  for(const [key,b] of Object.entries(precision.externalBounds??{})){const local=bounds[key];const min=Math.max(local?.min??-Infinity,b.min??-Infinity),max=Math.min(local?.max??Infinity,b.max??Infinity);bounds[key]={...local,min:Number.isFinite(min)?min:undefined,max:Number.isFinite(max)?max:undefined,minExclusive:!!(local?.min===min&&local.minExclusive||b.min===min&&b.minExclusive),maxExclusive:!!(local?.max===max&&local.maxExclusive||b.max===max&&b.maxExclusive),minReason:b.minReason??local?.minReason,maxReason:b.maxReason??local?.maxReason};}
+  for(const [key,b] of Object.entries(externalBounds)){const local=bounds[key];const min=Math.max(local?.min??-Infinity,b.min??-Infinity),max=Math.min(local?.max??Infinity,b.max??Infinity);bounds[key]={...local,min:Number.isFinite(min)?min:undefined,max:Number.isFinite(max)?max:undefined,minExclusive:!!(local?.min===min&&local.minExclusive||b.min===min&&b.minExclusive),maxExclusive:!!(local?.max===max&&local.maxExclusive||b.max===max&&b.maxExclusive),minReason:b.minReason??local?.minReason,maxReason:b.maxReason??local?.maxReason};}
   result.bounds=bounds;
  }
  return result;
 }
-export function format(n:number){return String(Number(n.toPrecision(10)));}
+export function format(n:number){return Number.isFinite(n)?String(Number(n.toPrecision(15))):"—";}

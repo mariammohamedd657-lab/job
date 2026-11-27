@@ -22,11 +22,11 @@ export function potentialAndCostEquations(config:Config,base:AdditionalEquations
  };
  const B=k("potential-buyers"),A=k("average-revenue-buyer"),R=k("potential-revenue"),N=k("total-buyers"),T=k("buyer-scope-revenue"),L=k("potential-profit"),C=k("estimated-avoided"),G=k("average-profit-buyer"),J=k("average-avoided-buyer"),H=k("buyer-total-profit"),W=k("buyer-variable-costs"),M=k("potential-margin"),K=k("average-variable-buyer");
  if(outcomes.some(o=>o.id==="F7"||o.id==="F8")){
-  prod(R,B,A);prod(T,N,A,1,N);integerKeys.push(N);estimatedKeys.push(B,R);averageKeys.push(A);
+  prod(R,B,A);prod(T,N,A);integerKeys.push(N);estimatedKeys.push(B,R);averageKeys.push(A);
   const walk=(routes:ContentRoute[])=>{for(const route of routes){
    const source=route.fields.find(f=>f.shared==="operational"||f.shared==="problem"),rate=route.fields.find(f=>f.key.startsWith("fin:conversion:"));
-   if(source&&rate){prod(B,source.key,rate.key,.01,source.key);const e=k("historical:"+route.id+":eligible"),c=k("historical:"+route.id+":converted");if(keys.has(e)&&keys.has(c)){prod(c,e,rate.key,.01,e);integerKeys.push(e,c);}}
-   if(route.id==="slots"&&source)prod(B,source.key,k("buyers-per-slot"),1,source.key);
+   if(source&&rate){prod(B,source.key,rate.key,.01);const e=k("historical:"+route.id+":eligible"),c=k("historical:"+route.id+":converted");if(keys.has(e)&&keys.has(c)){prod(c,e,rate.key,.01,e);integerKeys.push(e,c);}}
+   if(route.id==="slots"&&source)prod(B,source.key,k("buyers-per-slot"),1);
    if(route.id==="new-buyers"&&source&&options.newBuyerMatch)equal(B,source.key);
    if(route.id==="existing"&&source)prod(k("expected-future-revenue"),source.key,k("future-revenue-existing"));
    walk(route.children??[]);
@@ -34,7 +34,7 @@ export function potentialAndCostEquations(config:Config,base:AdditionalEquations
   walk(outcomes.find(o=>o.id==="F7")?.routes??outcomes.find(o=>o.id==="F8")?.routes??[]);
  }
  if(outcomes.some(o=>o.id==="F8")){
-  plus(R,L,C);prod(L,R,M,.01);prod(L,B,G);prod(C,B,J);plus(T,H,W);prod(H,T,M,.01,T);prod(H,N,G,1,N);prod(W,N,K,1,N);plus(A,G,J);
+  plus(R,L,C);prod(L,R,M,.01);prod(L,B,G);prod(C,B,J);plus(T,H,W);prod(H,T,M,.01);prod(H,N,G);prod(W,N,K);plus(A,G,J);
   if(options.matchedBuyerCosts)equal(J,K);
   signedKeys.push(L,G,H,M);averageKeys.push(G,J,K,M);estimatedKeys.push(L,C);
  }
@@ -105,8 +105,8 @@ export function potentialAndCostEquations(config:Config,base:AdditionalEquations
   prod(ws,hours,k("average-staff-hour"));prod(k("relevant-staff-costs"),k("corresponding-hours"),k("average-staff-hour"),1,k("corresponding-hours"));
   prod(wo,k("wasted-resources"),k("average-wasted-resource"));prod(k("wasted-resource-expenditure"),k("wasted-resource-reference-units"),k("average-wasted-resource"),1,k("wasted-resource-reference-units"));
   const walk=(routes:ContentRoute[])=>{for(const route of routes){const src=route.fields.find(f=>f.shared==="operational"||f.shared==="problem");
-   if(src&&route.id==="paid-lost")prod(paid,src.key,k("paid-share"),.01,src.key);
-   if(src&&route.id==="avoidable"){prod(hours,src.key,k("avoidable-paid-share"),.01,src.key);populationLinks.push({population:src.key,member:hours,kind:"subset",label:"Wasted paid staff hours cannot exceed applicable avoidable hours"});}
+   if(src&&route.id==="paid-lost")prod(paid,src.key,k("paid-share"),.01);
+   if(src&&route.id==="avoidable"){prod(hours,src.key,k("avoidable-paid-share"),.01);populationLinks.push({population:src.key,member:hours,kind:"subset",label:"Wasted paid staff hours cannot exceed applicable avoidable hours"});}
    if(src&&route.id==="slots")prod(hours,src.key,k("wasted-hours-slot"));
    walk(route.children??[]);
   }};walk(wasted.routes);
