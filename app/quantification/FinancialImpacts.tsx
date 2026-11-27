@@ -38,10 +38,26 @@ export function ContentResult({field,name,kind,raw,result,estimated=false}:{fiel
  const problemId=useQuantityRegistry().problemId,v=read(field,raw,result,problemId);
  return <div className="op-result step2-result"><div>Quantified negative {kind} impact</div><div className="op-result-row"><span>{name}</span><strong>{v.valid?format(v.n):"—"}</strong>{v.valid&&<span className="step2-result-unit">{field.unit}</span>}</div><div>{v.valid?((estimated||field.estimated||result.estimated.has(field.key)?"Estimated · ":"")+(v.computed?"Automatically calculated":"Directly entered")):"Awaiting information"}</div></div>;
 }
-export default function FinancialImpacts({problemId,outcomes,...props}:ContentProps&{problemId:string;outcomes:ContentOutcome[]}){
+export default function FinancialImpacts({problemId,outcomes,discoverySelections={},...props}:ContentProps&{problemId:string;outcomes:ContentOutcome[];discoverySelections?:Record<string,string[]>}){
  const [filters,setFilters]=useState<Record<string,"All"|"Confirmed"|"Estimated">>({});
  const [selected,setSelected]=useState<Record<string,boolean>>({});
  const [collapsed,setCollapsed]=useState<Record<string,boolean>>({});
+ const [previousDiscovery,setPreviousDiscovery]=useState<Record<string,string[]>>({});
+ const selectionSignature=JSON.stringify(discoverySelections);
+ if(selectionSignature!==JSON.stringify(previousDiscovery)){
+  const next={...selected},nextCollapsed={...collapsed};
+  for(const id of new Set([...Object.keys(previousDiscovery),...Object.keys(discoverySelections)])){
+   const before=new Set(previousDiscovery[id]??[]),after=new Set(discoverySelections[id]??[]);
+   for(const outcome of new Set([...before,...after])){
+    if(before.has(outcome)===after.has(outcome))continue;
+    const key=id+":"+outcome;
+    next[key]=after.has(outcome);
+    if(after.has(outcome))nextCollapsed[key]=false;
+   }
+  }
+  setPreviousDiscovery(discoverySelections);
+  setSelected(next);setCollapsed(nextCollapsed);
+ }
  const filter=filters[problemId]??"All";
  return <div className="fin-impact-content"><div className="fin-filter" role="group" aria-label="Financial impact filter">{(["All","Confirmed","Estimated"] as const).map(kind=><button type="button" key={kind} aria-pressed={filter===kind} onClick={()=>setFilters(old=>({...old,[problemId]:kind}))}>{kind}</button>)}</div>
  {(["Confirmed","Estimated"] as const).filter(kind=>filter==="All"||filter===kind).map(kind=>{

@@ -67,7 +67,7 @@ function SolutionCard({ problem, agent, state: problemState, pending = false }: 
     </div>
   </div>;
 }
-export function ProblemCard({ problem, onProblemConfirmation, onOperationalSelection }: { problem: Problem; onProblemConfirmation?: (id: string, confirmed: boolean) => void; onOperationalSelection?: (problemId:string,impactId:string,checked:boolean)=>void }) {
+export function ProblemCard({ problem, onProblemConfirmation, onOperationalSelection, onFinancialSelection }: { problem: Problem; onProblemConfirmation?: (id: string, confirmed: boolean) => void; onOperationalSelection?: (problemId:string,impactId:string,checked:boolean)=>void; onFinancialSelection?: (problemId:string,impactId:string,checked:boolean)=>void }) {
   const [state, dispatch] = useReducer(problemReducer, initialState);
   const matching = matchedSolutions(problem, agents);
   return <section className="problem-card" data-problem={problem.id}>
@@ -81,7 +81,7 @@ export function ProblemCard({ problem, onProblemConfirmation, onOperationalSelec
         {(["operational","financial"] as const).map(kind => {
           const impacts = kind === "operational" ? problem.operationalImpacts : problem.financialImpacts;
           return <div key={kind}><h4 className="impact-heading"><span className={`impact-tone-${kind}`}>Confirmed {kind} impacts</span></h4>
-            {impacts.length ? <div className="impact-list">{impacts.map(impact => <CircleInput key={impact.id} checked={state.selected[kind].includes(impact.id)} onChange={() => { dispatch({type:"impact",kind,id:impact.id}); if(kind==="operational")onOperationalSelection?.(problem.id,impact.id,!state.selected[kind].includes(impact.id)); }} label={impact.label}/>)}</div> : null}
+            {impacts.length ? <div className="impact-list">{impacts.map(impact => <CircleInput key={impact.id} checked={state.selected[kind].includes(impact.id)} onChange={() => { dispatch({type:"impact",kind,id:impact.id}); (kind==="operational"?onOperationalSelection:onFinancialSelection)?.(problem.id,impact.id,!state.selected[kind].includes(impact.id)); }} label={impact.label}/>)}</div> : null}
           </div>;
         })}
       </div>
@@ -93,6 +93,6 @@ export function ProblemCard({ problem, onProblemConfirmation, onOperationalSelec
 }
 const problemsById: Record<string, Problem> = Object.fromEntries(problems.map(problem => [problem.id, problem]));
 
-export default function Discovery({ onProblemConfirmation, onOperationalSelection }: { onProblemConfirmation?: (id:string,confirmed:boolean)=>void; onOperationalSelection?: (problemId:string,impactId:string,checked:boolean)=>void } = {}) {
-  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problemCategories.map(category => <section className="problem-category" key={category.title}><h2 className="problem-category-title">{category.title}</h2><div className="problem-list">{category.problemIds.map(id => <ProblemCard key={id} problem={problemsById[id]} onProblemConfirmation={onProblemConfirmation} onOperationalSelection={onOperationalSelection}/>)}</div></section>)}</div></section></main>;
+export default function Discovery({ onProblemConfirmation, onOperationalSelection, onFinancialSelection }: { onProblemConfirmation?: (id:string,confirmed:boolean)=>void; onOperationalSelection?: (problemId:string,impactId:string,checked:boolean)=>void; onFinancialSelection?: (problemId:string,impactId:string,checked:boolean)=>void } = {}) {
+  return <main className="discovery-page"><section className="discovery-shell" aria-labelledby="discovery-heading"><h1 id="discovery-heading">Discovery</h1><div className="problem-list">{problemCategories.map(category => <section className="problem-category" key={category.title}><h2 className="problem-category-title">{category.title}</h2><div className="problem-list">{category.problemIds.map(id => <ProblemCard key={id} problem={problemsById[id]} onProblemConfirmation={onProblemConfirmation} onOperationalSelection={onOperationalSelection} onFinancialSelection={onFinancialSelection}/>)}</div></section>)}</div></section></main>;
 }
