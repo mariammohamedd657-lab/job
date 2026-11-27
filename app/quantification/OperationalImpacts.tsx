@@ -13,8 +13,8 @@ function Icon({kind}:{kind:"check"|"link"|"calculator"|"chevron"}){
  const paths:Record<string,ReactNode>={check:<><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="m8 12 3 3 5-6" stroke="#181818"/></>,link:<><path d="m10 13 4-4M8 15l-1 1a3 3 0 0 1-4-4l4-4a3 3 0 0 1 4 0M13 9l1-1a3 3 0 0 1 4 4l-4 4a3 3 0 0 1-4 0"/></>,calculator:<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h1m6 0h1M8 15h1m6 0h1M8 18h1m6 0h1"/></>,chevron:<path d="m6 9 6 6 6-6"/>};
  return <svg className="q-icon" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[kind]}</svg>;
 }
-type Props={shortfall:boolean;setShortfall:(value:boolean)=>void;problemId:string;panels:OperationalPanel[];raw:Figures;result:Result;show:boolean;setShow:(value:boolean)=>void;update:(key:string,value:string)=>void;setRaw:(next:Figures)=>void};
-export default function OperationalImpacts({problemId,panels,raw,result,show,setShow,update,setRaw,shortfall,setShortfall}:Props){
+type Props={complete:Record<string,boolean>;setComplete:(id:string,value:boolean)=>void;shortfall:boolean;setShortfall:(value:boolean)=>void;problemId:string;panels:OperationalPanel[];raw:Figures;result:Result;show:boolean;setShow:(value:boolean)=>void;update:(key:string,value:string)=>void;setRaw:(next:Figures)=>void};
+export default function OperationalImpacts({problemId,panels,raw,result,show,setShow,update,setRaw,shortfall,setShortfall,complete,setComplete}:Props){
  const [collapsed,setCollapsed]=useState<Record<string,boolean>>({});
  const [shortfallOpen,setShortfallOpen]=useState(true);
  const config=configs.find(c=>c.id===problemId)!;
@@ -32,7 +32,7 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
     const state=summary.valid?((panel.estimated||result.estimated.has(panel.primaryKey))?(summary.computed?"Estimated · Automatically calculated":"Estimated · Directly entered"):(summary.computed?"Automatically calculated":"Directly entered")):"Awaiting information";
     return <section className="op-impact-card" key={id} data-impact={panel.id}>
       <button type="button" className="op-impact-toggle" aria-expanded={open} onClick={()=>setCollapsed(old=>({...old,[id]:open}))}><span className="op-result-tick"><Icon kind="check"/></span><span>{panel.name}</span><span className={"q-arrow "+(open?"q-open":"")}><Icon kind="chevron"/></span></button>
-      <div className="op-impact-body" hidden={!open}>
+      <div className="op-impact-body" hidden={!open}>{["negative-operational-lost-leads","negative-operational-lost-qualified-leads","negative-operational-fewer-appointments-booked","negative-operational-fewer-customers-served","negative-operational-fewer-tasks-completed"].includes(panel.id)&&<label className="step2-op-option"><input type="checkbox" checked={complete[panel.id]??true} onChange={e=>setComplete(panel.id,e.target.checked)}/>All applicable statuses form a complete, mutually exclusive breakdown</label>}
         <div className="op-impact-fields">{panel.fields.map(field=>{
           const v=resolved(field.key);
           return <div className="q-field" key={field.key}>

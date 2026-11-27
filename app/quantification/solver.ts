@@ -14,7 +14,7 @@ function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{r
 const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
 export type ZeroInference={target:string;dependencies:string[];label:string};
-export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
+export type AdditionalEquations={actualIntegerKeys?:string[];averageKeys?:string[];fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
 export type PopulationClassification="complete"|"incomplete"|"disjoint"|"containment"|"overlapping";
@@ -29,9 +29,10 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  if(config.id==="problem-28")labels["step2:staff-shortfall"]="Staff hour shortfall";
  const integerKeys=new Set([...activeExtras.filter(key=>supplemental[key]?.integer||key==="step2:payments-without-reminders"),"total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
  if(config.actualKey&&integerKeys.has(config.actualKey)){integerKeys.add("target");integerKeys.add("difference");}
+ const actualIntegerKeys=new Set(additional?.actualIntegerKeys??[]);
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
  const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
- const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key));
+ const inputEstimated=(key:string)=>!actualIntegerKeys.has(key)&&!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key)||additional?.averageKeys?.includes(key));
  // Only correct machine-precision residue of an exact integral calculation.
  // Never round an estimated count to an integer.
  const nearInteger=(n:number)=>Number.isSafeInteger(Math.round(n))&&Math.abs(n-Math.round(n))<=Math.min(1e-8,8*Number.EPSILON*Math.max(1,Math.abs(n)));
@@ -97,14 +98,14 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const estimateReach=new Set(Object.keys(known).filter(k=>estimated.has(k)));
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
-    const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
+    const exactIntegerKeys=new Set([...integerKeys].filter(k=>actualIntegerKeys.has(k)||precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
     return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,config.id==="problem-28"?{difference:"difference",shortfall:"step2:staff-shortfall"}:undefined);
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
  for(let round=0;round<50;round++){
   values={...manual};calculated={};estimated=new Set(Object.keys(manual).filter(inputEstimated));
-  const derivesEstimate=(key:string,dependencies:string[])=>!precision.exactInputs?.has(key)&&(inherentEstimates.has(key)||dependencies.some(k=>estimated.has(k)));
+  const derivesEstimate=(key:string,dependencies:string[])=>!actualIntegerKeys.has(key)&&!precision.exactInputs?.has(key)&&(inherentEstimates.has(key)||dependencies.some(k=>estimated.has(k)));
   const markEstimate=(key:string,estimate:boolean)=>{if(estimate)estimated.add(key);else estimated.delete(key);};
   const roots:Record<string,Set<string>>=Object.fromEntries(Object.keys(manual).map(k=>[k,new Set([k])]));
   const active=(k:string)=>values[k]!==undefined&&!blocked.has(k)&&![...(roots[k]??[])].some(x=>blocked.has(x));
@@ -211,6 +212,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   if(!changed)break;
  }
  const undefinedKeys=new Set(Object.entries(rateDenominators).filter(([key,count])=>!blocked.has(count)&&values[count]===0&&!(key in manual)).map(([key])=>key));
+ if(labels["fin:average-revenue-purchase"]&&values["fin:total-purchases"]===0&&!Number.isFinite(values["fin:average-revenue-purchase"]))undefinedKeys.add("fin:average-revenue-purchase");
  const result:Result={undefinedKeys,values,calculated,errors:[...errors],blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
  if(precision.includeBounds){
   // Consistent inputs give proactive limits. In a contradiction, use the

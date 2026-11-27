@@ -47,6 +47,7 @@ export function canonicalId(problemId:string,key:string):string{
  if(/^step3:historical:(reactivation|reviews):(eligible|converted)$/.test(key))return key.endsWith(":eligible")?"eligible_conversion_population":"converted_population";
  if(key.startsWith("op:")||key.startsWith("step2:negative-operational-")){
   const [,impact,suffix]=key.split(":");const id=opKeys[impact.replace("negative-operational-","")]?.[suffix];if(id)return id;
+  if(suffix==="not-lost"||suffix==="pending")return "unclassified_quantity";
  }
  if(key.startsWith("fin:")){
   const suffix=key.slice(4);

@@ -62,6 +62,7 @@ function combined(total:ImpactField,others:ImpactField[],rate:ImpactField):Relat
  const sum=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).reduce((n,k)=>n+v[k],0);
  const sumText=(v:Record<string,number>,except?:string)=>keys.filter(k=>k!==except).map(k=>format(v[k])).join(" + ");
  return {keys:[a,...keys,b],label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)",
+  terms:[...keys.map(key=>({coefficient:1,keys:[key]})),{coefficient:-1,keys:[a]},{coefficient:.01,keys:[a,b]}],
   complement:{population:a,components:keys,rate:b,label:others.map(p=>p.label).join(" + ")+" = "+total.label+" × (1 − "+rate.label+" ÷ 100)"},
   derive:(v,k)=>{if(k===a){const d=1-v[b]/100;return d===0?undefined:sum(v)/d;}if(k===b)return v[a]===0?undefined:(1-sum(v)/v[a])*100;return v[a]*(1-v[b]/100)-sum(v,k);},
   impossible:(v,k)=>k===a&&v[b]===100&&sum(v)!==0||k===b&&v[a]===0&&sum(v)!==0,
@@ -74,20 +75,27 @@ function bounded(total:ImpactField,parts:ImpactField[]):AdditionalConstraint{
   violated:v=>{const a=v[total.key],b=keys.reduce((n,k)=>n+(v[k]??0),0);return Number.isFinite(a)&&b>a&&!close(a,b);}};
 }
 
-export function operationalPanels(config:Config,selectedIds:readonly string[]):OperationalPanel[]{
+export function operationalPanels(config:Config,selectedIds:readonly string[],complete:Record<string,boolean>={}):OperationalPanel[]{
  const problem=problems.find(p=>p.id===config.id)!;
  return problem.operationalImpacts.filter(impact=>selectedIds.includes(impact.id)).map(impact=>{
   const key=impact.id.slice(prefix.length),method=operationalMethods[config.id]?.[key];
   const primaryKey="op:"+key+":result";
+  const finalized=complete[impact.id]??true;
   const support=(suffix:string,label:string,unit:string,integer=false)=>normalizeField(config.id,field("op:"+key+":"+suffix,label,unit,integer));
   const primary=(label:string,unit:string,integer=true):ImpactField=>({...normalizeField(config.id,field(primaryKey,label,unit,integer)),primary:true});
   const panel=(fields:ImpactField[],relations:Relation[]=[],extra:Partial<OperationalPanel>={}):OperationalPanel=>({id:impact.id,name:impact.label,fields,primaryKey:fields.find(f=>f.primary)!.key,relations,verified:true,populationLinks:operationalPopulationLinks(config.id,method,fields.find(f=>f.primary)!.key),...extra});
   const direct=(label:string,unit:string,estimated=false)=>{const result=primary(label,unit,!estimated);return panel([result],[],{estimated,example:{[result.key]:"7"}});};
   const ratePanel=(population:ImpactField,rate:ImpactField,result:ImpactField,others:ImpactField[]=[],context:ImpactField[]=[],estimated=false,example?:Record<string,string>)=>{
    const relations=[product(result.key,population.key,rate.key,.01,result.label+" = "+population.label+" × "+rate.label+" ÷ 100")];
-   if(others.length)relations.unshift(breakdown(population,[...others,result]));
-   if(others.length)relations.push(combined(population,others,rate));
-   return panel([...context,population,...others,rate,result],relations,{
+   const lossBreakdown=others.length===2;
+   const remainder=lossBreakdown?support("not-lost","Recovered + pending",population.unit):undefined;
+   if(finalized||!lossBreakdown){
+    if(others.length)relations.unshift(breakdown(population,[...others,result]));
+    if(others.length)relations.push(combined(population,others,rate));
+    if(remainder)relations.push(breakdown(population,[remainder,result]));
+   }
+   if(remainder)relations.push(breakdown(remainder,others));
+   return panel([...context,population,...others,...(remainder?[remainder]:[]),rate,result],relations,{
     estimated,constraints:[bounded(population,[...others,result])],
     inferZeros:v=>{
      const zeros:ZeroInference[]=[];
@@ -110,8 +118,9 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
   };
   switch(method){
    case "calls":
+   case "direct-leads":
    case "leads":{
-    const population=method==="calls"?support("unique-leads","Unique affected leads","Leads",true):shared(config,"affected",true);
+    const population=method!=="leads"?support("unique-leads","Unique affected leads","Leads",true):shared(config,"affected",true);
     const recovered=support("recovered","Recovered leads","Leads",true),pending=support("pending","Pending leads","Leads",true);
     return ratePanel(population,support("loss-rate","Loss rate","%"),primary("Lost leads","Leads"),[recovered,pending],[],false,{[population.key]:"26",[recovered.key]:"8",[pending.key]:"9"});
    }
@@ -121,13 +130,18 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
    case "attendance":return ratePanel(shared(config,"affected",true),support("attendance-loss-rate","Attendance loss rate","%"),primary("Lost attendance","Appointments"));
    case "slots":return direct("Unused appointment slots","Slots");
    case "new-buyers":return direct("Potential new buyers lost","Buyers",true);
-   case "existing-buyers":return direct("Lost existing buyers","Buyers");
-   case "unserved":return direct("Unserved buyers","Buyers");
+   case "existing-buyers":return ratePanel(support("affected","Affected existing buyers","Buyers",true),support("rate","Attributable existing buyer loss rate","%"),primary("Lost existing buyers","Buyers"));
+   case "unserved":{
+    const population=support("affected","Affected buyers","Buyers",true),served=support("served","Buyers subsequently served","Buyers",true),result=primary("Unserved buyers","Buyers"),pending=support("pending","Pending or otherwise classified buyers","Buyers",true);
+    const parts=finalized?[served,result]:[served,pending,result];
+    return panel([population,...parts],[breakdown(population,parts)],{constraints:[bounded(population,parts)],example:{[population.key]:"100",[served.key]:"70",...(finalized?{}:{[pending.key]:"0"})}});
+   }
    case "time":return ratePanel(shared(config,"hours"),support("avoidable-percentage","Avoidable time percentage","%"),primary("Avoidable time","hrs",false),[support("necessary-time","Necessary time","hrs")]);
-   case "tasks":
-    // Current problem-28 counts tasks affected by overload, not specifically incomplete tasks.
-    // Keep the incomplete-task result separate unless a genuinely identical field is provided.
-    return direct("Incomplete tasks","Tasks");
+   case "tasks":{
+    const population=config.id==="problem-28"?shared(config,"affected",true):support("affected","Affected tasks","Tasks",true),completed=support("completed","Completed affected tasks","Tasks",true),result=primary("Incomplete tasks","Tasks"),pending=support("pending","Pending or otherwise classified tasks","Tasks",true);
+    const parts=finalized?[completed,result]:[completed,pending,result];
+    return panel([population,...parts],[breakdown(population,parts)],{constraints:[bounded(population,parts)],example:{[population.key]:"200",[completed.key]:"150",...(finalized?{}:{[pending.key]:"0"})}});
+   }
    case "invoices":{
     // Missed payment reminders are not necessarily unique affected invoices.
     // The invoice-follow-up problem already has an identical affected-invoice count.
@@ -136,7 +150,7 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
    }
    case "reviews":return ratePanel(shared(config,"affected",true),support("additional-review-rate","Additional review rate","%"),primary("Potential reviews lost","Reviews",false),[],[],true);
    case "information":return panel([{...shared(config,"affected",true),primary:true}],[],{example:{affected:"7"}});
-   case "direct-leads":return direct("Lost leads","Leads");
+
    default:throw new Error("Missing approved operational configuration: "+config.id+" / "+impact.id);
   }
  });
