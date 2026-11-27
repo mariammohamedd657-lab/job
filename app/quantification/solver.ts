@@ -70,7 +70,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   valid:v=>close(v.difference,v.target*(v.targetPct/100-1))
  });
  if(config.moneyPopulation)relations.push(product("moneyTotal",config.moneyPopulation,"moneyAverage",1,"Total amount = quantity × average amount"));
- if(additional)relations.push(...additional.relations);
+ if(additional)relations.push(...additional.relations.filter(rel=>rel.keys.every(k=>Object.prototype.hasOwnProperty.call(labels,k))));
  const localLinks:PopulationLink[]=[];
  const subset=(population:string,member:string)=>localLinks.push({population,member,kind:"subset",label:(labels[member]??member)+" cannot exceed "+(labels[population]??population)});
  const linear=(keys:string[],coefficients:number[],label:string):Relation=>({keys,label,terms:keys.map((key,j)=>({coefficient:coefficients[j],keys:[key]})),derive:(v,k)=>-keys.reduce((acc,key,j)=>acc+(key===k?0:coefficients[j]*v[key]),0)/coefficients[keys.indexOf(k)],valid:v=>close(keys.reduce((acc,key,j)=>acc+coefficients[j]*v[key],0),0)});
@@ -86,13 +86,14 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  if(config.fields.Quantity.length&&complete)complements.push(
   {population:"total",components:["unaffected"],rate:"affectedPct",label:"Affected rate is the complement of unaffected quantity ÷ total"},
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
- const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
+ const algebra=relations.filter(rel=>rel.keys.every(k=>Object.prototype.hasOwnProperty.call(labels,k))).flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
  if(config.id==="problem-28"){
   const key="step2:staff-shortfall";
   relations.push({keys:[key,"difference"],label:"Staff hour shortfall = max(0, required − available)",derive:(v,k)=>k===key?Math.max(0,v.difference):v[key]>0?v[key]:undefined,valid:v=>close(v[key],Math.max(0,v.difference))});
  }
  const timeDenominators:Record<string,string>=config.timePopulation?{averageMinutes:config.timePopulation,...(config.id==="problem-15"?{averageEventMinutes:"reschedulingEvents"}:{})}:{};
  const rateDenominators:Record<string,string>={...timeDenominators,...(config.moneyPopulation?{moneyAverage:config.moneyPopulation}:{}),...(compatible?{affectedPct:"total",unaffectedPct:"total",remainingPct:"total"}:{}),targetPct:"target",daily:"days",...(config.id==="problem-12"?{missedReminderPct:"requiredReminders"}:{}),...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
+ for(const key of Object.keys(rateDenominators))if(!Object.prototype.hasOwnProperty.call(labels,key)||!Object.prototype.hasOwnProperty.call(labels,rateDenominators[key]))delete rateDenominators[key];
  const baseDomain=(key:string):[number,number]=>[key==="difference"||additional?.signedKeys?.includes(key)?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const domain=(key:string):[number,number]=>{const [lo,hi]=baseDomain(key),b=externalBounds[key];return [Math.max(lo,b?.min??-Infinity),Math.min(hi,b?.max??Infinity)];};
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>(),conflicts:Conflict[]=[];
@@ -100,27 +101,27 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;if(evidence[k]?.kind==="rounded"||evidence[k]?.kind==="interval")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);report([k],(labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
  const intervals=(known:Record<string,number>)=>{
-    const links=[...localLinks,...(compatible?basePopulationLinks(config):[]),...(additional?.populationLinks??[]),...(config.fields.Quantity.length&&compatible?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])];
+    const links=[...localLinks,...(compatible?basePopulationLinks(config):[]),...(additional?.populationLinks??[]),...(config.fields.Quantity.length&&compatible?[{population:"total",member:"affected",kind:"subset" as const,label:"Affected is contained in total"},{population:"total",member:"unaffected",kind:"subset" as const,label:"Unaffected is contained in total"}]:[])].filter(link=>Object.prototype.hasOwnProperty.call(labels,link.population)&&Object.prototype.hasOwnProperty.call(labels,link.member));
     // Relax the integer domain only for unknown counts in components with an
     // active estimate. A manual actual count is still an exact fixed value.
     // In an exact-only component retain the existing discrete bound inference.
     const estimateReach=new Set(Object.keys(known).filter(k=>estimated.has(k)));
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
-    const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
+    const exactIntegerKeys=new Set([...integerKeys].filter(k=>evidence[k]?.kind==="exact"||precision.exactInputs?.has(k)||!inherentEstimates.has(k)&&!estimateReach.has(k)||k in manual&&!estimated.has(k)));
     return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,[...(config.id==="problem-28"?[{difference:"difference",result:"step2:staff-shortfall"}]:[]),...(additional?.positiveParts??[])],externalBounds);
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
  for(let round=0;round<50;round++){
   values={...manual};calculated={};estimated=new Set(Object.keys(manual).filter(inputEstimated));
-  const derivesEstimate=(key:string,dependencies:string[])=>!precision.exactInputs?.has(key)&&(inherentEstimates.has(key)||dependencies.some(k=>estimated.has(k)));
+  const derivesEstimate=(key:string,dependencies:string[])=>evidence[key]?.kind!=="exact"&&!precision.exactInputs?.has(key)&&(inherentEstimates.has(key)||dependencies.some(k=>estimated.has(k)));
   const markEstimate=(key:string,estimate:boolean)=>{if(estimate)estimated.add(key);else estimated.delete(key);};
   const roots:Record<string,Set<string>>=Object.fromEntries(Object.keys(manual).map(k=>[k,new Set([k])]));
   const active=(k:string)=>values[k]!==undefined&&!blocked.has(k)&&![...(roots[k]??[])].some(x=>blocked.has(x));
   let changed=false;
   const contradict=(keys:string[],message:string)=>{const sources=[...new Set(keys.flatMap(k=>[...(roots[k]??[])]))];report(sources,message);for(const x of sources){if(!blocked.has(x)){blocked.add(x);changed=true;}}};
-  for(let pass=0;pass<50;pass++){
+  for(let pass=0;pass<Math.max(50,Object.keys(labels).length*2);pass++){
    let added=false;
    for(const [key,b] of Object.entries(externalBounds))if(active(key)&&((b.min!==undefined&&(values[key]<b.min&&!close(values[key],b.min)||b.minExclusive&&values[key]<=b.min))||(b.max!==undefined&&(values[key]>b.max&&!close(values[key],b.max)||b.maxExclusive&&values[key]>=b.max))))contradict([key],"Cross-problem restriction conflicts with "+(labels[key]??key)+".");
    for(const [average,count] of Object.entries(timeDenominators)){
@@ -147,7 +148,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    if(changed)break;
    for(const rel of relations){
     if(changed)break;
-    if(rel.keys.some(k=>blocked.has(k)))continue;
+    if(rel.keys.some(k=>blocked.has(k)||!Object.prototype.hasOwnProperty.call(labels,k)))continue;
     const productTerm=rel.terms?.length===2?rel.terms.find(t=>t.keys.length>1):undefined;
     const outputTerm=productTerm?rel.terms?.find(t=>t.keys.length===1):undefined;
     if(productTerm&&outputTerm){

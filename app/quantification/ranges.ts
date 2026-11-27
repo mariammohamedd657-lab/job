@@ -150,6 +150,7 @@ export function rangeConsequences(equations:AlgebraEquation[],known:Record<strin
      if(other.lo.value>0||other.hi.value<0){
       const corners=[A.lo.value/other.lo.value,A.lo.value/other.hi.value,A.hi.value/other.lo.value,A.hi.value/other.hi.value];
       if(corners.every(n=>!Number.isNaN(n))){const provenance=deps(A.lo,A.hi,other.lo,other.hi);narrow(key,"lo",limit(Math.min(...corners),provenance),equation.label);narrow(key,"hi",limit(Math.max(...corners),provenance),equation.label);}
+      if(other.lo.value>0&&A.lo.value>=0){if(Number.isFinite(other.hi.value))narrow(key,"lo",limit(A.lo.value/other.hi.value,deps(A.lo,other.hi)),equation.label);if(Number.isFinite(A.hi.value))narrow(key,"hi",limit(A.hi.value/other.lo.value,deps(A.hi,other.lo)),equation.label);}
      }else if(other.lo.value>=0&&A.lo.value>=0){
       if(other.hi.value>0&&Number.isFinite(other.hi.value))narrow(key,"lo",limit(A.lo.value/other.hi.value,deps(A.lo,other.hi)),equation.label);
      }

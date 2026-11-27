@@ -82,7 +82,7 @@ export default function Quantification({confirmedProblems = {},operationalSelect
    const displayed=config.id==="problem-1"?[...new Set([...(operationalSelections[config.id]??[]),"negative-operational-lost-leads"])]:operationalSelections[config.id]??[];
    const financialSources=new Set(financialContent(config).flatMap(o=>routeFields(o.routes)).filter(f=>f.shared==="operational").map(f=>f.key));
    const all=operationalPanels(config, Object.keys(operationalMethods[config.id]).map(id=>"negative-operational-"+id),{finalizedSlots:slotFinalized[config.id]??false,finalizedBuyers:buyerFinalized[config.id]??false,finalizedTasks:taskFinalized[config.id]??false});
-   const active=all.filter(panel=>displayed.includes(panel.id)||financialSources.has(panel.primaryKey));
+   const active=all.filter(panel=>displayed.includes(panel.id)||panel.fields.some(field=>financialSources.has(field.key))||panel.fields.some(field=>Object.prototype.hasOwnProperty.call(figures[config.id]??{},field.key)));
    return [config.id,potentialAndCostEquations(config,confirmedFinancialEquations(config,operationalEquations(active),matchedCost[config.id]??false),{newBuyerMatch:newBuyerMatches[config.id]??false,matchedBuyerCosts:buyerCostMatches[config.id]??false,...costOptions[config.id]})];
   }));
   return solveAcrossProblems(configs,figures,equations,classifications,lastEdited,sharing?sharingLinks:[],evidence);
