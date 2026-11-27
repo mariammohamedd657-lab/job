@@ -14,20 +14,21 @@ function ratio(a:string,b:string,c:string,factor:number,label:string):Relation{r
 const validValue=(key:string,n:number)=>Number.isFinite(n)&&(key==="difference"||n>=0)&&(!["affectedPct","unaffectedPct"].includes(key)||n<=100);
 export type AdditionalConstraint={keys:string[];message:string;violated:(values:Record<string,number>)=>boolean};
 export type ZeroInference={target:string;dependencies:string[];label:string};
-export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
+export type AdditionalEquations={signedKeys?:string[];actualIntegerKeys?:string[];unboundedRateKeys?:string[];positiveParts?:{result:string;difference:string}[];fields:{key:string;label:string;unit:string}[];relations:Relation[];constraints?:AdditionalConstraint[];undefinedRates?:{denominator:string;rate:string}[];integerKeys?:string[];estimatedKeys?:string[];populationLinks?:PopulationLink[];inferZeros?:(values:Record<string,number>)=>ZeroInference[]};
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
 export type PrecisionOptions={exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  const integerKeys=new Set(["total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
+ const actualIntegerKeys=new Set(additional?.actualIntegerKeys??[]);
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
  const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
- const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key));
+ const inputEstimated=(key:string)=>!actualIntegerKeys.has(key)&&!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key));
  // Only correct machine-precision residue of an exact integral calculation.
  // Never round an estimated count to an integer.
  const nearInteger=(n:number)=>Number.isSafeInteger(Math.round(n))&&Math.abs(n-Math.round(n))<=Math.min(1e-8,8*Number.EPSILON*Math.max(1,Math.abs(n)));
- const isValid=(key:string,n:number,computed=false,estimate=false)=>validValue(key,n)&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||n<=100)&&(!integerKeys.has(key)||(estimate?Math.abs(n)<=Number.MAX_SAFE_INTEGER:computed?nearInteger(n):Number.isSafeInteger(n)));
+ const isValid=(key:string,n:number,computed=false,estimate=false)=>(additional?.signedKeys?.includes(key)?Number.isFinite(n):validValue(key,n))&&(!additional?.fields.some(f=>f.key===key&&f.unit==="%")||additional?.unboundedRateKeys?.includes(key)||n<=100)&&(!integerKeys.has(key)||(estimate?Math.abs(n)<=Number.MAX_SAFE_INTEGER:computed?nearInteger(n):Number.isSafeInteger(n)));
  const numericValue=(key:string,n:number,estimate:boolean)=>integerKeys.has(key)&&!estimate?Math.round(n):n===0?0:n;
 
  const relations:Relation[]=[];
@@ -49,7 +50,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
  const rateDenominators:Record<string,string>={affectedPct:"total",unaffectedPct:"total",targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
- const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
+ const domain=(key:string):[number,number]=>[key==="difference"||additional?.signedKeys?.includes(key)?-Infinity:0,["affectedPct","unaffectedPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")&&!additional?.unboundedRateKeys?.includes(key)?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
@@ -61,14 +62,14 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const estimateReach=new Set(Object.keys(known).filter(k=>estimated.has(k)));
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
-    const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
-    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined);
+    const exactIntegerKeys=new Set([...integerKeys].filter(k=>actualIntegerKeys.has(k)||precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
+    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,additional?.positiveParts??[]);
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
  for(let round=0;round<50;round++){
   values={...manual};calculated={};estimated=new Set(Object.keys(manual).filter(inputEstimated));
-  const derivesEstimate=(key:string,dependencies:string[])=>!precision.exactInputs?.has(key)&&(inherentEstimates.has(key)||dependencies.some(k=>estimated.has(k)));
+  const derivesEstimate=(key:string,dependencies:string[])=>!actualIntegerKeys.has(key)&&!precision.exactInputs?.has(key)&&(inherentEstimates.has(key)||dependencies.some(k=>estimated.has(k)));
   const markEstimate=(key:string,estimate:boolean)=>{if(estimate)estimated.add(key);else estimated.delete(key);};
   const roots:Record<string,Set<string>>=Object.fromEntries(Object.keys(manual).map(k=>[k,new Set([k])]));
   const active=(k:string)=>values[k]!==undefined&&!blocked.has(k)&&![...(roots[k]??[])].some(x=>blocked.has(x));
