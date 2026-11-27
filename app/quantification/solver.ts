@@ -24,9 +24,10 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  if(["disjoint","incomplete"].includes(precision.populationClassification??"")){labels.remaining="Remaining unclassified quantity";labels.remainingPct="Remaining percentage";}
  if(precision.populationClassification==="overlapping"){labels.overlap="Overlap";labels.combined="Unique combined population";}
  const integerKeys=new Set(["intendedBookings","missedBookings","requiredReminders","missedReminders","sentReminders","pendingReminders","reschedulingEvents","affectedInvoices","requiredPayments","missingRecordings","missingOutcomes","missingBoth","requiredUpdates","missedUpdates","completedUpdates","pendingUpdates","overlap","combined", "step2:payments-without-reminders","total","affected","unaffected","remaining","recordedUnits",...(additional?.integerKeys??[])]);
+ if(config.actualKey&&integerKeys.has(config.actualKey)){integerKeys.add("target");integerKeys.add("difference");}
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
  const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="averageEventMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
- const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key));
+ const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)&&key!=="targetPct"||inherentEstimates.has(key));
  // Only correct machine-precision residue of an exact integral calculation.
  // Never round an estimated count to an integer.
  const nearInteger=(n:number)=>Number.isSafeInteger(Math.round(n))&&Math.abs(n-Math.round(n))<=Math.min(1e-8,8*Number.EPSILON*Math.max(1,Math.abs(n)));
@@ -48,7 +49,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  if(config.timePopulation)relations.push(product("hours",config.timePopulation,"averageMinutes",1/60,"Hours = quantity × average minutes ÷ 60"));
  if(hasFrequency)relations.push(product("affected","days","daily",1,"Affected quantity = days × quantity per day"));
  if(config.actualKey)relations.push(sum(config.actualKey,"target","difference","Actual = target + difference"),ratio(config.actualKey,"target","targetPct",.01,"Actual = target × percentage of target ÷ 100"),{
-  keys:["difference","target","targetPct"],label:"Difference = target × (percentage of target ÷ 100 − 1)",
+  keys:["difference","target","targetPct"],label:"Difference = target × (percentage of target ÷ 100 − 1)",terms:[{coefficient:1,keys:["difference"]},{coefficient:1,keys:["target"]},{coefficient:-.01,keys:["target","targetPct"]}],
   derive:(v,k)=>k==="difference"?v.target*(v.targetPct/100-1):k==="target"?div(v.difference,v.targetPct/100-1):v.target===0?undefined:(1+v.difference/v.target)*100,
   operation:(v,k)=>k==="difference"?format(v.target)+" × ("+format(v.targetPct)+" ÷ 100 − 1)":k==="target"?format(v.difference)+" ÷ ("+format(v.targetPct)+" ÷ 100 − 1)":"(1 + "+format(v.difference)+" ÷ "+format(v.target)+") × 100",
   impossible:(v,k)=>k==="target"&&v.targetPct===100&&v.difference!==0||k==="targetPct"&&v.target===0&&v.difference!==0,
@@ -105,6 +106,14 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     if(active(count)&&values[count]===0&&active(average))contradict([count,average],(labels[average]??average)+" is undefined when the corresponding count is zero.");
     if(active(average)&&values[average]===0&&active("hours")&&values.hours>0)contradict([average,"hours"],"Positive total duration cannot have a zero average duration.");
    }
+   if(config.actualKey&&active("targetPct")){
+    if(active("target")&&values.target===0)contradict(["target","targetPct"],"Percentage of target is undefined when target is zero.");
+    if(active("difference")){
+     const sign=Math.sign(values.targetPct-100),diffSign=Math.sign(values.difference);
+     if(sign!==diffSign)contradict(["difference","targetPct"],"Difference and percentage of target must have matching signs relative to 100%.");
+    }
+    if(active(config.actualKey)&&((values.targetPct===0&&values[config.actualKey]>0)||(values.targetPct>0&&values[config.actualKey]===0)))contradict([config.actualKey,"targetPct"],"A defined percentage of target requires compatible actual value and a positive target.");
+   }
    // A specified frequency requires a positive observation period, even when the frequency is zero.
    if(hasFrequency&&active("days")&&values.days===0){
     if(active("daily"))contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");
@@ -122,6 +131,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     if(rel.impossible?.(values,k)){contradict(known,"Contradictory entries: "+rel.label+".");continue;}
     const denominator=rateDenominators[k];if(denominator&&active(denominator)&&values[denominator]===0)continue;
     const n=rel.derive(values,k);if(n===undefined)continue;
+    if(config.actualKey&&k==="target"&&n===0&&active("targetPct")){contradict(known,"A defined percentage of target requires a positive target.");continue;}
     if(hasFrequency&&k==="days"&&n===0&&known.includes("daily")){contradict(known,"A defined daily frequency requires a positive measurement period.");continue;}
     if(Object.entries(timeDenominators).some(([average,count])=>count===k&&n===0&&active(average))){contradict(known,"A defined average duration requires a positive corresponding count.");continue;}
     const estimate=derivesEstimate(k,known);
@@ -166,6 +176,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
      const denominator=rateDenominators[k];
      if(denominator&&active(denominator)&&values[denominator]===0)continue;
      const estimate=derivesEstimate(k,inferred.dependencies);
+     if(config.actualKey&&k==="target"&&inferred.value===0&&active("targetPct")){contradict([...inferred.dependencies,"targetPct"],"A defined percentage of target requires a positive target.");continue;}
      if(hasFrequency&&k==="days"&&inferred.value===0&&active("daily")){contradict([...inferred.dependencies,"daily"],"A defined daily frequency requires a positive measurement period.");continue;}
      if(Object.entries(timeDenominators).some(([average,count])=>count===k&&inferred.value===0&&active(average))){contradict([...inferred.dependencies,...Object.keys(timeDenominators).filter(average=>timeDenominators[average]===k&&active(average))],"A defined average duration requires a positive corresponding count.");continue;}
      if(!isValid(k,inferred.value,true,estimate)){contradict(inferred.dependencies,"Contradictory entries: "+inferred.label+".");continue;}
