@@ -1,8 +1,8 @@
 import type {Config} from "./config";
 import {financialContent,routeFields,type ContentRoute} from "./step2-content";
 import {product,sum,type AdditionalEquations,type Relation} from "./solver";
-export function potentialAndCostEquations(config:Config,base:AdditionalEquations,options:{newBuyerMatch?:boolean;matchedBuyerCosts?:boolean;grossComplete?:boolean;netComplete?:boolean;wastedComplete?:boolean;paidLeadContainment?:boolean;simpleInterest?:boolean}={}):AdditionalEquations{
- const outcomes=financialContent(config).filter(o=>["F7","F8","F3","F9","F4"].includes(o.id));
+export function potentialAndCostEquations(config:Config,base:AdditionalEquations,options:{newBuyerMatch?:boolean;matchedBuyerCosts?:boolean;grossComplete?:boolean;netComplete?:boolean;wastedComplete?:boolean;paidLeadContainment?:boolean;simpleInterest?:boolean;estimatedSimpleInterest?:boolean;estimatedGrossComplete?:boolean;estimatedNetComplete?:boolean;shareEstimatedAverages?:boolean;overdueInvoiceMatch?:boolean;overdueInvoiceContainment?:boolean}={}):AdditionalEquations{
+ const outcomes=financialContent(config).filter(o=>["F7","F8","F3","F9","F4","F5"].includes(o.id));
  if(!outcomes.length)return base;
  const fields=[...new Map(outcomes.flatMap(o=>[...o.fields,...routeFields(o.routes)]).map(f=>[f.key,f])).values()];
  const keys=new Set(fields.map(f=>f.key));
@@ -40,32 +40,47 @@ export function potentialAndCostEquations(config:Config,base:AdditionalEquations
  for(const [id,prefix] of [["F3","higher:"],["F9","estimated-higher:"]]){
   if(!outcomes.some(o=>o.id===id))continue;
   const x=(suffix:string)=>k(prefix+suffix);
+  const estimated=id==="F9";
+  const avg=(suffix:string)=>k((estimated?"estimated-":"")+suffix);
+  const paidSpend=k(estimated?"estimated-marketing-spend":"marketing-spend"),paidCount=k(estimated?"estimated-paid-acquired":"paid-acquired");
+  if(estimated){estimatedKeys.push(...fields.filter(f=>f.key.startsWith("fin:estimated-higher:")||f.key.startsWith("fin:estimated-")&&!f.key.includes("avoided")).map(f=>f.key));if(options.shareEstimatedAverages)for(const key of ["average-paid-lead","average-additional-hour","average-collection-hour","average-additional-resource"])equal(avg(key),k(key));
+   prod(x("staff"),k("estimated-staff-equivalents"),k("estimated-equivalent-cost"));prod(k("estimated-equivalent-expenditure"),k("estimated-equivalent-reference"),k("estimated-equivalent-cost"),1,k("estimated-equivalent-reference"));
+  }
   positive(x("result"),x("difference"),x("actual"),x("comparable"));
   positive(x("marketing"),x("marketing-difference"),x("actual-marketing"),x("comparable-marketing"));
   positive(x("staff"),x("staff-difference"),x("actual-staff"),x("comparable-staff"));
-  prod(x("marketing"),x("paid-leads"),k("average-paid-lead"));
-  prod(k("marketing-spend"),k("paid-acquired"),k("average-paid-lead"),1,k("paid-acquired"));
-  prod(x("staff"),x("paid-hours"),k("average-additional-hour"));
+  prod(x("marketing"),x("paid-leads"),avg("average-paid-lead"));
+  prod(paidSpend,paidCount,avg("average-paid-lead"),1,paidCount);
+  prod(x("staff"),x("paid-hours"),avg("average-additional-hour"));
   prod(x("staff"),x("employees"),x("employee-cost"));
-  prod(x("incremental-staff-expenditure"),x("incremental-staff-hours"),k("average-additional-hour"),1,x("incremental-staff-hours"));
+  prod(x("incremental-staff-expenditure"),x("incremental-staff-hours"),avg("average-additional-hour"),1,x("incremental-staff-hours"));
   prod(x("incremental-employee-expenditure"),x("incremental-employee-count"),x("employee-cost"),1,x("incremental-employee-count"));
   plus(x("collection"),x("collection-staff"),x("collection-fees"));
-  prod(x("collection-staff"),x("collection-hours"),k("average-collection-hour"));
-  prod(x("collection-expenditure"),x("collection-reference-hours"),k("average-collection-hour"),1,x("collection-reference-hours"));
+  prod(x("collection-staff"),x("collection-hours"),avg("average-collection-hour"));
+  prod(x("collection-expenditure"),x("collection-reference-hours"),avg("average-collection-hour"),1,x("collection-reference-hours"));
   plus(x("financing"),x("interest"),x("financing-fees"));
-  if(options.simpleInterest!==false){
+  if((estimated?options.estimatedSimpleInterest:options.simpleInterest)!==false){
    const interest=x("interest"),factors=[x("borrowed"),x("interest-rate"),x("borrowing-period")],all=[interest,...factors];
    relations.push({keys:all,label:"Simple interest = principal × annual percentage × days ÷ 36,500",terms:[{coefficient:1,keys:[interest]},{coefficient:-1/36500,keys:factors}],derive:(v,key)=>{if(key===interest)return factors.reduce((a,b)=>a*v[b],1)/36500;const divisor=factors.filter(k=>k!==key).reduce((a,b)=>a*v[b],1);return divisor===0?undefined:v[interest]*36500/divisor;},valid:v=>Math.abs(v[interest]-factors.reduce((a,b)=>a*v[b],1)/36500)<=1e-8*Math.max(1,v[interest])});
   }
   positive(x("other"),x("other-difference"),x("actual-other"),x("comparable-other"));
-  prod(x("other"),x("resources"),k("average-additional-resource"));
-  prod(x("resource-expenditure"),x("resource-reference-units"),k("average-additional-resource"),1,x("resource-reference-units"));
-  averageKeys.push(k("average-collection-hour"),k("average-additional-resource"));
+  prod(x("other"),x("resources"),avg("average-additional-resource"));
+  prod(x("resource-expenditure"),x("resource-reference-units"),avg("average-additional-resource"),1,x("resource-reference-units"));
+  averageKeys.push(avg("average-collection-hour"),avg("average-additional-resource"));
   signedKeys.push(x("collection-difference"),x("financing-difference"),x("net-category-difference"));
-  totalOf(x("gross-increase"),["marketing","staff","collection","financing","other"].map(x),!!options.grossComplete);
-  if(options.netComplete){totalOf(x("net-category-difference"),["marketing","staff","collection","financing","other"].map(part=>x(part+"-difference")),true);equal(x("difference"),x("net-category-difference"));}
-  integerKeys.push(x("paid-leads"),x("employees"),x("incremental-employee-count"),k("paid-acquired"));
-  averageKeys.push(k("average-paid-lead"),k("average-additional-hour"),x("employee-cost"));
+  totalOf(x("gross-increase"),["marketing","staff","collection","financing","other"].map(x),!!(estimated?options.estimatedGrossComplete:options.grossComplete));
+  if(estimated?options.estimatedNetComplete:options.netComplete){totalOf(x("net-category-difference"),["marketing","staff","collection","financing","other"].map(part=>x(part+"-difference")),true);equal(x("difference"),x("net-category-difference"));}
+  integerKeys.push(x("paid-leads"),x("employees"),x("incremental-employee-count"),paidCount);
+  averageKeys.push(avg("average-paid-lead"),avg("average-additional-hour"),x("employee-cost"));
+ }
+ const delayed=outcomes.find(o=>o.id==="F5");
+ if(delayed){
+  const D=k("delayed"),due=k("payments-due"),timely=k("timely-payments"),count=k("late-invoices"),avg=k("average-late-invoice"),referenceCount=k("overdue-reference-count"),referenceAmount=k("overdue-reference-amount");
+  plus(due,D,timely);prod(D,count,avg);prod(referenceAmount,referenceCount,avg,1,referenceCount);
+  integerKeys.push(count,referenceCount);averageKeys.push(avg);
+  const src=delayed.routes.find(r=>r.id==="affected-invoice-context")?.fields[0];
+  if(src&&options.overdueInvoiceMatch)equal(count,src.key);
+  else if(src&&options.overdueInvoiceContainment)populationLinks.push({population:count,member:src.key,kind:"subset",label:"Applicable additional unpaid invoices are a subset of invoices not paid on time"});
  }
  const wasted=outcomes.find(o=>o.id==="F4");
  if(wasted){
