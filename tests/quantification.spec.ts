@@ -104,8 +104,8 @@ test("quantification panels, calculator state, and Discovery survive route navig
   await chooseProblem(page,c.id);
   for(const s of sectionOrder){
    const section=page.locator('[data-section="'+s+'"]');
-   if(c.fields[s].length)await expect(section.locator("button")).toBeEnabled();
-   else await expect(section.locator("button")).toBeDisabled();
+   if(c.fields[s].length)await expect(section.locator(".q-section-header")).toBeEnabled();
+   else await expect(section.locator(".q-section-header")).toBeDisabled();
   }
  }
 });

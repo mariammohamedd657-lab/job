@@ -3,7 +3,7 @@ import {useState,type ReactNode} from "react";
 import type {OperationalPanel} from "./operational-data";
 import {configs} from "./config";
 import {ContentRoutes,ContentResult,ContentRow} from "./FinancialImpacts";
-import {operationalAlternatives,shortfallField,shortfallRoute} from "./step2-content";
+import {operationalAlternatives,shortfallField,shortfallRoute,routeFields} from "./step2-content";
 import {format,type Figures,type Result} from "./solver";
 import NumericalInput, {resolveQuantity} from "./NumericalInput";
 import { QuantityLimits } from "./QuantityLimits";
@@ -22,7 +22,7 @@ export default function OperationalImpacts({problemId,panels,raw,result,show,set
  if(!panels.length&&problemId!=="problem-28")return <div className="op-empty">No confirmed operational impacts.</div>;
  const resolved=(key:string)=>resolveQuantity(key,raw,result);
  const example=Object.assign({},...panels.map(p=>p.example??{})) as Figures;
- const reset=()=>{const next={...raw};for(const panel of panels)for(const field of panel.fields)delete next[field.key];setRaw(next);};
+ const reset=()=>{const next={...raw};for(const panel of panels)for(const field of [...panel.fields,...routeFields(operationalAlternatives(config,panel.id))])if(!("shared" in field)||!field.shared||panel.fields.some(f=>f.key===field.key))delete next[field.key];if(problemId==="problem-28")delete next[shortfallField.key];setRaw(next);};
  return <div className="op-impact-content">
   <div className="op-confirmed-heading">Confirmed operational impacts</div>
   <div className="op-confirmed-list">{panels.map(p=><div key={p.id}><span className="op-confirmed-check"><Icon kind="check"/></span>{p.name}</div>)}</div>

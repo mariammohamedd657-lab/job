@@ -70,17 +70,19 @@ export function financialContent(config:Config):ContentOutcome[]{
  const lost=source("calls")??source("leads")??source("direct-leads")??source("qualified");
  const slots=source("slots")??(n===16?base("affected","Unused appointment slots"):undefined);
  const time=source("time");
- const marketingRoutes=[...(lost?[route("paid-lost","Paid lost leads",[lost,pct("paid-share","Percentage of lost leads acquired through paid marketing")],"Paid lost leads = Lost leads × Percentage of lost leads acquired through paid marketing ÷ 100.","Use the matching paid lost lead population.")]:[]),route("paid-average","Average cost per paid lead",[f("marketing-spend","Marketing spend for paid leads"),f("paid-acquired","Paid leads acquired","Leads")],"Average cost per paid lead = Marketing spend for paid leads ÷ Paid leads acquired.")];
+ const marketingRoutes=[...(lost?[route("paid-lost","Paid lost leads",[lost,pct("paid-share","Percentage of lost leads acquired through paid marketing")],"Paid lost leads = "+lost.label+" × Percentage of lost leads acquired through paid marketing ÷ 100.","Use the matching paid lost lead population.")]:[]),route("paid-average","Average cost per paid lead",[f("marketing-spend","Marketing spend for paid leads"),f("paid-acquired","Paid leads acquired","Leads")],"Average cost per paid lead = Marketing spend for paid leads ÷ Paid leads acquired.")];
  const staffRoutes=[...(time?[route("avoidable","Avoidable paid time",[time,pct("avoidable-paid-share","Percentage of avoidable time that was paid and wasted")],"Wasted paid staff hours = Avoidable time × Percentage of avoidable time that was paid and wasted ÷ 100.")]:[]),...(slots?[route("slots","Unused appointment slots",[slots,f("wasted-hours-slot","Wasted paid staff hours per unused slot","hrs/Slot")],"Wasted paid staff hours = Unused appointment slots × Wasted paid staff hours per unused slot.","Only if unused slots caused wasted paid time.")]:[]),route("staff-average","Average staffing cost per hour",[f("relevant-staff-costs","Relevant staffing costs"),f("corresponding-hours","Corresponding paid staff hours","hrs")],"Average staffing cost per hour = Relevant staffing costs ÷ Corresponding paid staff hours.")];
  add(4,wasted,[],"Wasted costs = Wasted marketing costs + Wasted staffing costs + Wasted other operating costs.",[route("breakdown","Cost breakdown",[wm,ws,wo],"Sum non-overlapping wasted costs.",undefined,[
  route("marketing","Wasted marketing costs",[paidLost,shared(avgPaid),wm],"Wasted marketing costs = Paid lost leads × Average cost per paid lead.",undefined,marketingRoutes),
  route("staff","Wasted staffing costs",[wastedHours,avgStaff,ws],"Wasted staffing costs = Wasted paid staff hours × Average staffing cost per hour.",undefined,staffRoutes),
  route("other","Wasted other operating costs",[f("wasted-resources","Wasted resources","Units"),f("average-wasted-resource","Average cost per wasted resource","$/Unit"),wo],"Wasted other operating costs = Wasted resources × Average cost per wasted resource.")
  ])],"Wasted costs are not automatically additional costs.");
+ const invoiceSource=source("invoices");
+ const invoiceContext=invoiceSource?[route("affected-invoice-context","Additional unpaid invoices",[invoiceSource],"The operational count provides context. An applicable unpaid monetary balance or average is separately required.","Additional unpaid invoices are not automatically confirmed unrecoverable invoices.")]:[];
  const due=f("payments-due","Payments due"),timely=f("timely-payments","Payments received on time"),delayed=f("delayed","Delayed cash collection");
- add(5,delayed,[due,timely],"Delayed cash collection = Payments due − Payments received on time.",[alt("invoice-timing",[f("late-invoices","Invoices not paid on time","Invoices"),f("average-late-invoice","Average amount not paid on time per invoice","$/Invoice")],"Delayed cash collection = Invoices not paid on time × Average amount not paid on time per invoice.")],"Use the same payment population; delayed cash is not permanent loss.");
+ add(5,delayed,[due,timely],"Delayed cash collection = Payments due − Payments received on time.",[...invoiceContext,alt("invoice-timing",[f("late-invoices","Invoices not paid on time","Invoices"),f("average-late-invoice","Average amount not paid on time per invoice","$/Invoice")],"Delayed cash collection = Invoices not paid on time × Average amount not paid on time per invoice.")],"Use the same payment population; delayed cash is not permanent loss.");
  const original=f("original-unpaid","Original unpaid amount"),recovered=f("recovered-unpaid","Recovered unpaid amount"),pending=f("pending-unpaid","Pending unpaid amount"),unpaid=f("unpaid-loss","Money lost from unpaid invoices");
- add(6,unpaid,[original,recovered,pending],"Money lost from unpaid invoices = Original unpaid amount − Recovered unpaid amount − Pending unpaid amount.",[alt("invoice-loss",[f("unrecoverable-invoices","Confirmed unrecoverable invoices","Invoices"),f("average-unrecoverable","Average unrecoverable amount per invoice","$/Invoice")],"Money lost from unpaid invoices = Confirmed unrecoverable invoices × Average unrecoverable amount per invoice. Directly established unrecoverable amount is also supported.")],"Fully classify the original balance. Unexplained or pending amounts are not confirmed unrecoverable.");
+ add(6,unpaid,[original,recovered,pending],"Money lost from unpaid invoices = Original unpaid amount − Recovered unpaid amount − Pending unpaid amount.",[...invoiceContext,alt("invoice-loss",[f("unrecoverable-invoices","Confirmed unrecoverable invoices","Invoices"),f("average-unrecoverable","Average unrecoverable amount per invoice","$/Invoice")],"Money lost from unpaid invoices = Confirmed unrecoverable invoices × Average unrecoverable amount per invoice. Directly established unrecoverable amount is also supported.")],"Fully classify the original balance. Unexplained or pending amounts are not confirmed unrecoverable.");
  const buyers=f("potential-buyers","Lost potential buyers","Buyers",{estimated:true}),avgBuyer=f("average-revenue-buyer","Average revenue per buyer","$/Buyer"),potential=f("potential-revenue","Lost potential revenue","$",{estimated:true});
  const conversions:ContentRoute[]=[];
  for(const [method,id,rateName] of [["calls","leads","Lead-to-buyer conversion rate"],["leads","leads","Lead-to-buyer conversion rate"],["direct-leads","leads","Lead-to-buyer conversion rate"],["qualified","qualified","Qualified lead-to-buyer conversion rate"],["reactivation","reactivation","Reactivation-to-buyer conversion rate"],["booking","booking","Booking-to-buyer conversion rate"],["attendance","attendance","Attendance-to-buyer conversion rate"],["unserved","unserved","Attributable purchase loss rate"]]){
@@ -99,7 +101,7 @@ export function financialContent(config:Config):ContentOutcome[]{
  route("revenue","Lost potential revenue",[shared(buyers),shared(avgBuyer)],"Supporting quantities for the shared lost potential revenue.",undefined,buyerRoutes)
  ],"Use the relevant estimated costs and margins; contribution profit can be negative.");
  const expected=f("estimated-invoice-loss","Estimated money lost from unpaid invoices","$",{estimated:true});
- add(10,expected,[shared(pending),pct("expected-unrecoverable","Expected unrecoverable percentage")],"Estimated money lost from unpaid invoices = Pending unpaid amount × Expected unrecoverable percentage ÷ 100.",[
+ add(10,expected,[shared(pending),pct("expected-unrecoverable","Expected unrecoverable percentage")],"Estimated money lost from unpaid invoices = Pending unpaid amount × Expected unrecoverable percentage ÷ 100.",[...invoiceContext,
  route("invoice-rate","Expected invoice loss rate",[f("pending-invoices","Pending invoices","Invoices"),pct("expected-invoice-rate","Expected invoice loss rate"),f("average-expected-unrecoverable","Average expected unrecoverable amount per lost invoice","$/Invoice")],"Estimated money lost = Pending invoices × Expected invoice loss rate ÷ 100 × Average expected unrecoverable amount per lost invoice."),
  route("recoverable","Expected recoverable amount",[f("expected-recoverable","Expected recoverable amount")],"Estimated money lost = Pending unpaid amount − Expected recoverable amount.")
  ],"Exclude confirmed unrecoverable balances from pending unpaid amounts.");
@@ -128,3 +130,31 @@ export function baseSupplementalRoutes(config:Config,section:string):ContentRout
  if(config.id==="problem-22"&&section==="Money")return [alt("payment-population",[{key:"step2:payments-without-reminders",label:"Payments without reminders",unit:"Payments"}],"Total amount of payments without reminders = Payments without reminders × Average payment amount.","Separate payment population from reminder events; canonical identity and existing monetary route reconciliation are pending Step 3.")];
  return [];
 }
+
+// Existing equations remain intact. Record differences from the new specification
+// explicitly, rather than silently changing a previously working population.
+export const baseScopeNotes:Record<string,string>={
+ "problem-1":"Missed calls do not equal unique affected leads.",
+ "problem-2":"Calls outside working hours are not necessarily unanswered.",
+ "problem-3":"Use compatible call and booking units; one call may involve multiple bookings.",
+ "problem-4":"Urgent calls, unique buyers and lost existing buyers are distinct populations.",
+ "problem-5":"Recorded-duration units are not necessarily affected leads.",
+ "problem-7":"Not every late qualification would have become a qualified lead.",
+ "problem-10":"Lost leads and potential reactivations lost may overlap.",
+ "problem-12":"Reminder events may differ from unique affected appointments. The existing attendance route requires matching populations.",
+ "problem-14":"Restrict the population to completed appointments; exclude or account for canceled, rescheduled and future appointments.",
+ "problem-15":"Rescheduling events and affected appointments must refer to compatible populations.",
+ "problem-16":"An empty slot does not necessarily establish an unserved buyer.",
+ "problem-17":"Not every routine question represents avoidable time.",
+ "problem-18":"Recorded response durations may represent a different population.",
+ "problem-20":"Manual tasks are not necessarily incomplete tasks.",
+ "problem-21":"Multiple requests may belong to one buyer.",
+ "problem-22":"Reminder events, payments and invoices are separate populations. Existing monetary calculations require matching payment populations.",
+ "problem-23":"Reuse affected invoices only for the matching invoice population.",
+ "problem-24":"Forgone reviews do not establish lost buyers.",
+ "problem-25":"Do not double-count missing recordings and outcomes for the same call.",
+ "problem-26":"Missing CRM updates do not automatically establish lost leads.",
+ "problem-27":"Financial consequences require separately established causal evidence.",
+ "problem-28":"A shortfall does not establish additional paid staff hours."
+};
+export function routeFields(routes:ContentRoute[]):ContentField[]{return routes.flatMap(r=>[...r.fields,...routeFields(r.children??[])]);}
