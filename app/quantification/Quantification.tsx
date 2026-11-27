@@ -71,11 +71,12 @@ export default function Quantification({confirmedProblems = {},operationalSelect
  const [lastEdited,setLastEdited]=useState<Record<string,string>>({});
  const c=configs.find(x=>x.id===selected)!;
  const raw=figures[selected]??{};
- const impacts=operationalPanels(c,operationalSelections[selected]??[],{finalizedSlots,finalizedBuyers,finalizedTasks});
+ const impactIds=selected==="problem-1"?[...new Set([...(operationalSelections[selected]??[]),"negative-operational-lost-leads"])]:operationalSelections[selected]??[];
+ const impacts=operationalPanels(c,impactIds,{finalizedSlots,finalizedBuyers,finalizedTasks});
  const includeShortfall=selected==="problem-28"&&shortfall;
  const results=useMemo(()=>{
   const equations=Object.fromEntries(configs.map(config=>{
-   const displayed=operationalSelections[config.id]??[];
+   const displayed=config.id==="problem-1"?[...new Set([...(operationalSelections[config.id]??[]),"negative-operational-lost-leads"])]:operationalSelections[config.id]??[];
    const financialSources=new Set(financialContent(config).flatMap(o=>routeFields(o.routes)).filter(f=>f.shared==="operational").map(f=>f.key));
    const all=operationalPanels(config, Object.keys(operationalMethods[config.id]).map(id=>"negative-operational-"+id),{finalizedSlots:slotFinalized[config.id]??false,finalizedBuyers:buyerFinalized[config.id]??false,finalizedTasks:taskFinalized[config.id]??false});
    const active=all.filter(panel=>displayed.includes(panel.id)||financialSources.has(panel.primaryKey));
