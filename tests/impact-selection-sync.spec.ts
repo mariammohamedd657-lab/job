@@ -24,14 +24,15 @@ for(const p of problems)test(p.id+" Discovery selects and deselects both impact 
  await expect(page.locator(".op-impact-card[data-impact]")).toHaveCount(p.operationalImpacts.length);
  for(const impact of p.operationalImpacts)await expect(page.locator('[data-impact="'+impact.id+'"]')).toBeVisible();
  const expected=selectedFinancialOutcomes(p.financialImpacts.map(i=>i.id));
- for(const id of expected)await expect(page.locator('[data-financial-impact="'+id+'"] .fin-check')).toBeChecked();
- await expect(page.locator(".fin-check:checked")).toHaveCount(expected.length);
+ for(const id of expected)await expect(page.locator('[data-financial-impact="'+id+'"] .op-result-tick')).toBeVisible();
+ await expect(page.locator(".fin-card")).toHaveCount(expected.length);
+ await expect(page.locator(".fin-impact-content input[type=checkbox]")).toHaveCount(0);
  await page.getByRole("link",{name:"Discovery"}).click();
  for(const impact of p.operationalImpacts)await op.getByRole("checkbox",{name:impact.label,exact:true}).uncheck();
  for(const impact of p.financialImpacts)await fin.getByRole("checkbox",{name:impact.label,exact:true}).uncheck();
  await page.getByRole("link",{name:"Quantification"}).click();
  await expect(page.locator(".op-impact-card[data-impact]")).toHaveCount(0);
- await expect(page.locator(".fin-check:checked")).toHaveCount(0);
+ await expect(page.locator(".fin-card")).toHaveCount(0);
 });
 test("multiple Discovery financial impacts sharing one card do not prematurely deselect it",()=>{
  expect(selectedFinancialOutcomes(["negative-financial-higher-cost-per-customer","negative-financial-higher-marketing-costs"])).toEqual(["F3"]);

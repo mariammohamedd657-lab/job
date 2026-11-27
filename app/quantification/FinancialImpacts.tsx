@@ -38,35 +38,24 @@ export function ContentResult({field,name,kind,raw,result,estimated=false}:{fiel
  const problemId=useQuantityRegistry().problemId,v=read(field,raw,result,problemId);
  return <div className={"op-result step2-result result-"+kind}><div className="op-result-row"><span>{name}</span><strong>{v.valid?format(v.n):"—"}</strong><span className="step2-result-unit">{field.unit}</span></div></div>;
 }
+function SelectedCheck(){return <svg className="q-icon" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="m8 12 3 3 5-6" stroke="#181818"/></svg>}
 export default function FinancialImpacts({problemId,outcomes,discoverySelections={},...props}:ContentProps&{problemId:string;outcomes:ContentOutcome[];discoverySelections?:Record<string,string[]>}){
  const [filters,setFilters]=useState<Record<string,"All"|"Confirmed"|"Estimated">>({});
- const [selected,setSelected]=useState<Record<string,boolean>>({});
  const [collapsed,setCollapsed]=useState<Record<string,boolean>>({});
- const [previousDiscovery,setPreviousDiscovery]=useState<Record<string,string[]>>({});
- const selectionSignature=JSON.stringify(discoverySelections);
- if(selectionSignature!==JSON.stringify(previousDiscovery)){
-  const next={...selected},nextCollapsed={...collapsed};
-  for(const id of new Set([...Object.keys(previousDiscovery),...Object.keys(discoverySelections)])){
-   const before=new Set(previousDiscovery[id]??[]),after=new Set(discoverySelections[id]??[]);
-   for(const outcome of new Set([...before,...after])){
-    if(before.has(outcome)===after.has(outcome))continue;
-    const key=id+":"+outcome;
-    next[key]=after.has(outcome);
-    if(after.has(outcome))nextCollapsed[key]=false;
-   }
-  }
-  setPreviousDiscovery(discoverySelections);
-  setSelected(next);setCollapsed(nextCollapsed);
- }
  const filter=filters[problemId]??"All";
+ const selected=new Set(discoverySelections[problemId]??[]);
+ const visible=outcomes.filter(outcome=>selected.has(outcome.id)&&(filter==="All"||outcome.kind===filter));
  return <div className="fin-impact-content"><div className="fin-filter" role="group" aria-label="Financial impact filter">{(["All","Confirmed","Estimated"] as const).map(kind=><button type="button" key={kind} aria-pressed={filter===kind} onClick={()=>setFilters(old=>({...old,[problemId]:kind}))}>{kind}</button>)}</div>
- {(["Confirmed","Estimated"] as const).filter(kind=>filter==="All"||filter===kind).map(kind=>{
-  const group=outcomes.filter(outcome=>outcome.kind===kind);
-  return group.length>0&&<div className="fin-group" key={kind}><div className="op-impact-panels">{group.map(outcome=>{
-   const key=problemId+":"+outcome.id,checked=!!selected[key],open=checked&&!collapsed[key],v=read(outcome.primary,props.raw,props.result,problemId);
-   return <section className="fin-card" data-financial-impact={outcome.id} data-applicability={outcome.applicability} key={key}><div className="fin-card-head"><label className="fin-select-row"><input type="checkbox" className="fin-check" aria-label={"Select "+outcome.name} checked={checked} onChange={e=>{const value=e.target.checked;setSelected(old=>({...old,[key]:value}));if(value)setCollapsed(old=>({...old,[key]:false}));}}/><span>{outcome.name}</span><span className="fin-mini-result">{checked&&v.valid?format(v.n):"—"}</span></label><button type="button" className="fin-card-toggle" aria-label={(open?"Collapse ":"Expand ")+outcome.name} aria-expanded={open} disabled={!checked} onClick={()=>setCollapsed(old=>({...old,[key]:open}))}><span className={"q-arrow "+(open?"q-open":"")}><Chevron/></span></button></div>
-   {open&&<div className="fin-card-body"><div className="step2-fields">{outcome.fields.map(field=><ContentRow key={field.key} field={field} primary={field.key===outcome.primary.key} {...props}/>)}</div>{props.show&&<div className="q-formula">{outcome.reference}<div>{outcome.condition}</div></div>}<ContentResult field={outcome.primary} name={outcome.name} kind="financial" estimated={kind==="Estimated"} {...props}/><ContentRoutes routes={outcome.routes} exclude={outcome.fields.map(f=>f.key)} {...props}/></div>}</section>;
-  })}</div></div>;
- })}
- {!outcomes.some(outcome=>filter==="All"||outcome.kind===filter)&&<div className="op-empty">No applicable financial impacts.</div>}</div>;
+ <div className="op-impact-panels">{visible.map(outcome=>{
+  const key=problemId+":"+outcome.id,open=!collapsed[key];
+  return <section className="op-impact-card fin-card" data-financial-impact={outcome.id} data-applicability={outcome.applicability} data-kind={outcome.kind} key={key}>
+   <button type="button" className="op-impact-toggle fin-card-toggle" aria-expanded={open} onClick={()=>setCollapsed(old=>({...old,[key]:open}))}><span className="op-result-tick"><SelectedCheck/></span><span>{outcome.name}</span><span className={"q-arrow "+(open?"q-open":"")}><Chevron/></span></button>
+   <div className="op-impact-body fin-card-body" hidden={!open}>
+    <div className="op-impact-fields">{outcome.fields.map(field=><ContentRow key={field.key} field={field} primary={field.key===outcome.primary.key} {...props}/>)}</div>
+    {props.show&&<div className="q-formula">{outcome.reference}<div>{outcome.condition}</div></div>}
+    <div className="op-result-wrap"><ContentResult field={outcome.primary} name={outcome.name} kind="financial" estimated={outcome.kind==="Estimated"} {...props}/></div>
+    <ContentRoutes routes={outcome.routes} exclude={outcome.fields.map(f=>f.key)} {...props}/>
+   </div></section>;
+ })}</div>
+ {!visible.length&&<div className="op-empty">No selected financial impacts.</div>}</div>;
 }

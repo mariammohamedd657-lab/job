@@ -37,11 +37,11 @@ for(const c of configs)test(c.id+" financial minimum inputs",()=>{
   const r=solve(c,figures,e,{includeBounds:true});expect(r.errors,id+" "+key).toEqual([]);expect(r.values["fin:"+key],id+" "+key).toBeCloseTo(n,7);
  }
 });
-test("confirmed revenue is calculated in the existing editable website field",async({page})=>{
- await page.goto("/quantification");await page.getByRole("button",{name:"Negative financial impacts",exact:true}).click();
- const card=page.locator('[data-financial-impact="F1"]');await card.locator(".fin-check").check();
+test("potential revenue is calculated in the selected editable website field",async({page})=>{
+ await page.goto("/");const p=page.locator('[data-problem="problem-1"]');await p.locator(".problem-toggle").click();await p.getByRole("checkbox",{name:"Lost potential revenue",exact:true}).check();await page.getByRole("link",{name:"Quantification"}).click();await page.getByRole("button",{name:"Negative financial impacts",exact:true}).click();
+ const card=page.locator('[data-financial-impact="F7"]');
  const field=(k:string)=>card.locator('input[data-quantity="fin:'+k+'"]').first();
- await field("average-revenue-purchase").fill("500");await field("confirmed-purchases").fill("20");await expect(field("confirmed-revenue")).toHaveValue("10000");
- await field("confirmed-purchases").fill("30");await expect(field("confirmed-revenue")).toHaveValue("15000");
- await field("confirmed-purchases").fill("");await expect(field("confirmed-revenue")).toHaveValue("");
+ await field("average-revenue-buyer").fill("500");await field("potential-buyers").fill("20");await expect(field("potential-revenue")).toHaveValue("10000");
+ await field("potential-buyers").fill("30");await expect(field("potential-revenue")).toHaveValue("15000");
+ await field("potential-buyers").fill("");await expect(field("potential-revenue")).toHaveValue("");
 });
