@@ -1,4 +1,5 @@
 import { problems, problemCategories } from "../discovery/data";
+import {normalizeField} from "./quantity-identity";
 
 export const sectionOrder = ["Quantity", "Time", "Frequency", "Comparison", "Money"] as const;
 export type Section = typeof sectionOrder[number];
@@ -57,6 +58,7 @@ export const configs: Config[] = problemCategories.flatMap(category => category.
   const compUnit=s.compareUnit??unit;
   if(actualKey) fields.Comparison=[field(actualKey,s.actual??s.affected,compUnit,true),field("target",s.target??({"problem-5":"Target response time","problem-7":"Target qualification time","problem-18":"Target response time"} as Record<string,string>)[id]??"Target value",compUnit),field("difference","Difference",compUnit),field("targetPct","Percentage of target","%")];
   if(available.has("Money")&&s.money) fields.Money=[field("moneyTotal",s.money[0],"Currency",true),field("moneyAverage",s.money[1],"Currency/unit")];
+  for(const section of sectionOrder) fields[section]=fields[section].map(f=>normalizeField(id,f));
   const example:Record<string,string>={total:"100",affected:"20",months:"3"};
   if(fields.Frequency.length)example.days="30";
   if(timePopulation){if(timePopulation==="recordedUnits")example.recordedUnits="10";example.averageMinutes="15";}

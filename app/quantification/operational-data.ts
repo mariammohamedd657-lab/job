@@ -1,6 +1,7 @@
 import { problems } from "../discovery/data";
 import { operationalPopulationLinks, type PopulationLink } from "./information-links";
 import type { Config, Field } from "./config";
+import {normalizeField} from "./quantity-identity";
 import { product, format, type AdditionalEquations, type AdditionalConstraint, type Relation, type ZeroInference } from "./solver";
 
 export type ImpactField=Field&{shared?:boolean;primary?:boolean;integer?:boolean};
@@ -78,8 +79,8 @@ export function operationalPanels(config:Config,selectedIds:readonly string[]):O
  return problem.operationalImpacts.filter(impact=>selectedIds.includes(impact.id)).map(impact=>{
   const key=impact.id.slice(prefix.length),method=operationalMethods[config.id]?.[key];
   const primaryKey="op:"+key+":result";
-  const support=(suffix:string,label:string,unit:string,integer=false)=>field("op:"+key+":"+suffix,label,unit,integer);
-  const primary=(label:string,unit:string,integer=true):ImpactField=>({...field(primaryKey,label,unit,integer),primary:true});
+  const support=(suffix:string,label:string,unit:string,integer=false)=>normalizeField(config.id,field("op:"+key+":"+suffix,label,unit,integer));
+  const primary=(label:string,unit:string,integer=true):ImpactField=>({...normalizeField(config.id,field(primaryKey,label,unit,integer)),primary:true});
   const panel=(fields:ImpactField[],relations:Relation[]=[],extra:Partial<OperationalPanel>={}):OperationalPanel=>({id:impact.id,name:impact.label,fields,primaryKey:fields.find(f=>f.primary)!.key,relations,verified:true,populationLinks:operationalPopulationLinks(config.id,method,fields.find(f=>f.primary)!.key),...extra});
   const direct=(label:string,unit:string,estimated=false)=>{const result=primary(label,unit,!estimated);return panel([result],[],{estimated,example:{[result.key]:"7"}});};
   const ratePanel=(population:ImpactField,rate:ImpactField,result:ImpactField,others:ImpactField[]=[],context:ImpactField[]=[],estimated=false,example?:Record<string,string>)=>{

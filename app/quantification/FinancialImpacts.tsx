@@ -1,5 +1,8 @@
 "use client";
 import {useState} from "react";
+import {useQuantityRegistry} from "./RegistryContext";
+import {fieldReference,instanceState} from "./quantity-identity";
+import {numericalTypes,validNumericalValue} from "./canonical-definitions";
 import type {ContentField,ContentRoute,ContentOutcome} from "./step2-content";
 import NumericalInput,{resolveQuantity} from "./NumericalInput";
 import {QuantityLimits} from "./QuantityLimits";
@@ -8,17 +11,19 @@ import "./step2.css";
 export type ContentProps={raw:Figures;result:Result;show:boolean;update:(key:string,value:string)=>void};
 function Chevron(){return <svg className="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>}
 function LinkIcon(){return <svg className="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m10 13 4-4M8 15l-1 1a3 3 0 0 1-4-4l4-4a3 3 0 0 1 4 0M13 9l1-1a3 3 0 0 1 4 4l-4 4a3 3 0 0 1-4 0"/></svg>}
-function read(field:ContentField,raw:Figures,result:Result){
+function read(field:ContentField,raw:Figures,result:Result,problemId:string){
+ const ref=fieldReference(problemId,field),state=instanceState(ref,raw,result);
  const resolved=resolveQuantity(field.key,raw,result),n=Number(resolved.value),entered=resolved.value.trim()!=="";
- const invalid=entered&&(result.blocked.has(field.key)||!Number.isFinite(n)||(!field.signed&&n<0)||(field.percentage&&n>100));
- return {...resolved,n,invalid,valid:entered&&!invalid};
+ const invalid=entered&&(state.contradictory||!Number.isFinite(n)||(!resolved.computed&&!validNumericalValue(ref.type,n)));
+ const rule=numericalTypes[ref.type] as {min?:number;max?:number};
+ return {...resolved,n,invalid,valid:entered&&!invalid,ref,rule};
 }
 export function ContentRow({field,primary=false,...props}:ContentProps&{field:ContentField;primary?:boolean}){
- const {raw,result,show,update}=props,v=read(field,raw,result);
+ const {raw,result,show,update}=props,problemId=useQuantityRegistry().problemId,v=read(field,raw,result,problemId);
  const labelClass=primary?"op-primary":field.shared==="problem"?"q-general":field.shared?"step2-shared":"";
- return <div className="q-field step2-field"><label className={labelClass}><span>{field.label}</span><NumericalInput step="any" min={field.signed?undefined:0} max={field.percentage?100:undefined} aria-label={field.label} data-quantity={field.key} value={v.value} placeholder="—" className={v.invalid?"q-invalid":v.computed?"q-calculated":""} onValueChange={value=>update(field.key,value)}/><span className="q-unit">{field.unit}</span></label>
+ return <div className="q-field step2-field"><label className={labelClass}><span>{v.ref.label}</span><NumericalInput step="any" min={v.rule.min} max={v.rule.max} aria-label={v.ref.label} data-quantity={field.key} value={v.value} placeholder="—" className={v.invalid?"q-invalid":v.computed?"q-calculated":""} onValueChange={value=>update(field.key,value)}/><span className="q-unit">{v.ref.unit}</span></label>
  {field.shared&&<div className="step2-shared-note"><LinkIcon/>Shared {field.shared} quantity</div>}
- {result.bounds?.[field.key]?<QuantityLimits quantity={field.key} unit={field.unit} result={result} value={v.value} show={show}/>:(!v.value||v.invalid)&&!field.signed&&<div className={"q-limits"+(v.invalid?" q-limits-conflict":"")}>Min: 0{field.percentage?"% · Max: 100%":""}</div>}
+ {result.bounds?.[field.key]?<QuantityLimits quantity={field.key} unit={field.unit} result={result} value={v.value} show={show}/>:(!v.value||v.invalid)&&(v.rule.min!==undefined||v.rule.max!==undefined)&&<div className={"q-limits"+(v.invalid?" q-limits-conflict":"")}>{v.rule.min!==undefined?"Min: "+v.rule.min+(v.ref.unit==="%"?"%":""):""}{v.rule.max!==undefined?(v.rule.min!==undefined?" · ":"")+"Max: "+v.rule.max+(v.ref.unit==="%"?"%":""):""}</div>}
  {v.invalid&&<div className="q-limits q-limits-conflict">Invalid value</div>}{v.computed&&<div className="op-auto">Automatically calculated</div>}{show&&v.computed&&<div className="q-formula">{result.calculated[field.key]}</div>}</div>;
 }
 export function ContentRoutes({routes,exclude=[],...props}:ContentProps&{routes:ContentRoute[];exclude?:string[]}){
@@ -30,7 +35,7 @@ function Route({route,exclude,...props}:ContentProps&{route:ContentRoute;exclude
  return <section className="step2-alternative"><button type="button" className="step2-alt-toggle" aria-expanded={open} onClick={()=>setOpen(!open)}>{route.title}<span className={"q-arrow "+(open?"q-open":"")}><Chevron/></span></button><div className="step2-alt-body" hidden={!open}>{open&&<><div className="step2-fields">{fields.map(field=><ContentRow key={field.key} field={field} {...props}/>)}</div>{props.show&&<div className="q-formula">{route.reference}{route.condition&&<div>{route.condition}</div>}</div>}<ContentRoutes routes={route.children??[]} exclude={[...exclude,...fields.map(f=>f.key)]} {...props}/></>}</div></section>;
 }
 export function ContentResult({field,name,kind,raw,result,estimated=false}:{field:ContentField;name:string;kind:"operational"|"financial";raw:Figures;result:Result;estimated?:boolean}){
- const v=read(field,raw,result);
+ const problemId=useQuantityRegistry().problemId,v=read(field,raw,result,problemId);
  return <div className="op-result step2-result"><div>Quantified negative {kind} impact</div><div className="op-result-row"><span>{name}</span><strong>{v.valid?format(v.n):"—"}</strong>{v.valid&&<span className="step2-result-unit">{field.unit}</span>}</div><div>{v.valid?((estimated||field.estimated||result.estimated.has(field.key)?"Estimated · ":"")+(v.computed?"Automatically calculated":"Directly entered")):"Awaiting information"}</div></div>;
 }
 export default function FinancialImpacts({problemId,outcomes,...props}:ContentProps&{problemId:string;outcomes:ContentOutcome[]}){
@@ -42,7 +47,7 @@ export default function FinancialImpacts({problemId,outcomes,...props}:ContentPr
  {(["Confirmed","Estimated"] as const).filter(kind=>filter==="All"||filter===kind).map(kind=>{
   const group=outcomes.filter(outcome=>outcome.kind===kind);
   return group.length>0&&<div className="fin-group" key={kind}><div className="op-confirmed-heading">{kind} financial impacts</div><div className="op-impact-panels">{group.map(outcome=>{
-   const key=problemId+":"+outcome.id,checked=!!selected[key],open=checked&&!collapsed[key],v=read(outcome.primary,props.raw,props.result);
+   const key=problemId+":"+outcome.id,checked=!!selected[key],open=checked&&!collapsed[key],v=read(outcome.primary,props.raw,props.result,problemId);
    return <section className="fin-card" data-financial-impact={outcome.id} data-applicability={outcome.applicability} key={key}><div className="fin-card-head"><input type="checkbox" className="fin-check" aria-label={"Select "+outcome.name} checked={checked} onChange={e=>{const value=e.target.checked;setSelected(old=>({...old,[key]:value}));if(value)setCollapsed(old=>({...old,[key]:false}));}}/><button type="button" className="fin-card-toggle" aria-expanded={open} onClick={()=>{if(!checked){setSelected(old=>({...old,[key]:true}));setCollapsed(old=>({...old,[key]:false}));}else setCollapsed(old=>({...old,[key]:open}));}}><span>{outcome.name}</span><span className="fin-mini-result">{checked&&v.valid?format(v.n):"—"}</span><span className={"q-arrow "+(open?"q-open":"")}><Chevron/></span></button></div>
    {open&&<div className="fin-card-body"><p className="fin-note">{kind==="Confirmed"?"Use only when the financial consequence is confirmed.":"Use only when the financial consequence is estimated."}</p><div className="step2-fields">{outcome.fields.map(field=><ContentRow key={field.key} field={field} primary={field.key===outcome.primary.key} {...props}/>)}</div>{props.show&&<div className="q-formula">{outcome.reference}<div>{outcome.condition}</div></div>}<ContentResult field={outcome.primary} name={outcome.name} kind="financial" estimated={kind==="Estimated"} {...props}/><ContentRoutes routes={outcome.routes} exclude={outcome.fields.map(f=>f.key)} {...props}/></div>}</section>;
   })}</div></div>;

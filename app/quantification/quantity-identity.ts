@@ -71,7 +71,7 @@ export function fieldReference(problemId:string,field:Pick<Field,"key"|"label"|"
  let type:NumericalType=estimated&&d.types.includes("EST_COUNT")?"EST_COUNT":d.types[0];
  if(id==="target_value")type=field.unit==="min"?"MINUTES":field.unit==="hrs"?"HOURS":"COUNT";
  const scopedUnit=field.unit==="Units"?(field.key==="recordedUnits"?unitDisplay(core.unit):unitDisplay(d.unit)):undefined;
- const unit=field.key==="daily"?"/day":id==="annual_interest_rate"?"%/year":scopedUnit??field.unit;
+ const unit=field.key==="daily"?"/day":id==="annual_interest_rate"?"%/year":field.unit==="Units"&&["target","difference"].includes(field.key)?unitDisplay(core.unit)??field.unit:scopedUnit??field.unit;
  const label=id==="target_value"?"Target value":d.name;
  return {problemId,legacyKey:field.key,canonicalId:id,instanceId,definition:d,label,unit,type,estimated,scope:{status:"local-reference",localReference:instanceId,countingUnit:unit}};
 }
