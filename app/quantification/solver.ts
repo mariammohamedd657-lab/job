@@ -3,7 +3,7 @@ import { algebraicConsequences, type Term } from "./algebra";
 import { rangeConsequences, type QuantityBounds, type ComplementRate } from "./ranges";
 import { basePopulationLinks, type PopulationLink } from "./information-links";
 export type Figures=Record<string,string>;
-export type Result={values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>; estimated:Set<string>; bounds?:Record<string,QuantityBounds>};
+export type Result={undefinedKeys?:Set<string>;values:Record<string,number>; calculated:Record<string,string>; errors:string[]; blocked:Set<string>; estimated:Set<string>; bounds?:Record<string,QuantityBounds>};
 export type Relation={keys:string[]; label:string; terms?:Term[]; complement?:ComplementRate; operation?:(v:Record<string,number>,key:string)=>string; impossible?:(v:Record<string,number>,key:string)=>boolean; derive:(v:Record<string,number>, key:string)=>number|undefined; valid:(v:Record<string,number>)=>boolean};
 const close=(a:number,b:number)=>Math.abs(a-b)<=1e-8*Math.max(1,Math.abs(a),Math.abs(b));
 const div=(a:number,b:number)=>b===0?undefined:a/b;
@@ -18,7 +18,7 @@ export type AdditionalEquations={fields:{key:string;label:string;unit:string}[];
 // Entered rates and averages are nominal estimates unless explicitly declared exact.
 // Actual count fields remain integer-valued when directly entered.
 export type PopulationClassification="complete"|"incomplete"|"disjoint"|"containment"|"overlapping";
-export type PrecisionOptions={populationClassification?:PopulationClassification;exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string};
+export type PrecisionOptions={populationClassification?:PopulationClassification;recordedSubset?:boolean;exactInputs?:ReadonlySet<string>;estimatedInputs?:ReadonlySet<string>; includeBounds?:boolean;correctionKey?:string};
 export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,precision:PrecisionOptions={}):Result{
  const labels=Object.fromEntries([...Object.values(config.fields).flat(),...(additional?.fields??[])].map(f=>[f.key,f.label]));
  const classification=precision.populationClassification??"complete";
@@ -26,7 +26,9 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
  const extras:Record<string,string[]>={"problem-3":["intendedBookings","missedBookings"],"problem-12":["requiredReminders","missedReminders","sentReminders","pendingReminders","missedReminderPct"],"problem-22":["requiredReminders","missedReminders","sentReminders","pendingReminders","missedReminderPct","affectedInvoices"],"problem-25":["missingRecordings","missingOutcomes","missingBoth"],"problem-26":["requiredUpdates","missedUpdates","completedUpdates","pendingUpdates"],"problem-15":["reschedulingEvents","averageEventMinutes"]};
  const activeExtras=[...(extras[config.id]??[]),...(classification==="incomplete"?["remaining","remainingPct"]:classification==="overlapping"?["overlap","combined"]:[]),...(config.id==="problem-22"?["step2:payments-without-reminders"]:[])];
  for(const key of activeExtras)labels[key]=supplemental[key]?.label??"Payments without reminders";
+ if(config.id==="problem-28")labels["step2:staff-shortfall"]="Staff hour shortfall";
  const integerKeys=new Set([...activeExtras.filter(key=>supplemental[key]?.integer||key==="step2:payments-without-reminders"),"total","affected","unaffected","recordedUnits",...(additional?.integerKeys??[])]);
+ if(config.actualKey&&integerKeys.has(config.actualKey)){integerKeys.add("target");integerKeys.add("difference");}
  const inherentEstimates=new Set(additional?.estimatedKeys??[]);
  const estimateInputs=new Set([...Object.values(config.fields).flat(),...(additional?.fields??[])].filter(f=>f.unit==="%"||f.key==="averageMinutes"||f.key==="daily"||f.key==="moneyAverage").map(f=>f.key));
  const inputEstimated=(key:string)=>!precision.exactInputs?.has(key)&&(precision.estimatedInputs?.has(key)||estimateInputs.has(key)||inherentEstimates.has(key));
@@ -69,6 +71,12 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   valid:v=>close(v.difference,v.target*(v.targetPct/100-1))
  });
  if(config.moneyPopulation)relations.push(product("moneyTotal",config.moneyPopulation,"moneyAverage",1,"Total amount = quantity × average amount"));
+ if(config.id==="problem-22")relations.push(linear(["affected","step2:payments-without-reminders"],[1,-1],"Distinct affected payments are the payments affected by missed reminders"));
+ if(config.id==="problem-28")relations.push({
+  keys:["difference","step2:staff-shortfall"],label:"Staff hour shortfall = max(0, required − available hours)",
+  derive:(v,k)=>k==="step2:staff-shortfall"?Math.max(0,v.difference):v["step2:staff-shortfall"]>0?v["step2:staff-shortfall"]:undefined,
+  valid:v=>close(v["step2:staff-shortfall"],Math.max(0,v.difference))
+ });
  if(additional)relations.push(...additional.relations);
  if(config.id==="problem-3"&&labels["op:fewer-appointments-booked:intended-bookings"])relations.push(linear(["intendedBookings","op:fewer-appointments-booked:intended-bookings"],[1,-1],"Same intended individual bookings"));
  const complements:ComplementRate[]=relations.flatMap(rel=>rel.complement?[rel.complement]:[]);
@@ -76,13 +84,13 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   {population:"total",components:["unaffected"],rate:"affectedPct",label:"Affected rate is the complement of unaffected quantity ÷ total"},
   {population:"total",components:["affected"],rate:"unaffectedPct",label:"Unaffected rate is the complement of affected quantity ÷ total"});
  const algebra=relations.flatMap(rel=>rel.terms?[{keys:rel.keys,label:rel.label,terms:rel.terms}]:[]);
- const rateDenominators:Record<string,string>={affectedPct:"total",unaffectedPct:"total",...(classification==="incomplete"?{remainingPct:"total"}:{}),...([ "problem-12","problem-22"].includes(config.id)?{missedReminderPct:"requiredReminders"}:{}),targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
+ const rateDenominators:Record<string,string>={...(config.timePopulation?{averageMinutes:config.timePopulation}:{}),...(config.moneyPopulation?{moneyAverage:config.moneyPopulation}:{}),...(config.id==="problem-15"?{averageEventMinutes:"reschedulingEvents"}:{}),affectedPct:"total",unaffectedPct:"total",...(classification==="incomplete"?{remainingPct:"total"}:{}),...([ "problem-12","problem-22"].includes(config.id)?{missedReminderPct:"requiredReminders"}:{}),targetPct:"target",daily:"days",...Object.fromEntries((additional?.undefinedRates??[]).map(x=>[x.rate,x.denominator]))};
  const domain=(key:string):[number,number]=>[key==="difference"?-Infinity:0,["affectedPct","unaffectedPct","remainingPct","missedReminderPct"].includes(key)||additional?.fields.some(f=>f.key===key&&f.unit==="%")?100:Infinity];
  const manual:Record<string,number>={},blocked=new Set<string>(),errors=new Set<string>();
  for(const [k,s] of Object.entries(raw)){if(!labels[k]||s.trim()==="")continue;const n=Number(s);if(!isValid(k,n,false,inputEstimated(k))){blocked.add(k);errors.add((labels[k]??k)+": invalid value.");}else manual[k]=n;}
  let values:Record<string,number>={},calculated:Record<string,string>={},estimated=new Set<string>();
  const intervals=(known:Record<string,number>)=>{
-    const links=[...localLinks,...basePopulationLinks(config),...(additional?.populationLinks??[])];
+    const links=[...localLinks,...(precision.recordedSubset===false?[]:basePopulationLinks(config)),...(additional?.populationLinks??[])];
     // Relax the integer domain only for unknown counts in components with an
     // active estimate. A manual actual count is still an exact fixed value.
     // In an exact-only component retain the existing discrete bound inference.
@@ -90,7 +98,7 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     const connected=[...relations.filter(rel=>!rel.keys.some(k=>blocked.has(k))).map(rel=>rel.keys),...links.filter(link=>!blocked.has(link.population)&&!blocked.has(link.member)).map(link=>[link.population,link.member])];
     let expanded=true;while(expanded){expanded=false;for(const keys of connected)if(keys.some(k=>estimateReach.has(k)))for(const k of keys)if(!estimateReach.has(k)){estimateReach.add(k);expanded=true;}}
     const exactIntegerKeys=new Set([...integerKeys].filter(k=>precision.exactInputs?.has(k)||!estimateReach.has(k)||k in manual&&!estimated.has(k)));
-    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined);
+    return rangeConsequences(algebra,known,blocked,domain,exactIntegerKeys,rateDenominators,links,complements,Object.keys(labels),config.actualKey?{actual:config.actualKey,target:"target",difference:"difference",rate:"targetPct"}:undefined,config.id==="problem-28"?{difference:"difference",shortfall:"step2:staff-shortfall"}:undefined);
 
  };
  // Rebuild from manual figures after blocking contradictory dependencies.
@@ -106,6 +114,15 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
    let added=false;
    for(const rel of relations){
     if(rel.keys.some(k=>blocked.has(k)))continue;
+    // An established zero factor fixes a product even if the other factor is unknown.
+    const productTerm=rel.terms?.find(t=>t.keys.length===2);
+    const outputTerm=rel.terms?.find(t=>t.keys.length===1);
+    if(productTerm&&outputTerm&&rel.terms?.length===2){
+     const output=outputTerm.keys[0],zero=productTerm.keys.find(k=>active(k)&&values[k]===0);
+     if(zero&&!active(output)&&!(output in manual)&&!blocked.has(output)){
+      values[output]=0;markEstimate(output,derivesEstimate(output,[zero]));roots[output]=new Set(roots[zero]);calculated[output]=(labels[output]??output)+" = 0 (zero factor)";added=true;
+     }
+    }
     const missing=rel.keys.filter(k=>!active(k));
     if(missing.length===0){if(!rel.valid(values))contradict(rel.keys,"Contradictory entries: "+rel.label+".");continue;}
     if(missing.length!==1)continue;
@@ -121,6 +138,9 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
     roots[k]=new Set(known.flatMap(x=>[...roots[x]]));
     calculated[k]=(labels[k]??k)+" = "+(rel.operation?.(values,k)??rel.label)+" = "+format(values[k])+(estimate?" (estimate)":"");
     added=true;
+   }
+   if(config.actualKey&&active("targetPct")&&values.targetPct===100&&!active("difference")&&!blocked.has("difference")&&!("difference" in manual)){
+    values.difference=0;markEstimate("difference",derivesEstimate("difference",["targetPct"]));roots.difference=new Set(roots.targetPct);calculated.difference="Difference = 0 (100% of target)";added=true;
    }
    // Boundary cases of the approved operational equations: a zero population,
    // a zero/100% rate, or an exhausted nonnegative breakdown can force zero
@@ -175,6 +195,11 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   if(active("requiredReminders")&&values.requiredReminders===0&&active("missedReminderPct")){if("missedReminderPct" in manual)contradict(["requiredReminders","missedReminderPct"],"Reminder-event percentage is undefined over zero required events.");else{delete values.missedReminderPct;delete calculated.missedReminderPct;}}
   if(active("target")&&values.target===0&&active("targetPct")){if("targetPct" in manual)contradict(["target","targetPct"],"Percentage of target is undefined when target is zero.");else{delete values.targetPct;delete calculated.targetPct;}}
   if(active("days")&&values.days===0&&active("daily")){if("daily" in manual)contradict(["days","daily"],"Frequency is undefined for a zero measurement period.");else{delete values.daily;delete calculated.daily;}}
+  for(const [average,count] of Object.entries(rateDenominators))if(["averageMinutes","averageEventMinutes","moneyAverage"].includes(average)&&active(count)&&values[count]===0&&active(average)){
+   if(average in manual)contradict([count,average],(labels[average]??average)+" is undefined when the corresponding population is zero.");
+   else{delete values[average];delete calculated[average];}
+  }
+  if(config.id==="problem-28"&&active("step2:staff-shortfall")&&values["step2:staff-shortfall"]===0&&active("difference")&&values.difference>0)contradict(["step2:staff-shortfall","difference"],"Zero shortfall requires required hours ≤ available hours.");
   // Extra checks belong only to active impact equations; the original problem rules remain unchanged.
   for(const link of localLinks)if(active(link.population)&&active(link.member)&&((link.kind==="subset"&&values[link.member]>values[link.population]&&!close(values[link.member],values[link.population]))||(link.kind==="attributed"&&values[link.population]===0&&values[link.member]>0)))contradict([link.population,link.member],link.label);
   const known=Object.fromEntries(Object.entries(values).filter(([key])=>active(key)));
@@ -185,7 +210,8 @@ export function solve(config:Config,raw:Figures,additional?:AdditionalEquations,
   }
   if(!changed)break;
  }
- const result:Result={values,calculated,errors:[...errors],blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
+ const undefinedKeys=new Set(Object.entries(rateDenominators).filter(([key,count])=>!blocked.has(count)&&values[count]===0&&!(key in manual)).map(([key])=>key));
+ const result:Result={undefinedKeys,values,calculated,errors:[...errors],blocked,estimated:new Set([...estimated].filter(k=>Number.isFinite(values[k])&&!blocked.has(k)))};
  if(precision.includeBounds){
   // Consistent inputs give proactive limits. In a contradiction, use the
   // other constraints to find the range for each conflicting manual entry.

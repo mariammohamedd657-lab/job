@@ -142,7 +142,8 @@ export function baseSupplementalRoutes(config:Config,section:string):ContentRout
  }
  if(section==="Time"&&config.id==="problem-15")return [alt("rescheduling-events",[{"key":"reschedulingEvents","label":"Individual rescheduling events","unit":"Events"},{"key":"averageEventMinutes","label":"Average rescheduling time per event","unit":"min"}],"Total hours = individual events × average minutes per event ÷ 60.","Use the same affected appointment occurrences and measurement period.")];
 
- if(config.id==="problem-22"&&section==="Money")return [alt("payment-population",[{key:"step2:payments-without-reminders",label:"Payments without reminders",unit:"Payments"}],"Total amount of payments without reminders = Payments without reminders × Average payment amount.","The canonical payment population is distinct from reminder events. Activate the relationship only when the monetary amount and payment population match.")];
+ if(config.id==="problem-28"&&section==="Comparison")return [shortfallRoute];
+ if(config.id==="problem-22"&&section==="Money")return [alt("payment-population",[{key:"step2:payments-without-reminders",label:"Distinct affected payments",unit:"Payments"}],"Total amount of payments without reminders = Payments without reminders × Average payment amount.","The canonical payment population is distinct from reminder events. Use distinct affected payments in the same measurement scope, not reminder events.")];
  return [];
 }
 
