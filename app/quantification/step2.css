@@ -5,8 +5,11 @@
 .fin-filter button[aria-pressed=true]{color:#f4f4f4;background:#292929}
 .fin-group+.fin-group{margin-top:15px}
 .fin-card{background:#191919;border:1px solid #403947;border-radius:13px;overflow:hidden}
-.fin-card-head{display:flex;align-items:center;gap:8px;padding:14px 12px;min-height:51px}
-.fin-card-toggle{display:flex;align-items:center;gap:8px;flex:1;min-width:0;text-align:left;background:none;border:0;color:var(--q-financial);padding:0;font:inherit;cursor:pointer}
+.fin-card-head{display:flex;align-items:stretch;min-height:51px}
+.fin-select-row{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:14px 4px 14px 12px;color:var(--q-financial);cursor:pointer}
+.fin-select-row>span:first-of-type{flex:1;min-width:0}
+.fin-card-toggle{display:flex;align-items:center;justify-content:center;flex:0 0 44px;background:none;border:0;color:var(--q-financial);padding:0;font:inherit;cursor:pointer}
+.fin-card-toggle:disabled{cursor:default}
 .fin-card-toggle .q-arrow{margin-left:0}
 .fin-mini-result{margin-left:auto;color:var(--q-financial);font-weight:600}
 .fin-check,.step2-check{appearance:none;flex:0 0 21px;width:21px;height:21px;border:1px solid #656565;border-radius:50%;background:transparent;position:relative;cursor:pointer;margin:0}

@@ -4,7 +4,7 @@
 .workspace-nav a {display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#aaa7a7;padding:8px 12px;border-radius:999px;}
 .workspace-nav a[aria-current="page"] {background:#282828;color:#f4f4f4;}
 .workspace-nav .q-icon {width:15px;height:15px;}
-.q-page {--q-purple:#CBB2F2;--q-green:#78C59B;--q-operational:#E7C975;--q-financial:#AACBF2; color:#f4f4f4; background:#181818; color-scheme:dark; padding:13px 14px 16px; font-size:14px; line-height:1.45; min-height:calc(100vh - 60px);}
+.q-page {--q-purple:#CBB2F2;--q-green:#78C59B;--q-operational:#F0D985;--q-financial:#AACBF2; color:#f4f4f4; background:#181818; color-scheme:dark; padding:13px 14px 16px; font-size:14px; line-height:1.45; min-height:calc(100vh - 60px);}
 .q-page h1 {font-size:27px;line-height:1.25;margin:8px 0 14px;font-weight:650;}
 .q-panels,.q-sections {display:flex;flex-direction:column;gap:12px;}
 .q-panel {border:1px solid #363636;border-radius:13px;background:#181818;min-width:0;}

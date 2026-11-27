@@ -13,9 +13,9 @@ test("requested Quantification visual cleanup retains existing controls",async({
  await expect(operational.locator(".op-confirmed-list,.op-confirmed-heading")).toHaveCount(0);
  const card=operational.locator('[data-impact="negative-operational-lost-leads"]');
  await expect(card).toBeVisible();
- await expect(card.locator(".op-result")).toHaveCSS("border-top-color","rgb(231, 201, 117)");
- await expect(card.locator(".op-result-row")).toHaveCSS("color","rgb(231, 201, 117)");
- await expect(card.locator(".op-result-row strong")).toHaveCSS("color","rgb(231, 201, 117)");
+ await expect(card.locator(".op-result")).toHaveCSS("border-top-color","rgb(240, 217, 133)");
+ await expect(card.locator(".op-result-row")).toHaveCSS("color","rgb(240, 217, 133)");
+ await expect(card.locator(".op-result-row strong")).toHaveCSS("color","rgb(240, 217, 133)");
  await page.getByRole("button",{name:"Negative financial impacts",exact:true}).click();
  const financial=page.locator(".fin-impact-content");
  await expect(financial.getByRole("group",{name:"Financial impact filter"})).toBeVisible();
@@ -31,4 +31,15 @@ test("requested Quantification visual cleanup retains existing controls",async({
   await expect(result).not.toContainText(/Quantified negative|Automatically calculated|Directly entered|Awaiting information/);
  }
  await expect(operational.getByRole("checkbox",{name:"Show calculations"})).toBeVisible();
+});
+
+test("financial selection row and disclosure button act independently",async({page})=>{
+ await page.goto("/quantification");
+ await page.getByRole("button",{name:"Negative financial impacts",exact:true}).click();
+ const card=page.locator('[data-financial-impact="F1"]');
+ const check=card.locator(".fin-check"),row=card.locator(".fin-select-row"),toggle=card.locator(".fin-card-toggle");
+ await row.locator("span").first().click();await expect(check).toBeChecked();await expect(toggle).toHaveAttribute("aria-expanded","true");
+ await toggle.click();await expect(check).toBeChecked();await expect(toggle).toHaveAttribute("aria-expanded","false");
+ await toggle.click();await expect(check).toBeChecked();await expect(toggle).toHaveAttribute("aria-expanded","true");
+ await row.locator("span").first().click();await expect(check).not.toBeChecked();await expect(toggle).toHaveAttribute("aria-expanded","false");
 });

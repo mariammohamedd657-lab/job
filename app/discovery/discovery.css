@@ -23,7 +23,7 @@ body { background: #181818; color: #f4f4f4; }
 .two-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
 .two-columns > div { min-width: 0; }
 .impact-heading, .outcome-heading { font-size: 15px; font-weight: 500; margin: 0 0 10px; line-height: 1.4; }
-.impact-tone-operational { color: #E7C975; background-color: rgba(231, 201, 117, 0.08); }
+.impact-tone-operational { color: #F0D985; background-color: rgba(240, 217, 133, 0.08); }
 .impact-tone-financial { color: #AACBF2; background-color: rgba(170, 203, 242, 0.08); }
 .impact-list { display: flex; flex-direction: column; gap: 11px; }
 .impact-list .circle-input { width: 20px; height: 20px; margin-top: 1px; }
@@ -42,7 +42,7 @@ body { background: #181818; color: #f4f4f4; }
 .agent-header p { color: #aaa7a7; font-size: 14px; margin: 0; }
 .sample-note { color: #999; font-size: 12px; }
 .solution-card hr { margin: 20px 0; }
-.outcome-tone-operational { color: #E7C975; }
+.outcome-tone-operational { color: #F0D985; }
 .outcome-tone-financial { color: #AACBF2; }
 .outcome-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; }
 .outcome-list li { display: flex; gap: 6px; align-items: flex-start; }
@@ -73,3 +73,10 @@ body { background: #181818; color: #f4f4f4; }
   .discovery-page { font-size: 14px; }
   .agent-header h3 { font-size: 21px; }
 }
+
+/* Full-width selection rows; confirmation and disclosure remain separate. */
+.impact-list .circle-label{width:100%;align-self:stretch;}
+.problem-header{padding:0;gap:0;align-items:stretch;}
+.problem-confirm{flex:1;padding:8px 0 8px 15px;min-height:54px;}
+.problem-toggle{height:auto;min-height:54px;flex:0 0 54px;}
+@media(max-width:480px){.problem-header{padding:0;}.problem-confirm{padding-left:10px;}}
