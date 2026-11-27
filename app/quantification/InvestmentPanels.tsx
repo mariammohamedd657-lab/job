@@ -1,5 +1,5 @@
 "use client";
-import {useState,type ReactNode} from "react";
+import {useEffect,useState,type ReactNode} from "react";
 import {targetNames,targetValues,editTarget,expectedValues,expectedMethods,expectedKeys,requiredUnits,requiredRecovery,recoveryPercentage,requirementForTarget,requiredSalesProfit,packages,finance,read,add,sub,mul,div,max,nonnegative,ceil,fmt,type Num,type TargetName,type Values,type ExpectedMethod} from "./investment-model";
 import type {Result} from "./solver";
 import "./investment.css";
@@ -23,8 +23,8 @@ export default function InvestmentPanels({result,problemId,sharedPool}:Props){
  const linkCurrent=(name:TargetName):Num=>confirmedCurrent(name)??(read(raw[targetKey(name,"current")])===undefined?estimateCurrent(name):undefined);
  const targets=Object.fromEntries(targetNames.map(name=>[name,targetValues(name,Object.fromEntries(["current","target","change","rate","deadline"].map(k=>[k,raw[targetKey(name,k)]??""])),linkCurrent(name))])) as Record<TargetName,ReturnType<typeof targetValues>>;
  const active=selected.includes(main)?main:selected[0],target=active?targets[active]:undefined;
- const requiredInputs=new Set<string>(["running","minutes","minuteCost","enterpriseOwnership","enterpriseSetup","enterpriseMonthly","launch","period","averageRevenue","averageProfit","cash","reserve","roiTarget",expectedKeys[expectedMethod],...(optional.removed?["removed"]:[]),...(optional.invoices?["invoices"]:[]),...(optional.otherLost?["otherLost"]:[])]);
- const row=(label:string,k:string,unit="AED",value:Num=n(k),locked=false,formula?:string,text?:string)=><div className="q-field inv-field" key={k+label}><label className={!locked&&text===undefined&&(k.startsWith("target:")||value===undefined&&requiredInputs.has(k))?"q-priority":""}><span>{label}</span><input aria-label={label} data-investment-quantity={k} type={text!==undefined?"text":"number"} step="any" value={text??(locked?value??"":raw[k]?.trim()?raw[k]:value??"")} readOnly={locked||text!==undefined} className={locked||text!==undefined?"inv-locked":""} placeholder="—" onChange={e=>update(k,e.target.value)}/><span className="q-unit">{unit}</span></label>{show&&formula&&<div className="q-formula">{formula} = {fmt(value)} {unit}</div>}</div>;
+ const requiredInputs=new Set<string>();
+ const row=(label:string,k:string,unit="AED",value:Num=n(k),locked=false,formula?:string,text?:string)=><div className="q-field inv-field" key={k+label}><label className={!locked&&text===undefined&&value===undefined&&requiredInputs.has(k)?"q-priority":""}><span>{label}</span><input aria-label={label} data-investment-quantity={k} type={text!==undefined?"text":"number"} step="any" value={text??(locked?value??"":raw[k]?.trim()?raw[k]:value??"")} readOnly={locked||text!==undefined} className={locked||text!==undefined?"inv-locked":""} placeholder="—" onChange={e=>update(k,e.target.value)}/><span className="q-unit">{unit}</span></label>{show&&formula&&<div className="q-formula">{formula} = {fmt(value)} {unit}</div>}</div>;
  const calc=(label:string,k:string,value:Num,unit="AED",formula?:string)=>row(label,k,unit,value,true,formula);
  const choices=(options:readonly string[],value:string,onChange:(v:string)=>void)=><div className="inv-options">{options.map(x=><button key={x} type="button" aria-pressed={value===x} onClick={()=>onChange(x)}>{x}</button>)}</div>;
  const dropdown=(label:string,options:readonly string[],value:string,onChange:(v:string)=>void)=><select className="inv-dropdown" aria-label={label} value={value} onChange={e=>onChange(e.target.value)}>{options.map(x=><option key={x} value={x}>{x}</option>)}</select>;
@@ -44,7 +44,7 @@ export default function InvestmentPanels({result,problemId,sharedPool}:Props){
  const routeUsed=hasShared?sharedRoute:route;
  const [sourceKey,rateKey]=routeMap[routeUsed],poolKey="pool:"+problemId+":"+routeUsed,conversionKey="conversion:"+problemId+":"+routeUsed;
  const linkedPool=hasShared?sharedPool?.lost:monthly(sourceKey),linkedRate=hasShared?sharedPool?.rate:(rateKey?known(rateKey):100),pool=hasShared?linkedPool:linkedPool??n(poolKey),conversion=hasShared?linkedRate:linkedRate??n(conversionKey);
- requiredInputs.add(poolKey);requiredInputs.add(conversionKey);
+ 
  const linkedRevenue=sharedPool?.ticket??known("fin:average-revenue-buyer"),linkedProfit=sharedPool?.profit??known("fin:average-profit-buyer"),avgRevenue=linkedRevenue??n("averageRevenue"),avgProfit=linkedProfit??n("averageProfit");
  const requirements=(name:TargetName)=>{
   const t=targets[name],after=nonnegative(sub(t.deadline,launch)),total=add(upfront,mul(monthlyCost,t.deadline)),gainNeeded=div(total,after),netNeeded=div(add(upfront,mul(monthlyCost,launch)),after);
@@ -54,13 +54,44 @@ export default function InvestmentPanels({result,problemId,sharedPool}:Props){
   const targetRemove=name==="Monthly costs"?add(t.change,monthlyCost):undefined,payRemove=nonnegative(sub(gainNeeded,extras));
   return {t,after,total,gainNeeded,netNeeded,targetBuyers,payBuyers,both,payProfit,recovered,rate,targetRemove,payRemove};
  };
- const req=active?requirements(active):undefined,roiTarget=optional.roi||goal==="Achieve target ROI"?n("roiTarget"):undefined;
+ const req=active?requirements(active):undefined,roiTarget=optional.roi||scenario==="Required scenario"&&goal==="Achieve target ROI"?n("roiTarget"):undefined;
  const roiProfit=nonnegative(sub(sub(div(mul(add(upfront,mul(monthlyCost,period)),add(1,div(roiTarget,100))),nonnegative(sub(period,launch))),removed),extras)),roiBuyers=requiredUnits(roiProfit,avgProfit);
  const requiredBuyers=goal==="Achieve payback"?req?.payBuyers:goal==="Achieve both targets"?req?.both:goal==="Achieve target ROI"?roiBuyers:req?.targetBuyers;
  const expected=expectedValues(expectedMethod,raw,pool,conversion,avgProfit),expectedRate=expected.rate,expectedRecovered=expected.recovered,expectedBuyers=expected.buyers,expectedProfit=expected.profit;
  const buyers=scenario==="Expected scenario"?expectedBuyers:requiredBuyers,profit=scenario==="Expected scenario"?expectedProfit:mul(buyers,avgProfit);
  const usedRecovery=scenario==="Expected scenario"?expectedRecovered:requiredRecovery(buyers,conversion),usedRate=scenario==="Expected scenario"?expectedRate:recoveryPercentage(usedRecovery,pool);
  const financial=finance(upfront,monthlyCost,period,launch,profit,saved,extras,n("cash"),n("reserve"));
+ // Only independent, active inputs are highlighted. A single missing running
+ // cost must not be mistaken for six separate missing financial outputs.
+ const missingSections=new Set<string>();
+ const need=(key:string,value:Num,section:string)=>{if(value===undefined){requiredInputs.add(key);missingSections.add(section);}};
+ if(pkg==="Enterprise"){need(payment==="Ownership"?"enterpriseOwnership":"enterpriseSetup",upFee,"package");if(payment==="Subscription")need("enterpriseMonthly",subFee,"package");}
+ if(runningMode==="Direct amount")need("running",running,"monthly");
+ else {need("minutes",n("minutes"),"monthly");need("minuteCost",n("minuteCost"),"monthly");}
+ if(timeline==="Custom timeline")need("launch",launch,"timeline");
+ for(const name of selected){
+  const t=targets[name];
+  if(t.change===undefined){
+   if(t.current===undefined)need(targetKey(name,"current"),t.current,"target:"+name);
+   if(t.target===undefined&&t.change===undefined&&t.rate===undefined){need(targetKey(name,"target"),t.target,"target:"+name);need(targetKey(name,"change"),t.change,"target:"+name);need(targetKey(name,"rate"),t.rate,"target:"+name);}
+   else if(t.target===undefined&&t.change===undefined)need(targetKey(name,"current"),t.current,"target:"+name);
+   else if(t.current===undefined&&t.target!==undefined)need(targetKey(name,"current"),t.current,"target:"+name);
+  }
+  if(t.deadline===undefined&&n("period")===undefined)need(targetKey(name,"deadline"),t.deadline,"target:"+name);
+  else if(t.deadline===undefined&&scenario==="Required scenario"&&(goal==="Achieve payback"||goal==="Achieve both targets"))need(targetKey(name,"deadline"),t.deadline,"target:"+name);
+ }
+ if(period===undefined&&(!active||target?.deadline!==undefined))need("period",period,"total");
+ if(!hasShared){need(poolKey,pool,"sales");need(conversionKey,conversion,"sales");}
+ if(selected.includes("Revenue")||scenario==="Expected scenario")need("averageRevenue",avgRevenue,"sales");
+ if(active!=="Monthly costs"||scenario==="Expected scenario"||goal!=="Reach business target")need("averageProfit",avgProfit,"sales");
+ if(scenario==="Expected scenario")need(expectedKeys[expectedMethod],n(expectedKeys[expectedMethod]),"sales");
+ if(optional.removed&&targetCostRemoval===undefined)need("removed",actualRemoved,"saved");
+ if(optional.invoices)need("invoices",sharedPool?.unpaid??n("invoices"),"gain");
+ if(optional.otherLost)need("otherLost",n("otherLost"),"gain");
+ if(optional.roi||scenario==="Required scenario"&&goal==="Achieve target ROI")need("roiTarget",roiTarget,"roi");
+ need("cash",n("cash"),"shortage");need("reserve",n("reserve"),"shortage");
+ const missingSignature=[...missingSections].sort().join("|");
+ useEffect(()=>{if(!missingSignature)return;setClosed(old=>({...old,...Object.fromEntries(missingSignature.split("|").map(id=>[id,false]))}));},[missingSignature]);
  const targetFailure=active&&target?.change!==undefined?(active==="Revenue"?sub(target.change,mul(buyers,avgRevenue)):active==="Profit from sales"?sub(target.change,profit):active==="Buyers"?sub(target.change,buyers):sub(target.change,saved)):undefined;
  const missedDeadline=target?.deadline!==undefined&&launch!==undefined&&launch>=target.deadline;
  const money=(v:Num)=>fmt(v)+" AED",bad=(x:Num)=>x!==undefined&&x<0;
@@ -85,7 +116,7 @@ export default function InvestmentPanels({result,problemId,sharedPool}:Props){
  {resultBox("gain","Monthly gain after costs",financial.gain,"AED",<>{calc("Extra monthly profit from sales","gain-profit",profit)}{calc("Monthly money saved","gain-saved",saved)}{check("Money saved from otherwise unpaid invoices","invoices")}{optional.invoices&&row("Money saved from otherwise unpaid invoices","invoices","AED",sharedPool?.unpaid??n("invoices"),sharedPool?.unpaid!==undefined)}{check("Other monthly money lost","otherLost")}{optional.otherLost&&row("Other monthly money lost","otherLost")}</>,bad(financial.gain)?"The monthly costs exceed the money the business saves and gains by "+money(-financial.gain!)+". The business loses an additional "+money(-financial.gain!)+" every month after launch instead of recovering its upfront investment.":financial.gain===0?"The business makes no monthly gain after costs.":"",financial.gain===0)}
  {resultBox("net","Total gain after costs",financial.net,"AED",<>{calc("Investment period","net-period",period,"Months")}{calc("Time after launch","net-after",financial.after,"Months")}{calc("Total money saved and gained before investment costs","net-gross",mul(financial.gross,financial.after))}{calc("Total investment","net-total",financial.total)}</>,bad(financial.net)?"The business loses "+money(-financial.net!)+" over the investment period.":financial.net===0?"The business breaks even over the investment period.":"",financial.net===0)}
  <h5>Cash requirements</h5>{resultBox("shortage","Maximum cash shortage",financial.shortage,"AED",<>{row("Available cash","cash")}{row("Minimum cash reserve","reserve")}{calc("Upfront investment","cash-up",upfront)}{calc("Extra cash needed upfront","cash-extra",nonnegative(sub(upfront,sub(n("cash"),n("reserve")))))}{calc("Costs before launch","cash-before",financial.before)}{calc("Monthly cash gained after costs","cash-gain",financial.gain)}<p className="inv-note">Assumes upfront payment at month zero, monthly investment costs from the start, and gains received at the end of each month after launch. Payment and collection timing can change the cash requirement.</p></>,financial.shortage!==undefined&&financial.shortage>0?"The business needs another "+money(financial.shortage)+" to maintain its minimum cash reserve.":"")}
- <hr/><h2>Percentage</h2>{resultBox("roi","Return on investment (ROI)",financial.roi,"%",<>{calc("Total gain after costs","roi-gain",financial.net)}{calc("Total investment","roi-investment",financial.total)}{check("Target ROI","roi")}{(optional.roi||goal==="Achieve target ROI")&&<>{row("Target return on investment","roiTarget","%")}{calc("Extra monthly profit needed from sales","roi-profit",roiProfit)}{calc("Required extra buyers","roi-buyers",roiBuyers,"Buyers")}{calc("Required recovered leads","roi-recovered",requiredRecovery(roiBuyers,conversion),"Leads")}{calc("Required recovery rate","roi-rate",recoveryPercentage(requiredRecovery(roiBuyers,conversion),pool),"%")}</>}{show&&<div className="q-formula">{fmt(financial.net)} ÷ {fmt(financial.total)} × 100 = {fmt(financial.roi)}%</div>}</>,financial.roi!==undefined&&roiTarget!==undefined&&financial.roi<roiTarget?"The return on investment falls short of the target by "+fmt(roiTarget-financial.roi)+" percentage points.":bad(financial.roi)?"The investment returns "+fmt(financial.roi)+"%. The business loses money.":financial.roi===0?"The investment produces no return.":"",financial.roi===0&&!(roiTarget!==undefined&&roiTarget>0))}
+ <hr/><h2>Percentage</h2>{resultBox("roi","Return on investment (ROI)",financial.roi,"%",<>{calc("Total gain after costs","roi-gain",financial.net)}{calc("Total investment","roi-investment",financial.total)}{check("Target ROI","roi")}{(optional.roi||scenario==="Required scenario"&&goal==="Achieve target ROI")&&<>{row("Target return on investment","roiTarget","%")}{calc("Extra monthly profit needed from sales","roi-profit",roiProfit)}{calc("Required extra buyers","roi-buyers",roiBuyers,"Buyers")}{calc("Required recovered leads","roi-recovered",requiredRecovery(roiBuyers,conversion),"Leads")}{calc("Required recovery rate","roi-rate",recoveryPercentage(requiredRecovery(roiBuyers,conversion),pool),"%")}</>}{show&&<div className="q-formula">{fmt(financial.net)} ÷ {fmt(financial.total)} × 100 = {fmt(financial.roi)}%</div>}</>,financial.roi!==undefined&&roiTarget!==undefined&&financial.roi<roiTarget?"The return on investment falls short of the target by "+fmt(roiTarget-financial.roi)+" percentage points.":bad(financial.roi)?"The investment returns "+fmt(financial.roi)+"%. The business loses money.":financial.roi===0?"The investment produces no return.":"",financial.roi===0&&!(roiTarget!==undefined&&roiTarget>0))}
  <div className="q-controls"><label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/>Show calculations</label><div><button type="button" onClick={()=>setRaw({})}>Reset</button><button type="button" onClick={()=>setClosed(Object.fromEntries([...resultIds,"package","timeline","scenario","conversion",...selected.flatMap(x=>["business:"+x,"pay:"+x,"both:"+x])].map(x=>[x,false])))}>Expand all</button><button type="button" onClick={()=>setClosed(Object.fromEntries([...resultIds,"package","timeline","scenario","conversion",...selected.flatMap(x=>["business:"+x,"pay:"+x,"both:"+x])].map(x=>[x,true])))}>Collapse all</button></div></div>
  </section></>;
 }
