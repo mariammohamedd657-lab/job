@@ -38,7 +38,7 @@ test("all 43 impact assignments use the same problem values and respect attribut
  }
  expect(count).toBe(43);
 });
-test("missed calls and outside-hours calls share logical bounds without assuming one lead per call",()=>{
+test("missed calls and outside-hours calls do not impose a unique-lead count ceiling",()=>{
  for(const id of ["problem-1","problem-2"]){
   const c=config(id),eq=operationalEquations(panels(id));
   const screenshot=solve(c,{affected:"100",[unique]:"67",[pending]:"7"},eq);
@@ -51,15 +51,15 @@ test("missed calls and outside-hours calls share logical bounds without assuming
   const shared=solve(c,{total:"80",unaffected:"13",[pending]:"7",[lost]:"60"},eq);
   expect(shared.errors).toEqual([]);
   expect(shared.values.affected).toBe(67);
-  expect(shared.values[unique]).toBe(67);
-  expect(shared.values[recovered]).toBe(0);
+  expect(shared.values[unique]).toBeUndefined();
+  expect(shared.values[recovered]).toBeUndefined();
   const reverse=solve(c,{total:"67",[unique]:"67"},eq);
-  expect(reverse.values.affected).toBe(67);expect(reverse.values.unaffected).toBe(0);
+  expect(reverse.values.affected).toBeUndefined();expect(reverse.values.unaffected).toBeUndefined();
   const ambiguous=solve(c,{affected:"67"},eq);
   expect(ambiguous.values[unique]).toBeUndefined();
   expect(ambiguous.values[lost]).toBeUndefined();
   const conflict=solve(c,{affected:"66",[unique]:"67",months:"2"},eq);
-  expect(conflict.errors.length).toBeGreaterThan(0);
+  expect(conflict.errors).toEqual([]);
   expect(conflict.values.months).toBe(2);
   expect(conflict.values.affected).toBe(66);expect(conflict.values[unique]).toBe(67);
   const changed=solve(c,{total:"80",unaffected:"12",[pending]:"7",[lost]:"60"},eq);
@@ -100,7 +100,7 @@ test("logical population links transfer values across visible inputs and recalcu
  const panel=page.locator(".op-impact-card");
  const op=(key:string)=>panel.locator('input[data-quantity="'+key+'"]');
  await op(pending).fill("7");await op(lost).fill("60");
- await expect(op(unique)).toHaveValue("67");await expect(op(recovered)).toHaveValue("0");
+ await expect(op(unique)).toHaveValue("");await expect(op(recovered)).toHaveValue("");
  await expect(affected).toHaveValue("67");await expect(field("Frequency","affected")).toHaveValue("67");
  await unaffected.fill("12");
  await expect(op(unique)).toHaveValue("");await expect(op(recovered)).toHaveValue("");
@@ -108,7 +108,7 @@ test("logical population links transfer values across visible inputs and recalcu
  await expect(op(recovered)).toHaveValue("0");
  await unaffected.fill("");
  await total.fill("67");
- await expect(affected).toHaveValue("67");await expect(unaffected).toHaveValue("0");
+ await expect(affected).toHaveValue("");await expect(unaffected).toHaveValue("");
  await panel.locator(".op-impact-toggle").click();
  await page.getByRole("link",{name:"Discovery",exact:true}).click();
  await page.getByRole("link",{name:"Quantification"}).click();
@@ -137,10 +137,10 @@ test("recorded-duration observations are not automatically treated as affected u
 // Independent finite-population oracle: enumerate every feasible integer
 // breakdown, then group by every possible subset of entered counts. This tests
 // equality/inequality combinations that the interior algebra audit cannot cover.
-test("exhaustive small-population count subsets for all three distinct-lead configurations",()=>{
+test("exhaustive small-population count subsets for the qualified-lead subset configuration",()=>{
  test.setTimeout(120000);
  let cases=0,targets=0;
- for(const id of ["problem-1","problem-2","problem-7"]){
+ for(const id of ["problem-7"]){
   const c=config(id),e=operationalEquations(panels(id));
   const u=id==="problem-7"?"op:lost-qualified-leads:affected-qualified-leads":unique;
   const pre=id==="problem-7"?"op:lost-qualified-leads:":"op:lost-leads:";
@@ -170,5 +170,33 @@ test("exhaustive small-population count subsets for all three distinct-lead conf
    }
   }
  }
- console.log("LOGICAL_COUNT_AUDIT "+JSON.stringify({problems:3,cases,targets,maximumTotal:4}));
+ console.log("LOGICAL_COUNT_AUDIT "+JSON.stringify({problems:1,cases,targets,maximumTotal:4}));
+});
+
+test("independent finite lead-population oracle with explicitly known unique lead count",()=>{
+ let cases=0;
+ for(const id of ["problem-1","problem-2"]){
+  const c=config(id),e=operationalEquations(panels(id)),keys=[recovered,pending,lost];
+  for(let population=0;population<=8;population++){
+   const models:number[][]=[];
+   for(let rec=0;rec<=population;rec++)for(let pen=0;pen<=population-rec;pen++)models.push([rec,pen,population-rec-pen]);
+   for(let mask=0;mask<8;mask++){
+    const groups=new Map<string,number[][]>();
+    for(const model of models){const k=model.filter((_,j)=>mask&(1<<j)).join(",");const group=groups.get(k)??[];group.push(model);groups.set(k,group);}
+    for(const group of groups.values()){
+     const raw:Record<string,string>={affected:"1",[unique]:String(population)};
+     keys.forEach((key,j)=>{if(mask&(1<<j))raw[key]=String(group[0][j]);});
+     // Zero population is incompatible with positive primary impact, not with a call event.
+     const result=solve(c,raw,e,{includeBounds:true});
+     expect(result.errors,JSON.stringify(raw)).toEqual([]);
+     keys.forEach((key,j)=>{
+      const values=group.map(x=>x[j]),min=Math.min(...values),max=Math.max(...values);
+      expect(result.values[key],JSON.stringify(raw)+" "+key).toBe(min===max?min:undefined);
+      expect(result.bounds?.[key].min).toBe(min);expect(result.bounds?.[key].max).toBe(max);
+     });cases++;
+    }
+   }
+  }
+ }
+ console.log("EXPLICIT_LEAD_POPULATION_AUDIT "+cases);
 });

@@ -1,5 +1,7 @@
 "use client";
 import {useState,type ComponentPropsWithoutRef} from "react";
+import {useQuantityRegistry} from "./RegistryContext";
+import {instanceState} from "./quantity-identity";
 import {format,type Figures,type Result} from "./solver";
 
 // A quantity has one manual constraint and one resolved result, independent of
@@ -13,6 +15,7 @@ export function resolveQuantity(key:string,raw:Figures,result:Result){
 }
 type Props=Omit<ComponentPropsWithoutRef<"input">,"type"|"value"|"defaultValue"|"onChange"|"onInput"|"onBlur"|"readOnly"|"disabled">&{
  value:string;
+ "data-quantity"?:string;
  onValueChange:(value:string)=>void;
 };
 // Every numerical field remains an actual editable number input. Clearing a
@@ -20,7 +23,12 @@ type Props=Omit<ComponentPropsWithoutRef<"input">,"type"|"value"|"defaultValue"|
 // display only in this focused occurrence so the next digit can be entered.
 export default function NumericalInput({value,onValueChange,...props}:Props){
  const [emptyDraft,setEmptyDraft]=useState(false);
- return <input {...props} type="number" value={emptyDraft?"":value} onInput={event=>{
+ const {registry,raw,result}=useQuantityRegistry();
+ const key=props["data-quantity"],ref=key?registry.instances[key]:undefined;
+ if(key&&!ref)throw Error("Unregistered numerical input "+registry.problemId+"/"+key);
+ const state=ref?instanceState(ref,raw,result):undefined;
+ const displayed=state?state.manualValue??(state.calculatedValue!==undefined?format(state.calculatedValue):""):value;
+ return <input {...props} data-canonical-quantity={ref?.canonicalId} data-quantity-instance={ref?.instanceId} data-numerical-type={ref?.type} data-quantity-source={state?.source} type="number" value={emptyDraft?"":displayed} onInput={event=>{
   // Native input events also capture a deliberate replacement with the same
   // number, which must become a manual constraint even if the display agrees.
   const next=event.currentTarget.value;

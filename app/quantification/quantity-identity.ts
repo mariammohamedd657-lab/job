@@ -1,5 +1,5 @@
 import {definition,problemQuantityDefinitions,type NumericalType,type QuantityDefinition,validNumericalValue} from "./canonical-definitions";
-import type {Field,Config} from "./config";
+import type {Field} from "./config";
 import type {Figures,Result} from "./solver";
 
 // Explicit key mappings. Neither matching names nor matching canonical types imply

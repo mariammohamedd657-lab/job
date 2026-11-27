@@ -2,8 +2,7 @@ import {configs,sectionOrder} from "./config";
 import {problems} from "../discovery/data";
 import {operationalPanels} from "./operational-data";
 import {baseSupplementalRoutes,financialContent,operationalAlternatives,shortfallRoute,type ContentRoute} from "./step2-content";
-import {fieldReference,canonicalId,canShare,type FieldReference} from "./quantity-identity";
-import {definition} from "./canonical-definitions";
+import {fieldReference,canShare,type FieldReference} from "./quantity-identity";
 export type RegistryFieldOccurrence={path:string;reference:FieldReference;panel:"problem"|"operational"|"financial";outcome?:string;route?:string};
 export type RegistryRoute={id:string;outcomeId?:string;panel:RegistryFieldOccurrence["panel"];fieldInstanceIds:string[];resultInstanceId?:string;reference:string;condition:string;active:boolean};
 export type ProblemRegistry={problemId:string;fields:RegistryFieldOccurrence[];instances:Readonly<Record<string,FieldReference>>;routes:RegistryRoute[];conditionalIdentities:readonly {left:string;right:string;condition:string;active:false}[]};
@@ -24,7 +23,7 @@ export function registryFor(problemId:string):ProblemRegistry{
  const addRoute=(id:string,panel:RegistryRoute["panel"],keys:string[],result:string|undefined,reference:string,condition:string,active=false,outcomeId?:string)=>{
   routes.push({id,panel,fieldInstanceIds:[...new Set(keys.map(key))],resultInstanceId:result?key(result):undefined,reference,condition,active,outcomeId});
  };
- const target=(outcome:string,r:ContentRoute,parentPath:string,primary:string):string|undefined=>{
+ const target=(outcome:string,r:ContentRoute,primary:string):string|undefined=>{
   const id=r.id;
   if(id==="affected-invoice-context"||id==="conversions"||id==="revenue")return id==="revenue"?"fin:potential-revenue":id==="conversions"?"fin:potential-buyers":undefined;
   if(outcome==="F1")return id==="purchase-average"?"fin:average-revenue-purchase":primary;
@@ -52,7 +51,7 @@ export function registryFor(problemId:string):ProblemRegistry{
   for(const r of items){
    const routePath=path+"/"+r.id;
    r.fields.forEach((f,j)=>put(f,panel,routePath+"/"+j,outcomeId,routePath));
-   const result=panel==="financial"?target(outcomeId!,r,path,primary):primary;
+   const result=panel==="financial"?target(outcomeId!,r,primary):primary;
    let keys=r.fields.map(f=>f.key);
    if(outcomeId==="F1"&&r.id==="purchase-values")keys=["fin:purchase-revenue","fin:retained-revenue"];
    if(r.id==="overall-difference")keys=[...keys,outcomeId==="F3"?"fin:higher:actual":"fin:estimated-higher:actual",outcomeId==="F3"?"fin:higher:comparable":"fin:estimated-higher:comparable"];
