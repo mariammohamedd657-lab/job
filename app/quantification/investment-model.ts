@@ -75,3 +75,45 @@ export type TargetPeriod=typeof targetPeriods[number];
 // Annualized calendar convention: 365 days and 52 weeks per year.
 export const monthlyFactor=(period:TargetPeriod)=>period==="Daily"?365/12:period==="Weekly"?52/12:period==="Yearly"?1/12:1;
 export const packageRecommendation=(count:number)=>count===0?undefined:count===1?"Starter":count<=3?"Growth":"Enterprise";
+
+/** Additional pre-launch payments are included in upfront, not charged twice. */
+export function paymentFinance(upfront:Num,monthly:Num,period:Num,launch:Num,profit:Num,saved:Num,extra:Num,cash:Num,reserve:Num,cashGainInput?:Num){
+ const after=period===0?0:nonnegative(sub(period,launch));
+ const total=add(upfront,mul(monthly,after));
+ const gain=add(profit,saved,extra),gross=add(gain,monthly);
+ const net=sub(mul(gain,after),upfront);
+ const payback=upfront===0?0:gain!==undefined&&gain>0?add(launch,div(upfront,gain)):undefined;
+ const cashGain=cashGainInput??gain;
+ let peak:Num=after===0?upfront:undefined;
+ // Conservative timing assumption: upfront paid at start, recurring payments
+ // at start of each period, and net cash gains at end. Partial months prorated.
+ if(upfront!==undefined&&monthly!==undefined&&after!==undefined&&cashGain!==undefined){
+  const full=Math.floor(after),fraction=after-full;
+  peak=upfront+Math.max(0,full>0?monthly-Math.min(0,cashGain)*(full-1):0,-cashGain*full,fraction>0?-cashGain*full+monthly*fraction:0,-cashGain*after);
+ }
+ return {after,before:0,total,gain,gross,net,payback,cashGain,shortage:nonnegative(sub(peak,sub(cash,reserve))),roi:mul(div(net,total),100),noPayback:upfront!==undefined&&upfront>0&&gain!==undefined&&gain<=0};
+}
+
+/** Solve all expected-performance products in every direction. Retain manual facts. */
+export function solveExpectedValues(raw:Values,pool:Num,conversion:Num,averageProfit:Num){
+ const v={pool,conversion,averageProfit,rate:read(raw.expectedRate),recovered:read(raw.expectedRecovered),buyers:read(raw.expectedBuyers),profit:read(raw.expectedProfit)};
+ const equations=[["recovered","pool","rate",.01],["buyers","recovered","conversion",.01],["profit","buyers","averageProfit",1]] as const;
+ const errors=new Set<string>();
+ for(let pass=0;pass<8;pass++){
+  let changed=false;
+  for(const [out,left,right,factor] of equations){
+   const a=v[out],b=v[left],c=v[right];
+   const proposed=[[out,mul(b,c,factor)],[left,div(a,mul(c,factor))],[right,div(a,mul(b,factor))]] as const;
+   for(const [key,value] of proposed){
+    if(value===undefined||!Number.isFinite(value))continue;
+    if(v[key]===undefined){v[key]=value;changed=true;}
+    else if(Math.abs(v[key]!-value)>1e-8*Math.max(1,Math.abs(v[key]!),Math.abs(value)))errors.add("Contradictory expected quantities: "+out+", "+left+" and "+right+".");
+   }
+  }
+  if(!changed)break;
+ }
+ for(const [key,value] of Object.entries(v)){
+  if(value!==undefined&&(value<0||(["rate","conversion"].includes(key)&&value>100)))errors.add("Invalid expected "+key+".");
+ }
+ return {...v,errors:[...errors]};
+}
