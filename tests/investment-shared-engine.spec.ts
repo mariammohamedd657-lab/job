@@ -69,3 +69,23 @@ test("browser: reverse savings inputs share values across approved result panels
  expect(Number(await field("removed").inputValue())).toBeCloseTo(689);
  expect(Number(await field("running").inputValue())).toBeCloseTo(610);
 });
+
+test("browser: identical historical buyer amounts transfer in both directions",async({page})=>{
+ await page.goto("/");
+ const problem=page.locator('[data-problem="problem-1"]');
+ await problem.locator(".problem-toggle").click();
+ await problem.getByRole("checkbox",{name:"Lost potential revenue",exact:true}).check();
+ await page.getByRole("link",{name:"Quantification"}).click();
+ await page.getByRole("button",{name:"Negative financial impacts",exact:true}).click();
+ const historical=page.locator('[data-financial-impact="F7"] input[data-quantity="fin:average-revenue-buyer"]').first();
+ const inv=page.locator(".inv-investment");
+ await inv.getByRole("button",{name:"Expand all",exact:true}).click();
+ const shared=inv.locator('[data-investment-quantity="averageRevenue"]');
+ await historical.fill("500");
+ await expect(shared).toHaveValue("500");
+ await expect(shared).toHaveAttribute("data-shared-historical-quantity","fin:average-revenue-buyer");
+ await shared.fill("750");
+ await expect(historical).toHaveValue("750");
+ await shared.fill("");
+ await expect(historical).toHaveValue("");
+});

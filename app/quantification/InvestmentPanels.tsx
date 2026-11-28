@@ -2,10 +2,11 @@
 import {useState,type ReactNode} from "react";
 import {targetNames,targetValues,editTarget,targetPeriods,monthlyFactor,packageRecommendation,type TargetPeriod,expectedMethods,packages,paymentFinance,read,add,sub,mul,div,max,nonnegative,ceil,fmt,type Num,type TargetName,type Values,type ExpectedMethod} from "./investment-model";
 import type {Result} from "./solver";
+import {useQuantityRegistry} from "./RegistryContext";
 import {solveInvestmentCore,solveInvestmentExpected,solveInvestmentPayback,resolved} from "./investment-equations";
 import "./investment.css";
 import ScenarioDropdown from "./ScenarioDropdown";
-type Props={result:Result;problemId:string;agentCount?:number};
+type Props={result:Result;problemId:string;agentCount?:number;onHistoricalValueChange?:(key:string,value:string)=>void};
 const targetKey=(n:TargetName,k:string)=>"target:"+n+":"+k;
 const amountUnit=(n:TargetName)=>n==="Buyers"?"Buyers":"AED";
 function Arrow({open}:{open:boolean}){return <span className={"q-arrow "+(open?"q-open":"")}><svg className="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="m6 9 6 6 6-6"/></svg></span>}
@@ -15,7 +16,8 @@ function InvestmentValue({label,value,display,blocked,onChange}:{label:string;va
  const [editing,setEditing]=useState(false);
  return <input className="inv-result-value" aria-label={label+" value"} aria-invalid={blocked||undefined} type={editing?"number":"text"} step="any" placeholder="—" value={editing?(value===undefined?"":String(value)):display??(value===undefined?"":fmt(value))} onFocus={()=>setEditing(true)} onBlur={()=>setEditing(false)} onChange={e=>onChange(e.target.value)}/>;
 }
-export default function InvestmentPanels({result,problemId,agentCount=0}:Props){
+export default function InvestmentPanels({result,problemId,agentCount=0,onHistoricalValueChange}:Props){
+ const historicalRegistry=useQuantityRegistry();
  const [raw,setRaw]=useState<Values>({}),[selected,setSelected]=useState<TargetName[]>([]),[closed,setClosed]=useState<Record<string,boolean>>({}),[show,setShow]=useState(false);
  const [mode,setMode]=useState("Relevant quantities"),[pkg,setPkg]=useState<"Starter"|"Growth"|"Enterprise">("Starter"),[payment,setPayment]=useState("Ownership"),[timeline,setTimeline]=useState("Standard roadmap"),[scenario,setScenario]=useState("Required scenario"),[goal,setGoal]=useState("Reach business target"),[main,setMain]=useState<TargetName>("Revenue"),[runningMode,setRunningMode]=useState("Direct amount"),[route,setRoute]=useState("Lost leads");
  const [optional,setOptional]=useState<Record<string,boolean>>({});
@@ -34,7 +36,10 @@ export default function InvestmentPanels({result,problemId,agentCount=0}:Props){
  const scenarioKeys=["profit","gain","net","roi","payback","accumGross","cash-gain"];
  const scenarioScope=scenario==="Expected scenario"?expectedScope:("required:"+problemId+":"+route+":"+goal+":"+(selected.includes(main)?main:selected[0]??main)+":");
  const keyFor=(k:string)=>{const canonical=coreAliases[k]??k;return expectedKeys.has(canonical)?expectedScope+canonical:canonical==="profit"&&scenario==="Expected scenario"?expectedScope+"expectedProfit":scenarioKeys.includes(canonical)?scenarioScope+canonical:canonical;};
- const update=(k:string,v:string)=>setRaw(old=>{k=keyFor(k);if(k.startsWith("target:")){const [,name,field]=k.split(":") as [string,TargetName,string];const prefix="target:"+name+":";const local=Object.fromEntries(Object.entries(old).filter(([key])=>key.startsWith(prefix)).map(([key,val])=>[key.slice(prefix.length),val]));const next=Object.fromEntries(Object.entries(old).filter(([key])=>!key.startsWith(prefix)));return {...next,...Object.fromEntries(Object.entries(editTarget(name,local,field,v,linkCurrent(name))).map(([key,val])=>[prefix+key,val]))};}const next={...old};if(v.trim()==="")delete next[k];else next[k]=v;return next;}),n=(k:string)=>read(raw[keyFor(k)]),toggle=(k:string)=>setClosed(old=>({...old,[k]:!old[k]}));
+ const update=(k:string,v:string)=>{
+  const historical=historicalKey(k);
+  if(historical&&onHistoricalValueChange){onHistoricalValueChange(historical,v);setRaw(old=>{const next={...old};delete next[keyFor(k)];return next;});return;}
+  setRaw(old=>{k=keyFor(k);if(k.startsWith("target:")){const [,name,field]=k.split(":") as [string,TargetName,string];const prefix="target:"+name+":";const local=Object.fromEntries(Object.entries(old).filter(([key])=>key.startsWith(prefix)).map(([key,val])=>[key.slice(prefix.length),val]));const next=Object.fromEntries(Object.entries(old).filter(([key])=>!key.startsWith(prefix)));return {...next,...Object.fromEntries(Object.entries(editTarget(name,local,field,v,linkCurrent(name))).map(([key,val])=>[prefix+key,val]))};}const next={...old};if(v.trim()==="")delete next[k];else next[k]=v;return next;});},n=(k:string)=>read(raw[keyFor(k)]),toggle=(k:string)=>setClosed(old=>({...old,[k]:!old[k]}));
  const known=(k:string):Num=>!result.blocked.has(k)&&Number.isFinite(result.values[k])?result.values[k]:undefined;
  // Existing problem-specific quantities are not automatically treated as business-wide
  // monthly totals. Only explicitly scoped historical buyer values and measurement periods are reused.
@@ -43,7 +48,13 @@ export default function InvestmentPanels({result,problemId,agentCount=0}:Props){
  const targets=Object.fromEntries(targetNames.map(name=>[name,targetValues(name,Object.fromEntries(["current","target","change","rate","deadline"].map(k=>[k,raw[targetKey(name,k)]??""])),linkCurrent(name))])) as Record<TargetName,ReturnType<typeof targetValues>>;
  const active=selected.includes(main)?main:selected[0],target=active?targets[active]:undefined;
  const recurringKey=(k:string)=>k==="removed"||k==="after-costs"||k==="target-costs"||k==="savings"||k.startsWith("remove-")||k.startsWith("pool:")||["expectedRecovered","expectedBuyers","expectedProfit","expected-revenue","used-buyers","used-recovered","gain-profit","gain-saved","invoices","otherLost"].includes(k)||/^(tb|tr|tc|trev|tprofit|pb|pr|pg|pp|bb|br):/.test(k);
- const displayNumber=(v:Num,scale:number)=>v===undefined?"":String(v*scale);
+ const displayNumber=(v:Num,scale:number)=>{
+  if(v===undefined)return "";
+  const value=v*scale,nearest=Math.round(value);
+  // Remove floating-point residue only; do not round meaningful fractions or
+  // feed display normalization back into the stored figures.
+  return String(Number.isSafeInteger(nearest)&&Math.abs(value-nearest)<=8*Number.EPSILON*Math.max(1,Math.abs(value))?nearest:value);
+ };
  const row=(label:string,k:string,unit="AED",value:Num=n(k),locked=false,formula?:string,text?:string)=>{
   const investment=!k.startsWith("target:")||label==="Current costs";
   const periodic=label==="Current costs"||recurringKey(k);
@@ -56,14 +67,16 @@ export default function InvestmentPanels({result,problemId,agentCount=0}:Props){
   const payMatch=/^(tp|ng|bg):(.+)$/.exec(k);
   const payResult=payMatch?requirements(payMatch[2] as TargetName).solverResult:undefined;
   const boundKey=payMatch?({tp:"deadline",ng:"requiredNet",bg:"requiredGross"} as Record<string,string>)[payMatch[1]]:resultKey;
-  const source=payResult??calculation;
+  const historical=historicalKey(k);
+  const source=historical?result:payResult??calculation;
   const sharedValue=canonical&&!(k==="gain-profit"&&scenario==="Expected scenario")?resolved(core,canonical):value;
-  const lockedNow=(locked&&!canonical)||k==="launch"&&timeline==="Standard roadmap"||k==="gain-profit"&&scenario==="Required scenario"&&requiredProfit!==undefined||text!==undefined;
-  const manual=read(raw[keyFor(k)]);
+  const lockedNow=(locked&&!canonical&&!historical)||k==="launch"&&timeline==="Standard roadmap"||k==="gain-profit"&&scenario==="Required scenario"&&requiredProfit!==undefined||text!==undefined;
+  const manual=historical?read(historicalRegistry.raw[historical])??read(raw[keyFor(k)]):read(raw[keyFor(k)]);
   const stored=lockedNow?sharedValue:manual??sharedValue;
-  const range=boundKey?source.bounds?.[boundKey]:undefined,blocked=!!boundKey&&source.blocked.has(boundKey);
+  const limitKey=historical??boundKey;
+  const range=limitKey?source.bounds?.[limitKey]:undefined,blocked=!!limitKey&&source.blocked.has(limitKey);
   const hint=range&&(stored===undefined||blocked)?[range.min!==undefined?"Min: "+(range.minExclusive?"> ":"")+fmt(range.min*scale):"",range.max!==undefined?"Max: "+(range.maxExclusive?"< ":"")+fmt(range.max*scale):""].filter(Boolean).join(" · "):"";
-  return <div className="q-field inv-field" key={k+label}><label><span>{label}</span><input aria-label={label} data-investment-quantity={k} data-quantity-source={manual!==undefined?"manual":stored!==undefined?"calculated":"unknown"} type={text!==undefined?"text":"number"} step="any" value={text??displayNumber(stored,scale)} readOnly={lockedNow} className={lockedNow?"inv-locked":manual===undefined&&stored!==undefined?"q-calculated":""} placeholder="—" onChange={e=>update(k,e.target.value===""?"":String(Number(e.target.value)/scale))}/><span className="q-unit">{shownUnit}</span></label>{hint&&<div className={"q-limits"+(blocked?" q-limits-conflict":"")}>{hint}</div>}{show&&formula&&<div className="q-formula">{formula} = {fmt(mul(stored,scale))} {shownUnit}</div>}</div>;
+  return <div className="q-field inv-field" key={k+label}><label><span>{label}</span><input aria-label={label} data-investment-quantity={k} data-quantity-source={manual!==undefined?"manual":stored!==undefined?"calculated":"unknown"} data-shared-historical-quantity={historical} aria-invalid={blocked||undefined} type={text!==undefined?"text":"number"} step="any" value={text??displayNumber(stored,scale)} readOnly={lockedNow} className={lockedNow?"inv-locked":manual===undefined&&stored!==undefined?"q-calculated":""} placeholder="—" onChange={e=>update(k,e.target.value===""?"":String(Number(e.target.value)/scale))}/><span className="q-unit">{shownUnit}</span></label>{hint&&<div className={"q-limits"+(blocked?" q-limits-conflict":"")}>{hint}</div>}{show&&formula&&<div className="q-formula">{formula} = {fmt(mul(stored,scale))} {shownUnit}</div>}</div>;
  };
  const periodRow=(label:string,name:TargetName,field:string,value:Num,locked=false)=>{const key=targetKey(name,field),factor=monthlyFactor(periodFor(name)),display=value===undefined?"":String(Number((value/factor).toPrecision(12)));return <div className="q-field inv-field" key={key}><label><span>{label}</span><input type="number" step="any" aria-label={label} data-investment-quantity={key} value={display} readOnly={locked} className={locked?"inv-locked":""} placeholder="—" onChange={e=>update(key,e.target.value===""?"":String(Number(e.target.value)*factor))}/><span className="q-unit">{amountUnit(name)}</span></label></div>;};
  const calc=(label:string,k:string,value:Num,unit="AED",formula?:string)=>row(label,k,unit,value,true,formula);
@@ -77,6 +90,15 @@ export default function InvestmentPanels({result,problemId,agentCount=0}:Props){
  const routeMap:Record<string,[string,string]>={"Lost leads":["op:lost-leads:result","fin:conversion:leads"],"Lost qualified leads":["op:lost-qualified-leads:result","fin:conversion:qualified"],"Lost reactivations":["op:fewer-old-leads-reactivated:result","fin:conversion:reactivation"],"Lost bookings":["op:fewer-appointments-booked:result","fin:conversion:booking"],"Lost attendance":["op:fewer-appointments-attended:result","fin:conversion:attendance"],"Unserved buyers":["op:fewer-customers-served:result","fin:conversion:unserved"],"Lost existing buyers":["op:lost-existing-customers:result",""],"Lost potential new buyers":["op:fewer-new-customers:result",""]};
  const [sourceKey,rateKey]=routeMap[route],poolKey="pool:"+problemId+":"+route,conversionKey="conversion:"+problemId+":"+route;
  const linkedPool=monthly(sourceKey),linkedRate=rateKey?known(rateKey):100,linkedRevenue=known("fin:average-revenue-buyer"),linkedProfit=known("fin:average-profit-buyer");
+ // Direct historical per-buyer amounts and conversion rates use the original
+ // scoped registry entry, not a second manual fact. Never write a hypothetical
+ // scenario result back to historical data. Period-normalized opportunity counts
+ // remain read transfers until their measurement scope is explicitly verified.
+ const historicalKey=(k:string):string|undefined=>{
+  if(!onHistoricalValueChange)return undefined;
+  const key=k==="averageRevenue"?"fin:average-revenue-buyer":k==="averageProfit"?"fin:average-profit-buyer":k===conversionKey?rateKey:undefined;
+  return key&&historicalRegistry.registry.instances[key]?key:undefined;
+ };
  const expectedInput=Object.fromEntries([...expectedKeys].map(k=>[k,raw[expectedScope+k]??""]));
  const expectedFirst=solveInvestmentExpected(expectedInput,linkedPool??n(poolKey),linkedRate??n(conversionKey),linkedProfit??n("averageProfit"));
  const facts={packageFee:fixedFee??n(upKey),subscription:payment==="Ownership"?0:fixed?.monthly??n("enterpriseMonthly"),launch:timeline==="Standard roadmap"?1:undefined,period:n("period")===undefined?target?.deadline:undefined,profit:scenario==="Expected scenario"?expectedFirst.profit:undefined,currentCosts:targets["Monthly costs"].current,invoices:optional.invoices?undefined:0,otherLost:optional.otherLost?undefined:0};
@@ -113,7 +135,7 @@ export default function InvestmentPanels({result,problemId,agentCount=0}:Props){
  const profit=profitConflict||scenario==="Expected scenario"&&!expectedValid?undefined:v("profit");
  const buyers=scenario==="Expected scenario"?expectedBuyers:requiredBuyers;
  const usedRecovery=scenario==="Expected scenario"?(expectedValid?expectedRecovered:undefined):ceil(div(mul(buyers,100),conversion)),usedRate=scenario==="Expected scenario"?(expectedValid?expectedRate:undefined):mul(div(usedRecovery,pool),100);
- const upFee=v("packageFee"),subFee=v("subscription"),callCost=v("callCost"),breakdown=v("running");
+ const upFee=fixedFee??v("packageFee"),subFee=payment==="Ownership"?0:fixed?.monthly??v("subscription"),callCost=v("callCost"),breakdown=v("running");
  // Retain the nonlinear cash timing calculation. Core financial quantities
  // are resolved by the same solver as the problem and impact panels.
  const timing=paymentFinance(v("upfront"),v("monthlyCost"),v("period"),v("launch"),profit,v("saved"),v("extras"),v("cash"),v("reserve"),n("cash-gain"));
