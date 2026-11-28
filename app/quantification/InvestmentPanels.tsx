@@ -3,6 +3,7 @@ import {useEffect,useState,type ReactNode} from "react";
 import {targetNames,targetValues,editTarget,expectedValues,expectedMethods,expectedKeys,requiredUnits,requiredRecovery,recoveryPercentage,requirementForTarget,requiredSalesProfit,packages,finance,read,add,sub,mul,div,max,nonnegative,ceil,fmt,type Num,type TargetName,type Values,type ExpectedMethod} from "./investment-model";
 import type {Result} from "./solver";
 import "./investment.css";
+import ScenarioDropdown from "./ScenarioDropdown";
 import type {PoolValues} from "./opportunity-pool";
 type Props={result:Result;problemId:string;sharedPool?:PoolValues};
 const targetKey=(n:TargetName,k:string)=>"target:"+n+":"+k;
@@ -27,7 +28,7 @@ export default function InvestmentPanels({result,problemId,sharedPool}:Props){
  const row=(label:string,k:string,unit="AED",value:Num=n(k),locked=false,formula?:string,text?:string)=><div className="q-field inv-field" key={k+label}><label className={!locked&&text===undefined&&value===undefined&&requiredInputs.has(k)?"q-priority":""}><span>{label}</span><input aria-label={label} data-investment-quantity={k} type={text!==undefined?"text":"number"} step="any" value={text??(locked?value??"":raw[k]?.trim()?raw[k]:value??"")} readOnly={locked||text!==undefined} className={locked||text!==undefined?"inv-locked":""} placeholder="—" onChange={e=>update(k,e.target.value)}/><span className="q-unit">{unit}</span></label>{show&&formula&&<div className="q-formula">{formula} = {fmt(value)} {unit}</div>}</div>;
  const calc=(label:string,k:string,value:Num,unit="AED",formula?:string)=>row(label,k,unit,value,true,formula);
  const choices=(options:readonly string[],value:string,onChange:(v:string)=>void)=><div className="inv-options">{options.map(x=><button key={x} type="button" aria-pressed={value===x} onClick={()=>onChange(x)}>{x}</button>)}</div>;
- const dropdown=(label:string,options:readonly string[],value:string,onChange:(v:string)=>void)=><select className="inv-dropdown" aria-label={label} value={value} onChange={e=>onChange(e.target.value)}>{options.map(x=><option key={x} value={x}>{x}</option>)}</select>;
+ const dropdown=(label:string,options:readonly string[],value:string,onChange:(v:string)=>void)=><ScenarioDropdown label={label} options={options} value={value} onChange={onChange}/>;
  const check=(label:string,k:string)=><label className="inv-check"><input type="checkbox" checked={!!optional[k]} onChange={e=>setOptional(old=>({...old,[k]:e.target.checked}))}/>{label}</label>;
  const section=(id:string,title:string,body:ReactNode,defaultOpen=true)=><section className="inv-section" key={id}><button type="button" className="inv-header" aria-expanded={closed[id]===undefined?defaultOpen:!closed[id]} onClick={()=>setClosed(old=>({...old,[id]:old[id]===undefined?defaultOpen:!old[id]}))}>{title}<Arrow open={closed[id]===undefined?defaultOpen:!closed[id]}/></button><div className="inv-body" hidden={!(closed[id]===undefined?defaultOpen:!closed[id])}>{body}</div></section>;
  const fixed=pkg==="Enterprise"?undefined:packages[pkg],upFee=payment==="Ownership"?fixed?.ownership??n("enterpriseOwnership"):fixed?.setup??n("enterpriseSetup"),subFee=payment==="Ownership"?0:fixed?.monthly??n("enterpriseMonthly");
