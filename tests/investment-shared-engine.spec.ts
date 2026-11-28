@@ -3,7 +3,8 @@ import {solveInvestmentCore,solveInvestmentExpected,solveInvestmentPayback,resol
 
 const facts={packageFee:73500,subscription:0,launch:1,period:undefined,profit:undefined,currentCosts:undefined,invoices:0,otherLost:0};
 test("shared solver calculates costs removed, payments and savings in either direction",()=>{
- for(const raw of [{removed:"689",running:"610"},{removed:"689",saved:"79"},{running:"610",saved:"79"}]){
+ const cases:Record<string,string>[]=[{removed:"689",running:"610"},{removed:"689",saved:"79"},{running:"610",saved:"79"}];
+ for(const raw of cases){
   const r=solveInvestmentCore(raw,facts,false);
   expect(r.errors).toEqual([]);
   expect(resolved(r,"removed")).toBeCloseTo(689);
