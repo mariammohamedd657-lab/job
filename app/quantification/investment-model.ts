@@ -69,23 +69,3 @@ export function expectedValues(method:ExpectedMethod,raw:Values,pool:Num,convers
  }
  return {rate,recovered,buyers,profit};
 }
-
-export function requiredUnits(amount:Num,perUnit:Num):Num{
- if(amount===undefined)return undefined;
- if(amount<=0)return 0;
- if(perUnit===undefined||perUnit<=0)return undefined;
- return Math.ceil(amount/perUnit-1e-10);
-}
-export function requiredRecovery(buyers:Num,conversion:Num):Num{
- return requiredUnits(buyers,conversion===undefined?undefined:conversion/100);
-}
-export function recoveryPercentage(recovered:Num,pool:Num):Num{
- if(recovered===0&&pool===0)return 0;
- return mul(div(recovered,pool),100);
-}
-export function requirementForTarget(name:TargetName,change:Num,revenue:Num,profit:Num):Num{
- return name==="Revenue"?requiredUnits(change,revenue):name==="Profit from sales"?requiredUnits(change,profit):name==="Buyers"?ceil(nonnegative(change)):0;
-}
-export function requiredSalesProfit(grossNeeded:Num,removed:Num,extra:Num):Num{
- return nonnegative(sub(sub(grossNeeded,removed),extra));
-}
