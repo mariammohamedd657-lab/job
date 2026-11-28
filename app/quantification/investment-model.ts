@@ -69,3 +69,9 @@ export function expectedValues(method:ExpectedMethod,raw:Values,pool:Num,convers
  }
  return {rate,recovered,buyers,profit};
 }
+
+export const targetPeriods=["Daily","Weekly","Monthly","Yearly"] as const;
+export type TargetPeriod=typeof targetPeriods[number];
+// Annualized calendar convention: 365 days and 52 weeks per year.
+export const monthlyFactor=(period:TargetPeriod)=>period==="Daily"?365/12:period==="Weekly"?52/12:period==="Yearly"?1/12:1;
+export const packageRecommendation=(count:number)=>count===0?undefined:count===1?"Starter":count<=3?"Growth":"Enterprise";
